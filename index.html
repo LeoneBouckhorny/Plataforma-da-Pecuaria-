@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Plataforma da Pecuária</title>
+    <meta name="description" content="Calculadora de pesagem e base inicial para gestão rural.">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">MVP inicial</p>
+          <h1>Plataforma da Pecuária</h1>
+        </div>
+        <nav class="tabs" aria-label="Navegação principal">
+          <button class="tab-button active" id="calculator-tab" type="button" data-tab="calculator">Calculadora</button>
+          <button class="tab-button" id="property-tab" type="button" data-tab="property">Propriedade</button>
+          <button class="tab-button" id="premium-tab" type="button" data-tab="premium">Premium</button>
+        </nav>
+      </header>
+
+      <main>
+        <section class="tab-panel active" id="calculator" aria-labelledby="calculator-tab">
+          <div class="workspace">
+            <section class="panel input-panel" aria-label="Dados da pesagem">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Plano gratuito</p>
+                  <h2>Pesagem rápida</h2>
+                </div>
+                <span class="status-pill">Sem cadastro definitivo</span>
+              </div>
+
+              <div id="demo-banner" class="demo-banner hidden" role="status">
+                Estes dados são fictícios. Limpe a pesagem antes de iniciar um lançamento real.
+              </div>
+
+              <form id="weighing-form" class="form-grid">
+                <label>
+                  Nome da pesagem
+                  <input id="weighing-name" type="text" value="" autocomplete="off" placeholder="Opcional">
+                </label>
+                <label>
+                  Data da pesagem
+                  <input id="weighing-date" type="date">
+                </label>
+                <label>
+                  Cotação regional da arroba (R$)
+                  <input id="arroba-price" type="text" inputmode="decimal" value="300,00" aria-describedby="arroba-price-message">
+                  <span id="arroba-price-message" class="field-message error"></span>
+                </label>
+                <label>
+                  Rendimento estimado (%)
+                  <input id="yield-rate" type="text" inputmode="decimal" value="50" aria-describedby="yield-rate-message">
+                  <span id="yield-rate-message" class="field-message error"></span>
+                </label>
+                <label>
+                  Faixa leve até (kg)
+                  <input id="light-limit" type="text" inputmode="decimal" value="300" aria-describedby="light-limit-message">
+                  <span id="light-limit-message" class="field-message error"></span>
+                </label>
+                <label>
+                  Faixa média até (kg)
+                  <input id="medium-limit" type="text" inputmode="decimal" value="420" aria-describedby="medium-limit-message">
+                  <span id="medium-limit-message" class="field-message error"></span>
+                </label>
+              </form>
+
+              <div class="action-row no-print">
+                <button class="secondary-button" id="load-demo" type="button">Carregar dados de exemplo</button>
+                <button class="secondary-button danger" id="clear-weighing" type="button">Limpar pesagem</button>
+              </div>
+
+              <div id="global-message" class="app-message" role="status"></div>
+
+              <div class="table-toolbar">
+                <h3>Animais</h3>
+                <button class="icon-button" id="add-animal" type="button" aria-label="Adicionar animal">+</button>
+              </div>
+
+              <div class="animal-table-wrap">
+                <table class="animal-table">
+                  <thead>
+                    <tr>
+                      <th>Brinco</th>
+                      <th>Peso vivo (kg)</th>
+                      <th>Categoria</th>
+                      <th>Observação</th>
+                      <th aria-label="Ações"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="animal-rows"></tbody>
+                </table>
+              </div>
+              <p id="animal-empty-message" class="empty-state">
+                Nenhum animal informado. Use o botão + para adicionar uma linha ou carregue dados de exemplo.
+              </p>
+            </section>
+
+            <aside class="panel results-panel" aria-label="Resultado da pesagem">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Resultado estimado</p>
+                  <h2 id="result-title">Pesagem sem nome</h2>
+                </div>
+                <button id="print-report" class="secondary-button no-print" type="button">Imprimir</button>
+              </div>
+
+              <section class="report-meta" aria-label="Dados do romaneio">
+                <div><span>Propriedade</span><strong id="report-property">Propriedade não informada</strong></div>
+                <div><span>Data</span><strong id="report-date">Data não informada</strong></div>
+                <div><span>Preço por arroba</span><strong id="report-price">R$ 0,00</strong></div>
+                <div><span>Rendimento</span><strong id="report-yield">0%</strong></div>
+              </section>
+
+              <div class="metrics">
+                <div class="metric">
+                  <span>Animais</span>
+                  <strong id="total-animals">0</strong>
+                </div>
+                <div class="metric">
+                  <span>Peso total</span>
+                  <strong id="total-weight">0 kg</strong>
+                </div>
+                <div class="metric">
+                  <span>Peso médio</span>
+                  <strong id="average-weight">0 kg</strong>
+                </div>
+                <div class="metric">
+                  <span>Arrobas estimadas</span>
+                  <strong id="total-arrobas">0 @</strong>
+                </div>
+                <div class="metric accent">
+                  <span>Valor estimado</span>
+                  <strong id="estimated-value">R$ 0,00</strong>
+                </div>
+              </div>
+
+              <section class="breakdown" aria-label="Faixas de peso">
+                <h3>Faixas de peso</h3>
+                <div id="weight-bands" class="band-list"></div>
+              </section>
+
+              <section class="breakdown" aria-label="Romaneio">
+                <h3>Romaneio simples</h3>
+                <div id="report-list" class="report-list"></div>
+              </section>
+
+              <p id="report-estimate-note" class="estimate-note">
+                Valores calculados como estimativas.
+              </p>
+
+              <p class="premium-note">
+                Com o plano premium, esta pesagem poderia ficar salva no histórico do lote,
+                vinculada à propriedade, ao pasto e aos animais individuais.
+              </p>
+            </aside>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="property" aria-labelledby="property-tab">
+          <div class="workspace single">
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Gestão futura</p>
+                  <h2>Configuração da propriedade</h2>
+                </div>
+                <span class="status-pill neutral">Opcional</span>
+              </div>
+
+              <div class="property-grid">
+                <label>
+                  Nome da propriedade
+                  <input id="property-name" type="text" value="" placeholder="Opcional">
+                </label>
+                <label class="toggle-row">
+                  <input id="use-paddocks" type="checkbox">
+                  <span>Dividir esta propriedade em pastos/piquetes</span>
+                </label>
+              </div>
+
+              <div id="paddock-config" class="paddock-config hidden">
+                <div class="table-toolbar">
+                  <h3>Pastos</h3>
+                  <button class="icon-button" id="add-paddock" type="button" aria-label="Adicionar pasto">+</button>
+                </div>
+                <div class="animal-table-wrap">
+                  <table class="animal-table">
+                    <thead>
+                      <tr>
+                        <th>Nome do pasto</th>
+                        <th>Lotação máxima</th>
+                        <th>Uso atual</th>
+                        <th>Situação</th>
+                        <th aria-label="Ações"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="paddock-rows"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div id="no-paddock-message" class="empty-state">
+                A propriedade pode funcionar sem pastos cadastrados. Nesse caso,
+                os animais e lotes ficam vinculados diretamente à propriedade.
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="premium" aria-labelledby="premium-tab">
+          <div class="workspace single">
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Caminho pago</p>
+                  <h2>Gestão completa sem pressão</h2>
+                </div>
+                <span class="status-pill">Em planejamento</span>
+              </div>
+              <div class="premium-grid">
+                <div>
+                  <h3>Cadastro e histórico</h3>
+                  <p>Animais individuais, lotes, pesagens anteriores, GMD e evolução de valor.</p>
+                </div>
+                <div>
+                  <h3>Manejo</h3>
+                  <p>Vacinação, reprodução, nascimento, castração, mortalidade e observações por animal.</p>
+                </div>
+                <div>
+                  <h3>Propriedades e pastos</h3>
+                  <p>Várias propriedades, pastos opcionais, movimentações e alerta de lotação máxima.</p>
+                </div>
+                <div>
+                  <h3>Equipe e relatórios</h3>
+                  <p>Permissões para funcionários, despesas, vendas, compras, PDFs e exportações.</p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
