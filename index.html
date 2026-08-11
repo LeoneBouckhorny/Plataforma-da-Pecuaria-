@@ -30,7 +30,10 @@
                   <p class="eyebrow">Plano gratuito</p>
                   <h2>Pesagem rápida</h2>
                 </div>
-                <span class="status-pill">Sem cadastro definitivo</span>
+                <div class="heading-actions">
+                  <span class="status-pill">Sem cadastro definitivo</span>
+                  <span id="save-status" class="save-status saving" role="status" aria-live="polite">Salvando...</span>
+                </div>
               </div>
 
               <div id="demo-banner" class="demo-banner hidden" role="status">
@@ -74,6 +77,7 @@
               </div>
 
               <div id="global-message" class="app-message" role="status"></div>
+              <div id="persistence-message" class="app-message persistence-message hidden" role="status"></div>
 
               <div class="table-toolbar">
                 <h3>Animais</h3>
@@ -245,6 +249,10 @@
       </main>
     </div>
 
+    <script src="src/calculator-core.js"></script>
+    <script src="src/local-data-core.js"></script>
+    <script src="src/local-database.js"></script>
+    <script src="src/draft-repository.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

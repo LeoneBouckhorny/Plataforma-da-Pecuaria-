@@ -1,15 +1,14 @@
 # Plataforma da Pecuaria
 
-Primeira base do projeto para validar uma plataforma simples de apoio ao produtor rural.
-
-O foco inicial e a porta de entrada gratuita e direta: uma calculadora de pesagem que ajuda o produtor a estimar rapidamente peso, arrobas e valor do gado, sem exigir que ele adote um sistema completo logo no primeiro contato.
+Base inicial da Plataforma da Pecuaria, com foco em uma porta de entrada simples para o produtor rural: uma calculadora de pesagem que estima peso, arrobas e valor do lote.
 
 ## Direcao do produto
 
 - Resolver uma dor imediata antes de vender gestao.
 - Manter o plano gratuito util de verdade.
 - Apresentar o plano pago sem pressao.
-- Funcionar bem no celular e, no futuro, tambem offline com sincronizacao.
+- Funcionar bem no celular.
+- Construir a base local-first antes de qualquer sincronizacao futura.
 - Usar benchmarks de mercado apenas para entender fluxos e superar a experiencia, sem copiar produto.
 
 ## MVP gratuito
@@ -19,7 +18,23 @@ O foco inicial e a porta de entrada gratuita e direta: uma calculadora de pesage
 - Rendimento de carcaca configuravel.
 - Valor estimado do lote.
 - Separacao visual por faixas de peso.
-- Romaneio simples para impressao/exportacao.
+- Romaneio simples para impressao.
+- Rascunho da pesagem atual preservado neste dispositivo com IndexedDB.
+
+## Persistencia local
+
+A aplicacao preserva uma pesagem em andamento no mesmo dispositivo. Ao fechar ou recarregar a pagina, o rascunho real mais recente pode ser restaurado.
+
+Essa persistencia local nao significa:
+
+- PWA;
+- cache offline completo da aplicacao;
+- sincronizacao em nuvem;
+- login;
+- historico completo de pesagens;
+- backup remoto.
+
+Dados de demonstracao nao sao persistidos. O botao `Limpar pesagem` remove o rascunho local `calculator-current` e restaura a tela vazia com os parametros padrao.
 
 ## Gestao premium futura
 
@@ -32,22 +47,36 @@ O foco inicial e a porta de entrada gratuita e direta: uma calculadora de pesage
 - Movimentacao entre propriedades e pastos.
 - Despesas e permissoes para funcionarios.
 
-## Como abrir
+## Como abrir para desenvolvimento
 
-Abra [index.html](./index.html) no navegador.
+Para QA da persistencia local, prefira servir o projeto via servidor local ou Live Preview. Exemplo:
 
-A aplicação inicia sem animais cadastrados. Use `Carregar dados de exemplo` apenas para testar o fluxo com dados fictícios, ou use o botão `+` para montar uma pesagem real manualmente.
+```powershell
+python -m http.server 8026 --bind 127.0.0.1
+```
 
-## Observações da Sprint 000
+Depois acesse:
 
-- Não há banco de dados, login, sincronização ou persistência local nesta etapa.
-- A calculadora usa dados apenas em memória.
-- O botão `Limpar pesagem` remove todos os animais informados na pesagem atual.
+```text
+http://127.0.0.1:8026/index.html
+```
+
+Abrir o HTML diretamente pode funcionar para leitura visual, mas o teste de IndexedDB deve ser feito em um contexto de navegador servido localmente.
 
 ## Testes
 
-Execute:
+Execute a checagem de sintaxe:
 
 ```powershell
-node --test tests/calculator-core.test.js
+node --check app.js
+node --check src/calculator-core.js
+node --check src/local-data-core.js
+node --check src/local-database.js
+node --check src/draft-repository.js
+```
+
+Execute os testes automatizados:
+
+```powershell
+node --test tests/calculator-core.test.js tests/local-data-core.test.js
 ```

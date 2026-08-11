@@ -1,264 +1,3 @@
-const CalculatorCore = (() => {
-  const CATEGORIES = ["Boi", "Vaca", "Novilha", "Bezerro", "Bezerra"];
-  const DEFAULT_SETTINGS = {
-    arrobaPrice: "300,00",
-    yieldRate: "50",
-    lightLimit: "300",
-    mediumLimit: "420",
-  };
-
-  function createId(prefix) {
-    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-      return `${prefix}-${crypto.randomUUID()}`;
-    }
-    return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  }
-
-  function localDateInputValue(date = new Date()) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }
-
-  function parseDecimal(rawValue) {
-    const raw = String(rawValue ?? "").trim();
-
-    if (!raw) {
-      return { value: 0, valid: false, reason: "empty" };
-    }
-
-    let normalized = raw.replace(/\s/g, "");
-    const hasComma = normalized.includes(",");
-    const hasDot = normalized.includes(".");
-
-    if (hasComma && hasDot) {
-      const lastComma = normalized.lastIndexOf(",");
-      const lastDot = normalized.lastIndexOf(".");
-
-      if (lastComma > lastDot) {
-        normalized = normalized.replace(/\./g, "").replace(",", ".");
-      } else {
-        normalized = normalized.replace(/,/g, "");
-      }
-    } else if (hasComma) {
-      normalized = normalized.replace(",", ".");
-    }
-
-    if (!/^-?\d+(\.\d+)?$/.test(normalized)) {
-      return { value: 0, valid: false, reason: "not_numeric" };
-    }
-
-    const value = Number(normalized);
-
-    if (!Number.isFinite(value)) {
-      return { value: 0, valid: false, reason: "not_numeric" };
-    }
-
-    return { value, valid: true, reason: null };
-  }
-
-  function normalizeTag(tag) {
-    return String(tag ?? "").trim().toUpperCase();
-  }
-
-  function getWeightBand(weight, lightLimit, mediumLimit) {
-    if (weight <= lightLimit) return "Leve";
-    if (weight <= mediumLimit) return "Médio";
-    return "Pesado";
-  }
-
-  function validateSettings(settings) {
-    const errors = {};
-    const price = parseDecimal(settings.arrobaPrice);
-    const yieldRate = parseDecimal(settings.yieldRate);
-    const lightLimit = parseDecimal(settings.lightLimit);
-    const mediumLimit = parseDecimal(settings.mediumLimit);
-
-    if (!price.valid) {
-      errors.arrobaPrice = price.reason === "empty"
-        ? "Informe o preço por arroba."
-        : "Use apenas números no preço por arroba.";
-    } else if (price.value < 0) {
-      errors.arrobaPrice = "O preço por arroba não pode ser negativo.";
-    }
-
-    if (!yieldRate.valid) {
-      errors.yieldRate = yieldRate.reason === "empty"
-        ? "Informe o rendimento."
-        : "Use apenas números no rendimento.";
-    } else if (yieldRate.value < 0) {
-      errors.yieldRate = "O rendimento não pode ser abaixo de 0%.";
-    } else if (yieldRate.value > 100) {
-      errors.yieldRate = "O rendimento não pode passar de 100%.";
-    }
-
-    if (!lightLimit.valid) {
-      errors.lightLimit = lightLimit.reason === "empty"
-        ? "Informe a faixa leve."
-        : "Use apenas números na faixa leve.";
-    } else if (lightLimit.value < 0) {
-      errors.lightLimit = "A faixa leve não pode ser negativa.";
-    }
-
-    if (!mediumLimit.valid) {
-      errors.mediumLimit = mediumLimit.reason === "empty"
-        ? "Informe a faixa média."
-        : "Use apenas números na faixa média.";
-    } else if (mediumLimit.value < 0) {
-      errors.mediumLimit = "A faixa média não pode ser negativa.";
-    } else if (lightLimit.valid && mediumLimit.value < lightLimit.value) {
-      errors.mediumLimit = "A faixa média deve ser maior ou igual à faixa leve.";
-    }
-
-    return {
-      values: {
-        arrobaPrice: price.value,
-        yieldRate: yieldRate.value,
-        lightLimit: lightLimit.value,
-        mediumLimit: mediumLimit.value,
-      },
-      errors,
-      priceValid: !errors.arrobaPrice,
-      yieldValid: !errors.yieldRate,
-      bandsValid: !errors.lightLimit && !errors.mediumLimit,
-      valid: Object.keys(errors).length === 0,
-    };
-  }
-
-  function validateAnimals(animals) {
-    const tagCounts = new Map();
-
-    animals.forEach((animal) => {
-      const tag = normalizeTag(animal.tag);
-      if (tag) {
-        tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
-      }
-    });
-
-    return animals.map((animal) => {
-      const errors = {};
-      const warnings = {};
-      const tag = normalizeTag(animal.tag);
-      const weight = parseDecimal(animal.weight);
-
-      if (!tag) {
-        warnings.tag = "Brinco vazio: o animal será listado como sem brinco.";
-      } else if (tagCounts.get(tag) > 1) {
-        errors.tag = "Brinco duplicado nesta pesagem.";
-      }
-
-      if (!weight.valid) {
-        errors.weight = weight.reason === "empty"
-          ? "Informe o peso."
-          : "Use apenas números no peso.";
-      } else if (weight.value === 0) {
-        errors.weight = "O peso deve ser maior que zero.";
-      } else if (weight.value < 0) {
-        errors.weight = "O peso não pode ser negativo.";
-      }
-
-      return {
-        id: animal.id,
-        tag: String(animal.tag ?? "").trim(),
-        normalizedTag: tag,
-        weight: weight.value,
-        category: CATEGORIES.includes(animal.category) ? animal.category : CATEGORIES[0],
-        note: String(animal.note ?? "").trim(),
-        errors,
-        warnings,
-        valid: Object.keys(errors).length === 0,
-      };
-    });
-  }
-
-  function calculateSummary(settings, animals) {
-    const settingState = validateSettings(settings);
-    const animalStates = validateAnimals(animals);
-    const validAnimals = animalStates.filter((animal) => animal.valid);
-    const totalAnimals = validAnimals.length;
-    const totalWeight = validAnimals.reduce((sum, animal) => sum + animal.weight, 0);
-    const averageWeight = totalAnimals ? totalWeight / totalAnimals : 0;
-    const totalArrobas = settingState.yieldValid
-      ? (totalWeight * (settingState.values.yieldRate / 100)) / 15
-      : null;
-    const estimatedValue = settingState.yieldValid && settingState.priceValid
-      ? totalArrobas * settingState.values.arrobaPrice
-      : null;
-    const bandCounts = settingState.bandsValid ? { Leve: 0, Médio: 0, Pesado: 0 } : null;
-    const reportAnimals = validAnimals.map((animal) => {
-      const band = settingState.bandsValid
-        ? getWeightBand(animal.weight, settingState.values.lightLimit, settingState.values.mediumLimit)
-        : null;
-      const arrobas = settingState.yieldValid
-        ? (animal.weight * (settingState.values.yieldRate / 100)) / 15
-        : null;
-
-      if (bandCounts && band) {
-        bandCounts[band] += 1;
-      }
-
-      return { ...animal, band, arrobas };
-    });
-
-    const generalMessages = [];
-    if (animals.length === 0) {
-      generalMessages.push("Adicione pelo menos um animal para calcular a pesagem.");
-    } else if (totalAnimals === 0) {
-      generalMessages.push("Nenhum animal válido para calcular. Corrija os campos destacados.");
-    }
-
-    if (!settingState.yieldValid) {
-      generalMessages.push("Corrija o rendimento para calcular arrobas e valor.");
-    }
-
-    if (settingState.yieldValid && !settingState.priceValid) {
-      generalMessages.push("Corrija o preço por arroba para calcular o valor estimado.");
-    } else if (!settingState.yieldValid && !settingState.priceValid) {
-      generalMessages.push("Corrija o preço por arroba antes de estimar o valor.");
-    }
-
-    if (!settingState.bandsValid) {
-      generalMessages.push("Corrija as faixas de peso para classificar os animais.");
-    }
-
-    return {
-      settings: settingState,
-      animals: animalStates,
-      validAnimals,
-      reportAnimals,
-      totalAnimals,
-      totalWeight,
-      averageWeight,
-      totalArrobas,
-      estimatedValue,
-      bandCounts,
-      generalMessages,
-    };
-  }
-
-  return {
-    CATEGORIES,
-    DEFAULT_SETTINGS,
-    createId,
-    localDateInputValue,
-    parseDecimal,
-    normalizeTag,
-    getWeightBand,
-    validateSettings,
-    validateAnimals,
-    calculateSummary,
-  };
-})();
-
-if (typeof module !== "undefined") {
-  module.exports = CalculatorCore;
-}
-
-if (typeof window !== "undefined") {
-  window.CalculatorCore = CalculatorCore;
-}
-
 if (typeof document !== "undefined") {
   const currencyFormatter = new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -269,15 +8,24 @@ if (typeof document !== "undefined") {
     maximumFractionDigits: 1,
   });
 
+  const SAVE_DEBOUNCE_MS = 500;
+  const CalculatorCore = window.CalculatorCore;
+  const LocalDataCore = window.LocalDataCore;
+  const DraftRepository = window.DraftRepository;
+
   const state = {
     animals: [],
     paddocks: [],
     demoMode: false,
+    saveTimer: null,
+    restoring: false,
+    clearing: false,
+    repository: null,
   };
 
   const sampleAnimals = [
-    { tag: "EX-001", weight: "450", category: "Boi", note: "Exemplo de demonstração" },
-    { tag: "EX-002", weight: "510", category: "Boi", note: "Exemplo de demonstração" },
+    { tag: "EX-001", weight: "450", category: "Boi", note: "Exemplo de demonstração", demo: true },
+    { tag: "EX-002", weight: "510", category: "Boi", note: "Exemplo de demonstração", demo: true },
   ];
 
   const inputs = {
@@ -295,6 +43,8 @@ if (typeof document !== "undefined") {
     animalRows: document.querySelector("#animal-rows"),
     paddockRows: document.querySelector("#paddock-rows"),
     globalMessage: document.querySelector("#global-message"),
+    persistenceMessage: document.querySelector("#persistence-message"),
+    saveStatus: document.querySelector("#save-status"),
     demoBanner: document.querySelector("#demo-banner"),
     animalEmptyMessage: document.querySelector("#animal-empty-message"),
     totalAnimals: document.querySelector("#total-animals"),
@@ -349,87 +99,70 @@ if (typeof document !== "undefined") {
     return value === null ? "Indisponível" : currencyFormatter.format(value);
   }
 
-  function createAnimalRow(animal, index) {
-    const row = createElement("tr", { data: { animalId: animal.id } });
-    const tagCell = createElement("td");
-    const weightCell = createElement("td");
-    const categoryCell = createElement("td");
-    const noteCell = createElement("td");
-    const actionCell = createElement("td");
-    const tagInput = createElement("input", {
-      value: animal.tag,
-      ariaLabel: `Brinco do animal ${index + 1}`,
-      data: { field: "tag" },
-    });
-    const tagMessage = createElement("div", { className: "field-message", data: { message: "tag" } });
-    const weightInput = createElement("input", {
-      value: animal.weight,
-      inputMode: "decimal",
-      ariaLabel: `Peso do animal ${index + 1}`,
-      data: { field: "weight" },
-    });
-    const weightMessage = createElement("div", { className: "field-message", data: { message: "weight" } });
-    const categorySelect = createElement("select", {
-      ariaLabel: `Categoria do animal ${index + 1}`,
-      data: { field: "category" },
-    });
-    const noteInput = createElement("input", {
-      value: animal.note,
-      ariaLabel: `Observação do animal ${index + 1}`,
-      data: { field: "note" },
-    });
-    const removeButton = createElement("button", {
-      className: "remove-button",
-      text: "x",
-      type: "button",
-      ariaLabel: `Remover animal ${index + 1}`,
-    });
+  function setSaveStatus(status) {
+    const messages = {
+      saving: "Salvando...",
+      saved: "Salvo neste dispositivo",
+      failed: "Não foi possível salvar neste dispositivo",
+    };
 
-    CalculatorCore.CATEGORIES.forEach((category) => {
-      const option = createElement("option", { text: category, value: category });
-      option.value = category;
-      option.selected = animal.category === category;
-      categorySelect.appendChild(option);
-    });
-
-    tagInput.addEventListener("input", () => {
-      animal.tag = tagInput.value;
-      renderResults();
-    });
-    weightInput.addEventListener("input", () => {
-      animal.weight = weightInput.value;
-      renderResults();
-    });
-    categorySelect.addEventListener("change", () => {
-      animal.category = categorySelect.value;
-      renderResults();
-    });
-    noteInput.addEventListener("input", () => {
-      animal.note = noteInput.value;
-      renderResults();
-    });
-    removeButton.addEventListener("click", () => {
-      state.animals = state.animals.filter((item) => item.id !== animal.id);
-      renderAnimals();
-      renderResults();
-    });
-
-    tagCell.append(tagInput, tagMessage);
-    weightCell.append(weightInput, weightMessage);
-    categoryCell.appendChild(categorySelect);
-    noteCell.appendChild(noteInput);
-    actionCell.appendChild(removeButton);
-    row.append(tagCell, weightCell, categoryCell, noteCell, actionCell);
-
-    return row;
+    elements.saveStatus.textContent = messages[status] || "";
+    elements.saveStatus.className = `save-status ${status || ""}`.trim();
   }
 
-  function renderAnimals() {
-    clearChildren(elements.animalRows);
-    state.animals.forEach((animal, index) => {
-      elements.animalRows.appendChild(createAnimalRow(animal, index));
-    });
-    elements.animalEmptyMessage.classList.toggle("hidden", state.animals.length > 0);
+  function setPersistenceWarning(message) {
+    elements.persistenceMessage.textContent = message || "";
+    elements.persistenceMessage.classList.toggle("hidden", !message);
+  }
+
+  function getSettingsInput() {
+    return {
+      arrobaPrice: inputs.arrobaPrice.value,
+      yieldRate: inputs.yieldRate.value,
+      lightLimit: inputs.lightLimit.value,
+      mediumLimit: inputs.mediumLimit.value,
+    };
+  }
+
+  function getDraftSource() {
+    return {
+      weighingName: inputs.weighingName.value,
+      weighingDate: inputs.weighingDate.value,
+      propertyName: inputs.propertyName.value,
+      settings: getSettingsInput(),
+      animals: state.animals,
+      usePaddocks: inputs.usePaddocks.checked,
+      paddocks: state.paddocks,
+      demoMode: state.demoMode,
+    };
+  }
+
+  async function saveDraftNow() {
+    if (state.restoring || state.clearing || state.demoMode) {
+      return;
+    }
+
+    const result = await state.repository.saveDraft(getDraftSource());
+    if (result.status === "saved") {
+      setSaveStatus("saved");
+      setPersistenceWarning("");
+      return;
+    }
+
+    if (result.status === "failed") {
+      setSaveStatus("failed");
+      setPersistenceWarning("A pesagem continua funcionando, mas não foi possível preservar os dados neste dispositivo.");
+    }
+  }
+
+  function scheduleDraftSave() {
+    if (state.restoring || state.clearing || state.demoMode) {
+      return;
+    }
+
+    window.clearTimeout(state.saveTimer);
+    setSaveStatus("saving");
+    state.saveTimer = window.setTimeout(saveDraftNow, SAVE_DEBOUNCE_MS);
   }
 
   function setFieldMessage(input, messageElement, message, type) {
@@ -452,15 +185,6 @@ if (typeof document !== "undefined") {
     } else {
       input.removeAttribute("aria-invalid");
     }
-  }
-
-  function getSettingsInput() {
-    return {
-      arrobaPrice: inputs.arrobaPrice.value,
-      yieldRate: inputs.yieldRate.value,
-      lightLimit: inputs.lightLimit.value,
-      mediumLimit: inputs.mediumLimit.value,
-    };
   }
 
   function renderMessages(summary) {
@@ -589,6 +313,94 @@ if (typeof document !== "undefined") {
     return summary;
   }
 
+  function createAnimalRow(animal, index) {
+    const row = createElement("tr", { data: { animalId: animal.id } });
+    const tagCell = createElement("td");
+    const weightCell = createElement("td");
+    const categoryCell = createElement("td");
+    const noteCell = createElement("td");
+    const actionCell = createElement("td");
+    const tagInput = createElement("input", {
+      value: animal.tag,
+      ariaLabel: `Brinco do animal ${index + 1}`,
+      data: { field: "tag" },
+    });
+    const tagMessage = createElement("div", { className: "field-message", data: { message: "tag" } });
+    const weightInput = createElement("input", {
+      value: animal.weight,
+      inputMode: "decimal",
+      ariaLabel: `Peso do animal ${index + 1}`,
+      data: { field: "weight" },
+    });
+    const weightMessage = createElement("div", { className: "field-message", data: { message: "weight" } });
+    const categorySelect = createElement("select", {
+      ariaLabel: `Categoria do animal ${index + 1}`,
+      data: { field: "category" },
+    });
+    const noteInput = createElement("input", {
+      value: animal.note,
+      ariaLabel: `Observação do animal ${index + 1}`,
+      data: { field: "note" },
+    });
+    const removeButton = createElement("button", {
+      className: "remove-button",
+      text: "x",
+      type: "button",
+      ariaLabel: `Remover animal ${index + 1}`,
+    });
+
+    CalculatorCore.CATEGORIES.forEach((category) => {
+      const option = createElement("option", { text: category, value: category });
+      option.value = category;
+      option.selected = animal.category === category;
+      categorySelect.appendChild(option);
+    });
+
+    tagInput.addEventListener("input", () => {
+      animal.tag = tagInput.value;
+      renderResults();
+      scheduleDraftSave();
+    });
+    weightInput.addEventListener("input", () => {
+      animal.weight = weightInput.value;
+      renderResults();
+      scheduleDraftSave();
+    });
+    categorySelect.addEventListener("change", () => {
+      animal.category = categorySelect.value;
+      renderResults();
+      scheduleDraftSave();
+    });
+    noteInput.addEventListener("input", () => {
+      animal.note = noteInput.value;
+      renderResults();
+      scheduleDraftSave();
+    });
+    removeButton.addEventListener("click", () => {
+      state.animals = state.animals.filter((item) => item.id !== animal.id);
+      renderAnimals();
+      renderResults();
+      scheduleDraftSave();
+    });
+
+    tagCell.append(tagInput, tagMessage);
+    weightCell.append(weightInput, weightMessage);
+    categoryCell.appendChild(categorySelect);
+    noteCell.appendChild(noteInput);
+    actionCell.appendChild(removeButton);
+    row.append(tagCell, weightCell, categoryCell, noteCell, actionCell);
+
+    return row;
+  }
+
+  function renderAnimals() {
+    clearChildren(elements.animalRows);
+    state.animals.forEach((animal, index) => {
+      elements.animalRows.appendChild(createAnimalRow(animal, index));
+    });
+    elements.animalEmptyMessage.classList.toggle("hidden", state.animals.length > 0);
+  }
+
   function createPaddockRow(paddock, index) {
     const row = createElement("tr", { data: { paddockId: paddock.id } });
     const nameCell = createElement("td");
@@ -599,16 +411,19 @@ if (typeof document !== "undefined") {
     const nameInput = createElement("input", {
       value: paddock.name,
       ariaLabel: `Nome do pasto ${index + 1}`,
+      data: { field: "paddockName" },
     });
     const maxInput = createElement("input", {
       value: paddock.max,
       inputMode: "decimal",
       ariaLabel: `Lotação máxima do pasto ${index + 1}`,
+      data: { field: "paddockMax" },
     });
     const currentInput = createElement("input", {
       value: paddock.current,
       inputMode: "decimal",
       ariaLabel: `Uso atual do pasto ${index + 1}`,
+      data: { field: "paddockCurrent" },
     });
     const status = createElement("span");
     const removeButton = createElement("button", {
@@ -633,18 +448,22 @@ if (typeof document !== "undefined") {
 
     nameInput.addEventListener("input", () => {
       paddock.name = nameInput.value;
+      scheduleDraftSave();
     });
     maxInput.addEventListener("input", () => {
       paddock.max = maxInput.value;
       updateStatus();
+      scheduleDraftSave();
     });
     currentInput.addEventListener("input", () => {
       paddock.current = currentInput.value;
       updateStatus();
+      scheduleDraftSave();
     });
     removeButton.addEventListener("click", () => {
       state.paddocks = state.paddocks.filter((item) => item.id !== paddock.id);
       renderPaddocks();
+      scheduleDraftSave();
     });
 
     nameCell.appendChild(nameInput);
@@ -684,36 +503,86 @@ if (typeof document !== "undefined") {
 
   function addAnimal(animal = {}) {
     state.animals.push({
-      id: CalculatorCore.createId("animal"),
+      id: animal.id || CalculatorCore.createId("animal"),
       tag: animal.tag || "",
       weight: animal.weight || "",
-      category: animal.category || "Boi",
+      category: CalculatorCore.normalizeCategory(animal.category),
       note: animal.note || "",
+      demo: Boolean(animal.demo),
     });
     renderAnimals();
     renderResults();
+    scheduleDraftSave();
   }
 
-  function restoreDefaultCalculatorFields() {
+  function addPaddock(paddock = {}) {
+    state.paddocks.push({
+      id: paddock.id || CalculatorCore.createId("paddock"),
+      name: paddock.name || "",
+      max: paddock.max || "",
+      current: paddock.current || "",
+      demo: Boolean(paddock.demo),
+    });
+    renderPaddocks();
+    scheduleDraftSave();
+  }
+
+  function applyDraftData(data) {
+    const draftData = LocalDataCore.normalizeDraftData(data);
+    state.animals = draftData.animals.map((animal) => ({ ...animal, demo: false }));
+    state.paddocks = draftData.paddocks.map((paddock) => ({ ...paddock, demo: false }));
+    state.demoMode = false;
+    inputs.weighingName.value = draftData.weighingName;
+    inputs.weighingDate.value = draftData.weighingDate;
+    inputs.propertyName.value = draftData.propertyName;
+    inputs.arrobaPrice.value = draftData.settings.arrobaPrice;
+    inputs.yieldRate.value = draftData.settings.yieldRate;
+    inputs.lightLimit.value = draftData.settings.lightLimit;
+    inputs.mediumLimit.value = draftData.settings.mediumLimit;
+    inputs.usePaddocks.checked = draftData.usePaddocks;
+    renderAnimals();
+    renderPaddocks();
+    syncPaddockVisibility();
+    renderResults();
+  }
+
+  function applyEmptyState() {
+    state.animals = [];
+    state.paddocks = [];
+    state.demoMode = false;
+    inputs.weighingName.value = "";
+    inputs.propertyName.value = "";
+    inputs.usePaddocks.checked = false;
     inputs.arrobaPrice.value = CalculatorCore.DEFAULT_SETTINGS.arrobaPrice;
     inputs.yieldRate.value = CalculatorCore.DEFAULT_SETTINGS.yieldRate;
     inputs.lightLimit.value = CalculatorCore.DEFAULT_SETTINGS.lightLimit;
     inputs.mediumLimit.value = CalculatorCore.DEFAULT_SETTINGS.mediumLimit;
     inputs.weighingDate.value = CalculatorCore.localDateInputValue();
-  }
-
-  function clearWeighing() {
-    state.animals = [];
-    state.paddocks = state.paddocks.filter((paddock) => !paddock.demo);
-    state.demoMode = false;
-    inputs.weighingName.value = "";
-    restoreDefaultCalculatorFields();
     renderAnimals();
     renderPaddocks();
+    syncPaddockVisibility();
     renderResults();
   }
 
+  async function clearWeighing() {
+    state.clearing = true;
+    window.clearTimeout(state.saveTimer);
+    applyEmptyState();
+
+    const result = await state.repository.deleteDraft();
+    if (result.status === "deleted") {
+      setSaveStatus("saved");
+      setPersistenceWarning("");
+    } else {
+      setSaveStatus("failed");
+      setPersistenceWarning("A pesagem foi limpa da tela, mas não foi possível confirmar a exclusão no dispositivo.");
+    }
+
+    state.clearing = false;
+  }
+
   function loadDemoData() {
+    window.clearTimeout(state.saveTimer);
     state.animals = sampleAnimals.map((animal) => ({
       id: CalculatorCore.createId("animal"),
       ...animal,
@@ -728,42 +597,81 @@ if (typeof document !== "undefined") {
     renderResults();
   }
 
-  function addPaddock(paddock = {}) {
-    state.paddocks.push({
-      id: CalculatorCore.createId("paddock"),
-      name: paddock.name || "",
-      max: paddock.max || "",
-      current: paddock.current || "",
-      demo: Boolean(paddock.demo),
-    });
-    renderPaddocks();
+  async function restoreDraft() {
+    const result = await state.repository.loadDraft();
+
+    if (result.status === "loaded") {
+      applyDraftData(result.draft.data);
+      setSaveStatus("saved");
+      return;
+    }
+
+    if (result.status === "empty") {
+      applyEmptyState();
+      setSaveStatus("saved");
+      return;
+    }
+
+    if (result.status === "incompatible") {
+      applyEmptyState();
+      setSaveStatus("failed");
+      setPersistenceWarning("Existe um rascunho local incompatível com esta versão. A calculadora continua disponível.");
+      return;
+    }
+
+    applyEmptyState();
+    setSaveStatus("failed");
+    setPersistenceWarning("A calculadora continua funcionando, mas não foi possível acessar o salvamento neste dispositivo.");
   }
 
-  document.querySelectorAll(".tab-button").forEach((button) => {
-    button.addEventListener("click", () => setActiveTab(button.dataset.tab));
-  });
+  function bindEvents() {
+    document.querySelectorAll(".tab-button").forEach((button) => {
+      button.addEventListener("click", () => setActiveTab(button.dataset.tab));
+    });
 
-  document.querySelector("#add-animal").addEventListener("click", () => addAnimal());
-  document.querySelector("#clear-weighing").addEventListener("click", clearWeighing);
-  document.querySelector("#load-demo").addEventListener("click", loadDemoData);
-  document.querySelector("#add-paddock").addEventListener("click", () => addPaddock());
-  document.querySelector("#print-report").addEventListener("click", () => window.print());
+    document.querySelector("#add-animal").addEventListener("click", () => addAnimal());
+    document.querySelector("#clear-weighing").addEventListener("click", clearWeighing);
+    document.querySelector("#load-demo").addEventListener("click", loadDemoData);
+    document.querySelector("#add-paddock").addEventListener("click", () => addPaddock());
+    document.querySelector("#print-report").addEventListener("click", () => window.print());
 
-  [inputs.weighingName, inputs.weighingDate, inputs.propertyName].forEach((input) => {
-    input.addEventListener("input", renderResults);
-    input.addEventListener("change", renderResults);
-  });
+    [inputs.weighingName, inputs.weighingDate, inputs.propertyName].forEach((input) => {
+      input.addEventListener("input", () => {
+        renderResults();
+        scheduleDraftSave();
+      });
+      input.addEventListener("change", () => {
+        renderResults();
+        scheduleDraftSave();
+      });
+    });
 
-  [inputs.arrobaPrice, inputs.yieldRate, inputs.lightLimit, inputs.mediumLimit].forEach((input) => {
-    input.addEventListener("input", renderResults);
-  });
+    [inputs.arrobaPrice, inputs.yieldRate, inputs.lightLimit, inputs.mediumLimit].forEach((input) => {
+      input.addEventListener("input", () => {
+        renderResults();
+        scheduleDraftSave();
+      });
+    });
 
-  inputs.usePaddocks.addEventListener("change", syncPaddockVisibility);
+    inputs.usePaddocks.addEventListener("change", () => {
+      syncPaddockVisibility();
+      scheduleDraftSave();
+    });
+  }
 
-  restoreDefaultCalculatorFields();
-  renderAnimals();
-  renderPaddocks();
-  syncPaddockVisibility();
-  setActiveTab("calculator");
-  renderResults();
+  async function init() {
+    if (!CalculatorCore || !LocalDataCore || !DraftRepository) {
+      throw new Error("Módulos locais obrigatórios não foram carregados.");
+    }
+
+    state.repository = DraftRepository.createDraftRepository();
+    state.restoring = true;
+    bindEvents();
+    setActiveTab("calculator");
+    setSaveStatus("saving");
+    await restoreDraft();
+    state.restoring = false;
+  }
+
+  init();
 }

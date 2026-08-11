@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const core = require("../app.js");
+const core = require("../src/calculator-core.js");
 
 const validSettings = {
   arrobaPrice: "300,00",
