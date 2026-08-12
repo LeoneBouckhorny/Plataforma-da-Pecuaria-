@@ -2,6 +2,12 @@
 
 Este backlog registra ideias aprovadas para acompanhamento futuro. Os itens abaixo nao foram implementados na Sprint 001.
 
+## Observacao Comercial Pos-Sprint 002
+
+- O historico de pesagens podera ser recurso Premium no modelo comercial futuro.
+- Durante MVP, beta, validacao e QA, o historico local pode permanecer liberado para reduzir atrito e coletar feedback real.
+- Nenhum paywall deve ser implementado sem decisao explicita do CTO e do CEO.
+
 ## Epica Futura: Gestao de Arrendamentos e Parcerias
 
 Objetivo futuro: permitir que o produtor registre corretamente relacoes entre terra, posse fisica do animal e participacao economica.

@@ -18,8 +18,10 @@ Base inicial da Plataforma da Pecuaria, com foco em uma porta de entrada simples
 - Rendimento de carcaca configuravel.
 - Valor estimado do lote.
 - Separacao visual por faixas de peso.
-- Romaneio simples para impressao.
+- Romaneio V1 para impressao.
+- Exportacao CSV com UTF-8 BOM e separador ponto e virgula.
 - Rascunho da pesagem atual preservado neste dispositivo com IndexedDB.
+- Historico local de pesagens finalizadas neste dispositivo.
 
 ## Persistencia local
 
@@ -31,10 +33,11 @@ Essa persistencia local nao significa:
 - cache offline completo da aplicacao;
 - sincronizacao em nuvem;
 - login;
-- historico completo de pesagens;
 - backup remoto.
 
 Dados de demonstracao nao sao persistidos. O botao `Limpar pesagem` remove o rascunho local `calculator-current` e restaura a tela vazia com os parametros padrao.
+
+Na Sprint 002, a aplicacao tambem salva sessoes finalizadas em historico local. Esse historico usa snapshots e nao muda quando o rascunho atual e editado depois. O historico ainda fica somente no dispositivo e nao substitui backup, conta ou sincronizacao.
 
 ## Gestao premium futura
 
@@ -73,10 +76,13 @@ node --check src/calculator-core.js
 node --check src/local-data-core.js
 node --check src/local-database.js
 node --check src/draft-repository.js
+node --check src/weighing-history-core.js
+node --check src/weighing-repository.js
+node --check src/csv-export-core.js
 ```
 
 Execute os testes automatizados:
 
 ```powershell
-node --test tests/calculator-core.test.js tests/local-data-core.test.js
+node --test tests/calculator-core.test.js tests/local-data-core.test.js tests/draft-repository.test.js tests/local-database-migration.test.js tests/weighing-history-core.test.js tests/csv-export-core.test.js tests/weighing-repository.test.js
 ```
