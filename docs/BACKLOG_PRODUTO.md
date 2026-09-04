@@ -8,6 +8,16 @@ Este backlog registra ideias aprovadas para acompanhamento futuro. Os itens abai
 - Durante MVP, beta, validacao e QA, o historico local pode permanecer liberado para reduzir atrito e coletar feedback real.
 - Nenhum paywall deve ser implementado sem decisao explicita do CTO e do CEO.
 
+## Backlog Tecnico Pos-Sprint 003
+
+- UX de nova versao disponivel para Service Worker.
+- Armazenamento persistente quando o navegador oferecer suporte.
+- Estrategia de backup local/remoto.
+- Sincronizacao futura entre dispositivos.
+- Manual especifico para instalacao em iOS, se necessario.
+- Telemetria futura com privacidade e decisao explicita de produto.
+- Estrategia de recuperacao de dados para perda, troca ou limpeza de aparelho.
+
 ## Epica Futura: Gestao de Arrendamentos e Parcerias
 
 Objetivo futuro: permitir que o produtor registre corretamente relacoes entre terra, posse fisica do animal e participacao economica.

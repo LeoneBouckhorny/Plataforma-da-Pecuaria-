@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Plataforma da Pecuária</title>
     <meta name="description" content="Calculadora de pesagem e base inicial para gestão rural.">
+    <meta name="theme-color" content="#2f6f4e">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Pecuária">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="apple-touch-icon" href="./assets/icons/icon-180.png">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -20,6 +27,10 @@
           <button class="tab-button" id="property-tab" type="button" data-tab="property">Propriedade</button>
           <button class="tab-button" id="premium-tab" type="button" data-tab="premium">Premium</button>
         </nav>
+        <div class="pwa-controls no-print" aria-label="Aplicativo e conexão">
+          <button class="secondary-button install-button hidden" id="install-app" type="button">Instalar aplicativo</button>
+          <span class="connection-status hidden" id="connection-status" role="status" aria-live="polite"></span>
+        </div>
       </header>
 
       <main>
@@ -380,5 +391,6 @@
     <script src="src/weighing-repository.js"></script>
     <script src="src/csv-export-core.js"></script>
     <script src="app.js"></script>
+    <script src="src/pwa-controller.js"></script>
   </body>
 </html>

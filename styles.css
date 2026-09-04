@@ -95,6 +95,47 @@ h3 {
   overflow-x: auto;
 }
 
+.pwa-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.install-button {
+  white-space: nowrap;
+}
+
+.connection-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  max-width: 340px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.connection-status.offline {
+  border-color: rgba(184, 132, 44, 0.36);
+  background: #fff8eb;
+  color: #735321;
+}
+
+.connection-status.online {
+  border-color: rgba(47, 111, 78, 0.28);
+  background: #e9f2ec;
+  color: var(--brand-strong);
+}
+
 .tab-button,
 .secondary-button,
 .primary-button,
@@ -690,6 +731,14 @@ button:focus-visible {
 
   .heading-actions {
     justify-content: flex-start;
+  }
+
+  .pwa-controls {
+    justify-content: flex-start;
+  }
+
+  .connection-status {
+    max-width: 100%;
   }
 
   .tabs {

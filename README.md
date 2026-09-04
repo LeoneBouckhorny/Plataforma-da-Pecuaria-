@@ -22,6 +22,8 @@ Base inicial da Plataforma da Pecuaria, com foco em uma porta de entrada simples
 - Exportacao CSV com UTF-8 BOM e separador ponto e virgula.
 - Rascunho da pesagem atual preservado neste dispositivo com IndexedDB.
 - Historico local de pesagens finalizadas neste dispositivo.
+- PWA instalavel em navegadores compativeis.
+- App shell disponivel offline apos primeiro carregamento adequado.
 
 ## Persistencia local
 
@@ -29,7 +31,6 @@ A aplicacao preserva uma pesagem em andamento no mesmo dispositivo. Ao fechar ou
 
 Essa persistencia local nao significa:
 
-- PWA;
 - cache offline completo da aplicacao;
 - sincronizacao em nuvem;
 - login;
@@ -38,6 +39,31 @@ Essa persistencia local nao significa:
 Dados de demonstracao nao sao persistidos. O botao `Limpar pesagem` remove o rascunho local `calculator-current` e restaura a tela vazia com os parametros padrao.
 
 Na Sprint 002, a aplicacao tambem salva sessoes finalizadas em historico local. Esse historico usa snapshots e nao muda quando o rascunho atual e editado depois. O historico ainda fica somente no dispositivo e nao substitui backup, conta ou sincronizacao.
+
+## PWA e uso offline
+
+Na Sprint 003, a aplicacao passou a registrar um Service Worker e um Web App Manifest. Em navegadores compativeis, ela pode ser instalada como aplicativo e pode abrir sem internet depois de ter sido carregada online pelo menos uma vez em contexto compativel com Service Worker.
+
+O funcionamento offline cobre:
+
+- abertura da aplicacao apos o app shell estar cacheado;
+- calculadora de pesagem;
+- rascunho local no IndexedDB;
+- finalizacao de pesagens;
+- consulta e exclusao de historico local;
+- geracao de CSV em memoria;
+- preparacao do romaneio para impressao.
+
+Ainda nao existe:
+
+- login;
+- nuvem;
+- backup remoto;
+- sincronizacao entre dispositivos;
+- compartilhamento;
+- recuperacao de dados em outro aparelho.
+
+O navegador pode remover dados locais conforme suas proprias politicas de armazenamento. IndexedDB e Cache Storage melhoram o uso offline, mas nao substituem uma estrategia futura de backup.
 
 ## Gestao premium futura
 
@@ -66,6 +92,8 @@ http://127.0.0.1:8026/index.html
 
 Abrir o HTML diretamente pode funcionar para leitura visual, mas o teste de IndexedDB deve ser feito em um contexto de navegador servido localmente.
 
+Para QA de PWA e Service Worker, use `http://127.0.0.1:8026/index.html` ou outro localhost. Em producao, Service Worker exige HTTPS.
+
 ## Testes
 
 Execute a checagem de sintaxe:
@@ -79,10 +107,12 @@ node --check src/draft-repository.js
 node --check src/weighing-history-core.js
 node --check src/weighing-repository.js
 node --check src/csv-export-core.js
+node --check src/pwa-controller.js
+node --check sw.js
 ```
 
 Execute os testes automatizados:
 
 ```powershell
-node --test tests/calculator-core.test.js tests/local-data-core.test.js tests/draft-repository.test.js tests/local-database-migration.test.js tests/weighing-history-core.test.js tests/csv-export-core.test.js tests/weighing-repository.test.js
+node --test tests/*.test.js
 ```
