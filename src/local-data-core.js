@@ -56,6 +56,8 @@ const LocalDataCore = ((CalculatorCoreRef) => {
     return {
       accountId: null,
       propertyId: null,
+      lotId: null,
+      lotName: "",
       weighingName: "",
       weighingDate: CalculatorCore.localDateInputValue(date),
       propertyName: "",
@@ -76,6 +78,8 @@ const LocalDataCore = ((CalculatorCoreRef) => {
     return {
       accountId: source.accountId == null ? null : asString(source.accountId),
       propertyId: source.propertyId == null ? null : asString(source.propertyId),
+      lotId: source.lotId == null ? null : asString(source.lotId),
+      lotName: asString(source.lotName),
       weighingName: asString(source.weighingName ?? base.weighingName),
       weighingDate: asString(source.weighingDate ?? base.weighingDate),
       propertyName: asString(source.propertyName ?? base.propertyName),

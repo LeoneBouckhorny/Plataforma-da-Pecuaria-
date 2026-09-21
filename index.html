@@ -25,6 +25,7 @@
         <nav class="tabs" aria-label="Navegação principal">
           <button class="tab-button active" id="calculator-tab" type="button" data-tab="calculator">Calculadora</button>
           <button class="tab-button" id="history-tab" type="button" data-tab="history">Histórico</button>
+          <button class="tab-button" id="herd-tab" type="button" data-tab="herd">Rebanho</button>
           <button class="tab-button" id="property-tab" type="button" data-tab="property">Propriedades</button>
           <button class="tab-button" id="premium-tab" type="button" data-tab="premium">Premium</button>
         </nav>
@@ -71,6 +72,10 @@
                 <label>
                   Identificação no romaneio
                   <input id="property-name" type="text" value="" placeholder="Opcional">
+                </label>
+                <label id="registered-lot-field" class="hidden">
+                  Lote cadastrado (opcional)
+                  <select id="registered-lot"><option value="">Sem lote cadastrado</option></select>
                 </label>
                 <label>
                   Cotação regional da arroba (R$)
@@ -140,7 +145,7 @@
                 </div>
 
                 <div id="no-paddock-message" class="empty-state">
-                  A pesagem pode ser feita sem pastos. O cadastro definitivo de pastos fica para uma próxima etapa.
+                  Sem divisão temporária nesta pesagem.
                 </div>
               </section>
 
@@ -181,6 +186,8 @@
                 <div><span>Documento</span><strong id="report-document">Romaneio de pesagem</strong></div>
                 <div><span>Nome</span><strong id="report-name">Pesagem sem nome</strong></div>
                 <div><span>Propriedade</span><strong id="report-property">Propriedade não informada</strong></div>
+                <div><span>Lote cadastrado</span><strong id="report-lot">Sem vínculo</strong></div>
+                <div><span>Pasto do lote</span><strong id="report-paddock">Local não definido</strong></div>
                 <div><span>Data da pesagem</span><strong id="report-date">Data não informada</strong></div>
                 <div><span>Emitido em</span><strong id="report-issued-at">Emissão não informada</strong></div>
                 <div><span>Preço por arroba</span><strong id="report-price">R$ 0,00</strong></div>
@@ -246,6 +253,9 @@
                 </select>
               </label>
               <p id="history-empty-message" class="empty-state">Nenhuma pesagem salva neste dispositivo.</p>
+              <label class="history-filter">Lote cadastrado
+                <select id="history-lot-filter"><option value="all">Todos os lotes</option><option value="unlinked">Sem vínculo</option></select>
+              </label>
               <div id="history-list" class="history-list"></div>
             </section>
 
@@ -271,6 +281,8 @@
                   <div><span>Documento</span><strong>Romaneio de pesagem</strong></div>
                   <div><span>Nome</span><strong id="history-report-name">Pesagem sem nome</strong></div>
                   <div><span>Propriedade</span><strong id="history-report-property">Propriedade não informada</strong></div>
+                  <div><span>Lote cadastrado</span><strong id="history-report-lot">Sem vínculo</strong></div>
+                  <div><span>Pasto na finalização</span><strong id="history-report-paddock">Local não definido</strong></div>
                   <div><span>Data da pesagem</span><strong id="history-report-date">Data não informada</strong></div>
                   <div><span>Salvo em</span><strong id="history-report-created-at">Salvamento não informado</strong></div>
                   <div><span>Preço por arroba</span><strong id="history-report-price">R$ 0,00</strong></div>
@@ -311,6 +323,24 @@
                 </p>
               </div>
             </aside>
+          </div>
+        </section>
+
+        <section class="tab-panel no-print" id="herd" aria-labelledby="herd-tab">
+          <div class="panel">
+            <div class="panel-heading"><h2>Rebanho</h2></div>
+            <div class="form-grid">
+              <label>Propriedade<select id="herd-property"><option value="">Selecione uma propriedade</option></select></label>
+              <label>Buscar animal<input id="herd-search" type="search" placeholder="Brinco ou nome" autocomplete="off"></label>
+            </div>
+            <div class="metrics herd-metrics">
+              <div class="metric"><span>Pastos ativos</span><strong id="herd-count-paddock">0</strong></div>
+              <div class="metric"><span>Lotes ativos</span><strong id="herd-count-lot">0</strong></div>
+              <div class="metric"><span>Animais ativos cadastrados</span><strong id="herd-count-animal">0</strong></div>
+            </div>
+            <p id="herd-feedback" class="app-message hidden" role="status" aria-live="polite"></p>
+            <p id="herd-empty" class="empty-state">Nenhuma propriedade selecionada.</p>
+            <div id="herd-sections"></div>
           </div>
         </section>
 
@@ -451,6 +481,16 @@
     <script src="src/account-repository.js"></script>
     <script src="src/property-repository.js"></script>
     <script src="src/draft-repository.js"></script>
+    <script src="src/herd-core.js"></script>
+    <script src="src/paddock-core.js"></script>
+    <script src="src/lot-core.js"></script>
+    <script src="src/animal-core.js"></script>
+    <script src="src/herd-repository.js"></script>
+    <script src="src/paddock-repository.js"></script>
+    <script src="src/lot-repository.js"></script>
+    <script src="src/animal-repository.js"></script>
+    <dialog id="herd-dialog" class="finalize-dialog" aria-labelledby="herd-dialog-title"><form id="herd-form" novalidate></form></dialog>
+    <script src="src/herd-controller.js"></script>
     <script src="src/weighing-history-core.js"></script>
     <script src="src/weighing-repository.js"></script>
     <script src="src/csv-export-core.js"></script>

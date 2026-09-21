@@ -27,7 +27,23 @@ Este backlog registra ideias aprovadas para acompanhamento futuro. Os itens abai
 - Conversao futura de operacao local em conta na nuvem, sem perder IDs locais.
 - Estrategia de conflito para sincronizacao futura entre celular e computador.
 
-## Epica Futura: Gestao de Arrendamentos e Parcerias
+## Atualizacao Pos-Sprint 006
+
+Pastos/piquetes, lotes e animais individuais agora possuem cadastro local.
+A mudanca de pasto do lote e de lote do animal representa somente estado atual.
+Os itens de cadastro listados no backlog pos-Sprint 004 foram atendidos nesta
+entrega, sujeita a auditoria do CTO. Permanecem futuros:
+
+- Transferencia formal entre propriedades.
+- Historico de movimentacoes, com eventos de entrada/saida.
+- Pesagem individual vinculada explicitamente ao animal, sem inferencia por brinco.
+- Sanidade, vacinas, medicamentos e reproducao.
+- Compra, venda, morte, nascimento e castracao como eventos proprios.
+- Arrendamento, parceria e boi a meia/inteira.
+- Capacidade/lotacao de pastagem e UA/ha.
+- Sincronizacao, backup e recuperacao.
+
+## Epica Futura: Gestao de Arrendamentos e Parcerias (Detalhamento)
 
 Objetivo futuro: permitir que o produtor registre corretamente relacoes entre terra, posse fisica do animal e participacao economica.
 

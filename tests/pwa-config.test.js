@@ -101,7 +101,7 @@ test("controlador PWA registra service worker relativo e nao usa API experimenta
 test("service worker possui cache versionado e regras de seguranca", () => {
   const serviceWorker = readText("sw.js");
 
-  assert.match(serviceWorker, /const CACHE_VERSION = "v3"/);
+  assert.match(serviceWorker, /const CACHE_VERSION = "v4"/);
   assert.match(serviceWorker, /const CACHE_PREFIX = "plataforma-pecuaria-shell-"/);
   assert.match(serviceWorker, /const CACHE_NAME = `\$\{CACHE_PREFIX\}\$\{CACHE_VERSION\}`/);
   assert.match(serviceWorker, /cache\.addAll\(APP_SHELL\)/);

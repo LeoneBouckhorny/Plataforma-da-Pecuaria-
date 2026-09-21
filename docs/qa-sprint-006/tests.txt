@@ -1,0 +1,838 @@
+TAP version 13
+# Subtest: cria operação local e grava active-account-id
+ok 1 - cria operação local e grava active-account-id
+  ---
+  duration_ms: 5.3966
+  type: 'test'
+  ...
+# Subtest: ensureLocalAccount chamado duas vezes não duplica conta
+ok 2 - ensureLocalAccount chamado duas vezes não duplica conta
+  ---
+  duration_ms: 13.9403
+  type: 'test'
+  ...
+# Subtest: reutiliza conta ativa existente quando setting ainda não existe
+ok 3 - reutiliza conta ativa existente quando setting ainda não existe
+  ---
+  duration_ms: 3.304
+  type: 'test'
+  ...
+# Subtest: atualiza nome da operação sem trocar ID
+ok 4 - atualiza nome da operação sem trocar ID
+  ---
+  duration_ms: 1.5837
+  type: 'test'
+  ...
+# Subtest: animal aceita identificacao {"tag":"101"}
+ok 5 - animal aceita identificacao {"tag":"101"}
+  ---
+  duration_ms: 31.3384
+  type: 'test'
+  ...
+# Subtest: animal aceita identificacao {"name":"Estrela"}
+ok 6 - animal aceita identificacao {"name":"Estrela"}
+  ---
+  duration_ms: 0.699
+  type: 'test'
+  ...
+# Subtest: animal aceita identificacao {"tag":" BR-550 ","name":"Estrela"}
+ok 7 - animal aceita identificacao {"tag":" BR-550 ","name":"Estrela"}
+  ---
+  duration_ms: 0.5562
+  type: 'test'
+  ...
+# Subtest: animal rejeita identificacao vazia e sexo invalido
+ok 8 - animal rejeita identificacao vazia e sexo invalido
+  ---
+  duration_ms: 0.744
+  type: 'test'
+  ...
+# Subtest: animal rejeita nascimento 2025-02-29
+ok 9 - animal rejeita nascimento 2025-02-29
+  ---
+  duration_ms: 1.1158
+  type: 'test'
+  ...
+# Subtest: animal rejeita nascimento 2026-13-01
+ok 10 - animal rejeita nascimento 2026-13-01
+  ---
+  duration_ms: 0.7114
+  type: 'test'
+  ...
+# Subtest: animal rejeita nascimento 31/01/2026
+ok 11 - animal rejeita nascimento 31/01/2026
+  ---
+  duration_ms: 1.0189
+  type: 'test'
+  ...
+# Subtest: animal rejeita nascimento invalid
+ok 12 - animal rejeita nascimento invalid
+  ---
+  duration_ms: 0.7794
+  type: 'test'
+  ...
+# Subtest: animal rejeita nascimento 2026-04-31
+ok 13 - animal rejeita nascimento 2026-04-31
+  ---
+  duration_ms: 0.9207
+  type: 'test'
+  ...
+# Subtest: animal preserva campos livres sem paddockId ou idade persistidos
+ok 14 - animal preserva campos livres sem paddockId ou idade persistidos
+  ---
+  duration_ms: 3.8563
+  type: 'test'
+  ...
+# Subtest: animal CRUD, listagem e ciclo de status preservam ID
+ok 15 - animal CRUD, listagem e ciclo de status preservam ID
+  ---
+  duration_ms: 42.319
+  type: 'test'
+  ...
+# Subtest: animal isola conta e propriedade mesmo com nomes/brincos iguais
+ok 16 - animal isola conta e propriedade mesmo com nomes/brincos iguais
+  ---
+  duration_ms: 4.565
+  type: 'test'
+  ...
+# Subtest: animal bloqueia transferencia, conta forjada, propriedade ausente e colisao ID
+ok 17 - animal bloqueia transferencia, conta forjada, propriedade ausente e colisao ID
+  ---
+  duration_ms: 6.5468
+  type: 'test'
+  ...
+# Subtest: cenário de referência calcula quantidade, peso, arrobas e valor
+ok 18 - cenário de referência calcula quantidade, peso, arrobas e valor
+  ---
+  duration_ms: 6.8892
+  type: 'test'
+  ...
+# Subtest: preço negativo invalida valor sem mostrar preço como válido
+ok 19 - preço negativo invalida valor sem mostrar preço como válido
+  ---
+  duration_ms: 0.9733
+  type: 'test'
+  ...
+# Subtest: rendimento negativo deixa arrobas e valor indisponíveis
+ok 20 - rendimento negativo deixa arrobas e valor indisponíveis
+  ---
+  duration_ms: 2.7166
+  type: 'test'
+  ...
+# Subtest: rendimento acima de 100 deixa arrobas e valor indisponíveis
+ok 21 - rendimento acima de 100 deixa arrobas e valor indisponíveis
+  ---
+  duration_ms: 2.0505
+  type: 'test'
+  ...
+# Subtest: faixa inválida não bloqueia peso, arrobas ou valor
+ok 22 - faixa inválida não bloqueia peso, arrobas ou valor
+  ---
+  duration_ms: 0.6946
+  type: 'test'
+  ...
+# Subtest: faixa média menor que faixa leve deixa classificação indisponível
+ok 23 - faixa média menor que faixa leve deixa classificação indisponível
+  ---
+  duration_ms: 0.6575
+  type: 'test'
+  ...
+# Subtest: brinco duplicado na sessão invalida os itens repetidos
+ok 24 - brinco duplicado na sessão invalida os itens repetidos
+  ---
+  duration_ms: 1.0009
+  type: 'test'
+  ...
+# Subtest: animal sem brinco é permitido com aviso
+ok 25 - animal sem brinco é permitido com aviso
+  ---
+  duration_ms: 0.8666
+  type: 'test'
+  ...
+# Subtest: peso zero é inválido
+ok 26 - peso zero é inválido
+  ---
+  duration_ms: 0.9777
+  type: 'test'
+  ...
+# Subtest: peso negativo é inválido
+ok 27 - peso negativo é inválido
+  ---
+  duration_ms: 0.7949
+  type: 'test'
+  ...
+# Subtest: vírgula e ponto decimal são aceitos
+ok 28 - vírgula e ponto decimal são aceitos
+  ---
+  duration_ms: 0.656
+  type: 'test'
+  ...
+# Subtest: separadores de milhar brasileiros e internacionais são aceitos
+ok 29 - separadores de milhar brasileiros e internacionais são aceitos
+  ---
+  duration_ms: 0.2944
+  type: 'test'
+  ...
+# Subtest: cálculo após remoção de animal é recalculado
+ok 30 - cálculo após remoção de animal é recalculado
+  ---
+  duration_ms: 0.8811
+  type: 'test'
+  ...
+# Subtest: data local usa ano, mês e dia locais
+ok 31 - data local usa ano, mês e dia locais
+  ---
+  duration_ms: 3.3837
+  type: 'test'
+  ...
+# Subtest: exporta CSV comum com BOM e separador ponto e vírgula
+ok 32 - exporta CSV comum com BOM e separador ponto e vírgula
+  ---
+  duration_ms: 130.463
+  type: 'test'
+  ...
+# Subtest: preserva acentos
+ok 33 - preserva acentos
+  ---
+  duration_ms: 2.0689
+  type: 'test'
+  ...
+# Subtest: formata número com vírgula decimal
+ok 34 - formata número com vírgula decimal
+  ---
+  duration_ms: 0.8519
+  type: 'test'
+  ...
+# Subtest: escapa ponto e vírgula
+ok 35 - escapa ponto e vírgula
+  ---
+  duration_ms: 2.8566
+  type: 'test'
+  ...
+# Subtest: escapa quebra de linha
+ok 36 - escapa quebra de linha
+  ---
+  duration_ms: 0.8138
+  type: 'test'
+  ...
+# Subtest: escapa aspas
+ok 37 - escapa aspas
+  ---
+  duration_ms: 0.5628
+  type: 'test'
+  ...
+# Subtest: neutraliza fórmula começando com igual
+ok 38 - neutraliza fórmula começando com igual
+  ---
+  duration_ms: 0.6465
+  type: 'test'
+  ...
+# Subtest: neutraliza fórmula começando com mais
+ok 39 - neutraliza fórmula começando com mais
+  ---
+  duration_ms: 0.5109
+  type: 'test'
+  ...
+# Subtest: neutraliza fórmula começando com menos
+ok 40 - neutraliza fórmula começando com menos
+  ---
+  duration_ms: 0.6979
+  type: 'test'
+  ...
+# Subtest: neutraliza fórmula começando com arroba
+ok 41 - neutraliza fórmula começando com arroba
+  ---
+  duration_ms: 0.7578
+  type: 'test'
+  ...
+# Subtest: sanitiza nome de arquivo
+ok 42 - sanitiza nome de arquivo
+  ---
+  duration_ms: 1.7599
+  type: 'test'
+  ...
+# Subtest: design system centraliza a paleta oficial e os estados semanticos
+ok 43 - design system centraliza a paleta oficial e os estados semanticos
+  ---
+  duration_ms: 4.073
+  type: 'test'
+  ...
+# Subtest: camadas CSS existem e nao duplicam cores fora dos tokens
+ok 44 - camadas CSS existem e nao duplicam cores fora dos tokens
+  ---
+  duration_ms: 11.7661
+  type: 'test'
+  ...
+# Subtest: URLs de CSS e HTML sao locais relativas e os assets existem no shell
+ok 45 - URLs de CSS e HTML sao locais relativas e os assets existem no shell
+  ---
+  duration_ms: 18.5991
+  type: 'test'
+  ...
+# Subtest: branding preserva exatamente o simbolo e os PNG aprovados
+ok 46 - branding preserva exatamente o simbolo e os PNG aprovados
+  ---
+  duration_ms: 25.677
+  type: 'test'
+  ...
+# Subtest: header pequeno usa simbolo e nome sem assinatura ilegivel
+ok 47 - header pequeno usa simbolo e nome sem assinatura ilegivel
+  ---
+  duration_ms: 6.7487
+  type: 'test'
+  ...
+# Subtest: focus-visible usa tokens oficiais e controles possuem tamanho de toque
+ok 48 - focus-visible usa tokens oficiais e controles possuem tamanho de toque
+  ---
+  duration_ms: 2.1072
+  type: 'test'
+  ...
+# Subtest: tipografia possui fallback offline sem fonte externa
+ok 49 - tipografia possui fallback offline sem fonte externa
+  ---
+  duration_ms: 4.3275
+  type: 'test'
+  ...
+# Subtest: icones de acao usam a mesma linguagem local Lucide com licenca
+ok 50 - icones de acao usam a mesma linguagem local Lucide com licenca
+  ---
+  duration_ms: 7.5546
+  type: 'test'
+  ...
+# Subtest: manifest e favicon seguem paleta e dimensoes da marca
+ok 51 - manifest e favicon seguem paleta e dimensoes da marca
+  ---
+  duration_ms: 4.7615
+  type: 'test'
+  ...
+# Subtest: pares de contraste dos tokens atendem AA para texto e bordas de campos
+ok 52 - pares de contraste dos tokens atendem AA para texto e bordas de campos
+  ---
+  duration_ms: 2.5387
+  type: 'test'
+  ...
+# Subtest: salvar demonstração não substitui draft real existente
+ok 53 - salvar demonstração não substitui draft real existente
+  ---
+  duration_ms: 8.1172
+  type: 'test'
+  ...
+# Subtest: remover draft depois da finalização não altera registro histórico separado
+ok 54 - remover draft depois da finalização não altera registro histórico separado
+  ---
+  duration_ms: 3.6226
+  type: 'test'
+  ...
+# Subtest: loadDraft aplica accountId atual em rascunho legado sem adivinhar propertyId
+ok 55 - loadDraft aplica accountId atual em rascunho legado sem adivinhar propertyId
+  ---
+  duration_ms: 3.4835
+  type: 'test'
+  ...
+# Subtest: PWA v4 inclui todos os modulos do rebanho tambem referenciados no HTML
+ok 56 - PWA v4 inclui todos os modulos do rebanho tambem referenciados no HTML
+  ---
+  duration_ms: 7.856
+  type: 'test'
+  ...
+# Subtest: vinculos mesma propriedade e mudanca do lote derivam local de todos os animais
+ok 57 - vinculos mesma propriedade e mudanca do lote derivam local de todos os animais
+  ---
+  duration_ms: 38.8528
+  type: 'test'
+  ...
+# Subtest: bloqueia pais cross-scope a/q na criacao e edicao
+ok 58 - bloqueia pais cross-scope a/q na criacao e edicao
+  ---
+  duration_ms: 3.9182
+  type: 'test'
+  ...
+# Subtest: bloqueia pais cross-scope b/r na criacao e edicao
+ok 59 - bloqueia pais cross-scope b/r na criacao e edicao
+  ---
+  duration_ms: 6.7414
+  type: 'test'
+  ...
+# Subtest: arquivamento bloqueia filhos ativos; mover ou desvincular permite
+ok 60 - arquivamento bloqueia filhos ativos; mover ou desvincular permite
+  ---
+  duration_ms: 5.267
+  type: 'test'
+  ...
+# Subtest: nao aceita vinculo inexistente ou arquivado em entidade ativa
+ok 61 - nao aceita vinculo inexistente ou arquivado em entidade ativa
+  ---
+  duration_ms: 1.6701
+  type: 'test'
+  ...
+# Subtest: draft antigo normaliza lotId null, novo preserva ID/nome e temporarios
+ok 62 - draft antigo normaliza lotId null, novo preserva ID/nome e temporarios
+  ---
+  duration_ms: 11.6191
+  type: 'test'
+  ...
+# Subtest: selecao por ID limpa lote de outra propriedade/conta ou arquivado
+ok 63 - selecao por ID limpa lote de outra propriedade/conta ou arquivado
+  ---
+  duration_ms: 0.7326
+  type: 'test'
+  ...
+# Subtest: historico captura lote/pasto atuais atomicamente e nao muda apos renomear/mover
+ok 64 - historico captura lote/pasto atuais atomicamente e nao muda apos renomear/mover
+  ---
+  duration_ms: 36.7193
+  type: 'test'
+  ...
+# Subtest: pesagem rejeita lote cross-property e arquivado sem gravar sessao/itens
+ok 65 - pesagem rejeita lote cross-property e arquivado sem gravar sessao/itens
+  ---
+  duration_ms: 3.4501
+  type: 'test'
+  ...
+# Subtest: historico filtra lotes homonimos por ID e combina filtro propriedade/sem vinculo
+ok 66 - historico filtra lotes homonimos por ID e combina filtro propriedade/sem vinculo
+  ---
+  duration_ms: 4.8689
+  type: 'test'
+  ...
+# Subtest: cria draft válido com chave e versão do schema
+ok 67 - cria draft válido com chave e versão do schema
+  ---
+  duration_ms: 9.2038
+  type: 'test'
+  ...
+# Subtest: draft novo preserva accountId, propertyId e snapshot textual da propriedade
+ok 68 - draft novo preserva accountId, propertyId e snapshot textual da propriedade
+  ---
+  duration_ms: 1.1383
+  type: 'test'
+  ...
+# Subtest: draft antigo sem propriedade cadastrada continua compatível
+ok 69 - draft antigo sem propriedade cadastrada continua compatível
+  ---
+  duration_ms: 0.9672
+  type: 'test'
+  ...
+# Subtest: preserva IDs de animais e pastos durante normalização
+ok 70 - preserva IDs de animais e pastos durante normalização
+  ---
+  duration_ms: 0.8256
+  type: 'test'
+  ...
+# Subtest: normaliza estruturas ausentes para arrays e valores padrão
+ok 71 - normaliza estruturas ausentes para arrays e valores padrão
+  ---
+  duration_ms: 2.437
+  type: 'test'
+  ...
+# Subtest: campos ausentes de settings recebem defaults oficiais
+ok 72 - campos ausentes de settings recebem defaults oficiais
+  ---
+  duration_ms: 0.6156
+  type: 'test'
+  ...
+# Subtest: parâmetros explicitamente vazios permanecem vazios
+ok 73 - parâmetros explicitamente vazios permanecem vazios
+  ---
+  duration_ms: 0.6243
+  type: 'test'
+  ...
+# Subtest: data explicitamente vazia permanece vazia
+ok 74 - data explicitamente vazia permanece vazia
+  ---
+  duration_ms: 0.5101
+  type: 'test'
+  ...
+# Subtest: rejeita schema incompatível
+ok 75 - rejeita schema incompatível
+  ---
+  duration_ms: 0.5402
+  type: 'test'
+  ...
+# Subtest: rejeita chave incompatível
+ok 76 - rejeita chave incompatível
+  ---
+  duration_ms: 0.5912
+  type: 'test'
+  ...
+# Subtest: mantém campos vazios sem quebrar o draft
+ok 77 - mantém campos vazios sem quebrar o draft
+  ---
+  duration_ms: 0.4432
+  type: 'test'
+  ...
+# Subtest: permite animal sem brinco no draft
+ok 78 - permite animal sem brinco no draft
+  ---
+  duration_ms: 0.6313
+  type: 'test'
+  ...
+# Subtest: preserva valores digitados com vírgula
+ok 79 - preserva valores digitados com vírgula
+  ---
+  duration_ms: 0.5438
+  type: 'test'
+  ...
+# Subtest: preserva dados inválidos para correção posterior
+ok 80 - preserva dados inválidos para correção posterior
+  ---
+  duration_ms: 0.5326
+  type: 'test'
+  ...
+# Subtest: dados inválidos permanecem intactos durante normalização
+ok 81 - dados inválidos permanecem intactos durante normalização
+  ---
+  duration_ms: 0.5896
+  type: 'test'
+  ...
+# Subtest: serialização inclui apenas dados, sem DOM
+ok 82 - serialização inclui apenas dados, sem DOM
+  ---
+  duration_ms: 1.0289
+  type: 'test'
+  ...
+# Subtest: desserializa draft válido e normaliza novamente
+ok 83 - desserializa draft válido e normaliza novamente
+  ---
+  duration_ms: 0.9054
+  type: 'test'
+  ...
+# Subtest: dados de demonstração não são elegíveis para persistência
+ok 84 - dados de demonstração não são elegíveis para persistência
+  ---
+  duration_ms: 0.6343
+  type: 'test'
+  ...
+# Subtest: reset cria draft vazio com padrões da calculadora
+ok 85 - reset cria draft vazio com padrões da calculadora
+  ---
+  duration_ms: 0.4018
+  type: 'test'
+  ...
+# Subtest: migração inicial cria stores atuais, preservando histórico e índices
+ok 86 - migração inicial cria stores atuais, preservando histórico e índices
+  ---
+  duration_ms: 4.9681
+  type: 'test'
+  ...
+# Subtest: migration V3 para V4 mantem as seis stores anteriores e adiciona indices do rebanho
+ok 87 - migration V3 para V4 mantem as seis stores anteriores e adiciona indices do rebanho
+  ---
+  duration_ms: 1.5544
+  type: 'test'
+  ...
+# Subtest: migração V1 para V2 preserva drafts e cria stores históricos
+ok 88 - migração V1 para V2 preserva drafts e cria stores históricos
+  ---
+  duration_ms: 2.7535
+  type: 'test'
+  ...
+# Subtest: migração V2 cria índice sessionId quando store de itens já existe
+ok 89 - migração V2 cria índice sessionId quando store de itens já existe
+  ---
+  duration_ms: 0.8104
+  type: 'test'
+  ...
+# Subtest: migração V2 para V3 preserva stores existentes e cria conta/propriedade/settings
+ok 90 - migração V2 para V3 preserva stores existentes e cria conta/propriedade/settings
+  ---
+  duration_ms: 2.9875
+  type: 'test'
+  ...
+# Subtest: lot aceita categoria regional e pasto opcional
+ok 91 - lot aceita categoria regional e pasto opcional
+  ---
+  duration_ms: 17.7272
+  type: 'test'
+  ...
+# Subtest: lot muda pasto sem mudar identidade e arquiva/reativa
+ok 92 - lot muda pasto sem mudar identidade e arquiva/reativa
+  ---
+  duration_ms: 1.653
+  type: 'test'
+  ...
+# Subtest: lot CRUD, listagem e ciclo de status preservam ID
+ok 93 - lot CRUD, listagem e ciclo de status preservam ID
+  ---
+  duration_ms: 35.0073
+  type: 'test'
+  ...
+# Subtest: lot isola conta e propriedade mesmo com nomes/brincos iguais
+ok 94 - lot isola conta e propriedade mesmo com nomes/brincos iguais
+  ---
+  duration_ms: 6.3383
+  type: 'test'
+  ...
+# Subtest: lot bloqueia transferencia, conta forjada, propriedade ausente e colisao ID
+ok 95 - lot bloqueia transferencia, conta forjada, propriedade ausente e colisao ID
+  ---
+  duration_ms: 5.0625
+  type: 'test'
+  ...
+# Subtest: paddock normaliza nome, notes e area decimal sem obrigar area
+ok 96 - paddock normaliza nome, notes e area decimal sem obrigar area
+  ---
+  duration_ms: 5.5423
+  type: 'test'
+  ...
+# Subtest: paddock rejeita area 0
+ok 97 - paddock rejeita area 0
+  ---
+  duration_ms: 1.1881
+  type: 'test'
+  ...
+# Subtest: paddock rejeita area -1
+ok 98 - paddock rejeita area -1
+  ---
+  duration_ms: 0.4521
+  type: 'test'
+  ...
+# Subtest: paddock rejeita area x
+ok 99 - paddock rejeita area x
+  ---
+  duration_ms: 0.6168
+  type: 'test'
+  ...
+# Subtest: paddock rejeita area Infinity
+ok 100 - paddock rejeita area Infinity
+  ---
+  duration_ms: 0.6505
+  type: 'test'
+  ...
+# Subtest: paddock rejeita area 1,2.3
+ok 101 - paddock rejeita area 1,2.3
+  ---
+  duration_ms: 0.4799
+  type: 'test'
+  ...
+# Subtest: paddock rejeita area 1e3
+ok 102 - paddock rejeita area 1e3
+  ---
+  duration_ms: 0.4715
+  type: 'test'
+  ...
+# Subtest: paddock exige nome e preserva ID no ciclo editar/arquivar/reativar
+ok 103 - paddock exige nome e preserva ID no ciclo editar/arquivar/reativar
+  ---
+  duration_ms: 3.0188
+  type: 'test'
+  ...
+# Subtest: paddock CRUD, listagem e ciclo de status preservam ID
+ok 104 - paddock CRUD, listagem e ciclo de status preservam ID
+  ---
+  duration_ms: 38.1043
+  type: 'test'
+  ...
+# Subtest: paddock isola conta e propriedade mesmo com nomes/brincos iguais
+ok 105 - paddock isola conta e propriedade mesmo com nomes/brincos iguais
+  ---
+  duration_ms: 4.5655
+  type: 'test'
+  ...
+# Subtest: paddock bloqueia transferencia, conta forjada, propriedade ausente e colisao ID
+ok 106 - paddock bloqueia transferencia, conta forjada, propriedade ausente e colisao ID
+  ---
+  duration_ms: 11.031
+  type: 'test'
+  ...
+# Subtest: cria propriedade válida com ID estável e status ativo
+ok 107 - cria propriedade válida com ID estável e status ativo
+  ---
+  duration_ms: 7.4637
+  type: 'test'
+  ...
+# Subtest: nome vazio invalida propriedade
+ok 108 - nome vazio invalida propriedade
+  ---
+  duration_ms: 0.788
+  type: 'test'
+  ...
+# Subtest: arquiva e reativa mantendo ID e dados principais
+ok 109 - arquiva e reativa mantendo ID e dados principais
+  ---
+  duration_ms: 0.9786
+  type: 'test'
+  ...
+# Subtest: edição não troca ID nem accountId
+ok 110 - edição não troca ID nem accountId
+  ---
+  duration_ms: 1.116
+  type: 'test'
+  ...
+# Subtest: formata identificação com município e UF quando disponíveis
+ok 111 - formata identificação com município e UF quando disponíveis
+  ---
+  duration_ms: 0.8683
+  type: 'test'
+  ...
+# Subtest: cria duas propriedades e lista por accountId
+ok 112 - cria duas propriedades e lista por accountId
+  ---
+  duration_ms: 53.5662
+  type: 'test'
+  ...
+# Subtest: edita propriedade sem trocar ID
+ok 113 - edita propriedade sem trocar ID
+  ---
+  duration_ms: 2.1115
+  type: 'test'
+  ...
+# Subtest: arquiva e reativa propriedade sem apagar registro
+ok 114 - arquiva e reativa propriedade sem apagar registro
+  ---
+  duration_ms: 1.7585
+  type: 'test'
+  ...
+# Subtest: não retorna nem altera propriedade de outra conta
+ok 115 - não retorna nem altera propriedade de outra conta
+  ---
+  duration_ms: 0.912
+  type: 'test'
+  ...
+# Subtest: nome vazio retorna erro compreensível
+ok 116 - nome vazio retorna erro compreensível
+  ---
+  duration_ms: 0.602
+  type: 'test'
+  ...
+# Subtest: app shell do service worker aponta apenas para arquivos locais existentes
+ok 117 - app shell do service worker aponta apenas para arquivos locais existentes
+  ---
+  duration_ms: 17.9166
+  type: 'test'
+  ...
+# Subtest: icones PWA possuem dimensoes corretas
+ok 118 - icones PWA possuem dimensoes corretas
+  ---
+  duration_ms: 5.6353
+  type: 'test'
+  ...
+# Subtest: manifest referencia somente icones existentes no app shell
+ok 119 - manifest referencia somente icones existentes no app shell
+  ---
+  duration_ms: 3.5512
+  type: 'test'
+  ...
+# Subtest: manifest PWA possui configuracao instalavel e caminhos relativos
+ok 120 - manifest PWA possui configuracao instalavel e caminhos relativos
+  ---
+  duration_ms: 4.4163
+  type: 'test'
+  ...
+# Subtest: HTML referencia manifest, icone Apple e controlador PWA
+ok 121 - HTML referencia manifest, icone Apple e controlador PWA
+  ---
+  duration_ms: 1.8345
+  type: 'test'
+  ...
+# Subtest: controlador PWA registra service worker relativo e nao usa API experimental
+ok 122 - controlador PWA registra service worker relativo e nao usa API experimental
+  ---
+  duration_ms: 2.0956
+  type: 'test'
+  ...
+# Subtest: service worker possui cache versionado e regras de seguranca
+ok 123 - service worker possui cache versionado e regras de seguranca
+  ---
+  duration_ms: 1.1533
+  type: 'test'
+  ...
+# Subtest: navegacao so permite atualizar fallback do index para entrada principal
+ok 124 - navegacao so permite atualizar fallback do index para entrada principal
+  ---
+  duration_ms: 10.9846
+  type: 'test'
+  ...
+# Subtest: cria snapshot histórico válido
+ok 125 - cria snapshot histórico válido
+  ---
+  duration_ms: 4.9252
+  type: 'test'
+  ...
+# Subtest: IDs históricos são estáveis dentro do snapshot
+ok 126 - IDs históricos são estáveis dentro do snapshot
+  ---
+  duration_ms: 3.4107
+  type: 'test'
+  ...
+# Subtest: animal sem brinco é salvo com snapshot vazio
+ok 127 - animal sem brinco é salvo com snapshot vazio
+  ---
+  duration_ms: 0.5909
+  type: 'test'
+  ...
+# Subtest: snapshot não muda quando o draft original é alterado depois
+ok 128 - snapshot não muda quando o draft original é alterado depois
+  ---
+  duration_ms: 2.0751
+  type: 'test'
+  ...
+# Subtest: sessão sem propriedade cadastrada mantém propertyId nulo e snapshot textual opcional
+ok 129 - sessão sem propriedade cadastrada mantém propertyId nulo e snapshot textual opcional
+  ---
+  duration_ms: 1.2199
+  type: 'test'
+  ...
+# Subtest: parâmetros inválidos são rejeitados
+ok 130 - parâmetros inválidos são rejeitados
+  ---
+  duration_ms: 0.6399
+  type: 'test'
+  ...
+# Subtest: animais com erro impedem finalização
+ok 131 - animais com erro impedem finalização
+  ---
+  duration_ms: 0.5337
+  type: 'test'
+  ...
+# Subtest: modo demonstração impede snapshot histórico
+ok 132 - modo demonstração impede snapshot histórico
+  ---
+  duration_ms: 0.3745
+  type: 'test'
+  ...
+# Subtest: salva sessão e itens
+ok 133 - salva sessão e itens
+  ---
+  duration_ms: 8.1211
+  type: 'test'
+  ...
+# Subtest: lista sessões mais recentes primeiro
+ok 134 - lista sessões mais recentes primeiro
+  ---
+  duration_ms: 25.4941
+  type: 'test'
+  ...
+# Subtest: busca itens isolados por sessionId
+ok 135 - busca itens isolados por sessionId
+  ---
+  duration_ms: 1.1989
+  type: 'test'
+  ...
+# Subtest: exclui sessão e todos os itens vinculados
+ok 136 - exclui sessão e todos os itens vinculados
+  ---
+  duration_ms: 0.9762
+  type: 'test'
+  ...
+# Subtest: filtra histórico por propertyId e mantém sessões sem vínculo separadas
+ok 137 - filtra histórico por propertyId e mantém sessões sem vínculo separadas
+  ---
+  duration_ms: 1.635
+  type: 'test'
+  ...
+# Subtest: filtro por conta não mistura conta diferente quando accountId existe
+ok 138 - filtro por conta não mistura conta diferente quando accountId existe
+  ---
+  duration_ms: 1.2035
+  type: 'test'
+  ...
+1..138
+# tests 138
+# suites 0
+# pass 138
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1190.1234

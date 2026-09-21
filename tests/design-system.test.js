@@ -94,8 +94,8 @@ test("manifest e favicon seguem paleta e dimensoes da marca", () => {
   assert.match(read("index.html"), /sizes="32x32" href="\.\/assets\/icons\/favicon-32\.png"/);
   const png = fs.readFileSync(path.join(root, "assets/icons/favicon-32.png"));
   assert.equal(png.readUInt32BE(16), 32); assert.equal(png.readUInt32BE(20), 32);
-  assert.match(read("sw.js"), /CACHE_VERSION = "v3"/);
-  assert.match(read("src/local-database.js"), /DB_VERSION = 3/);
+  assert.match(read("sw.js"), /CACHE_VERSION = "v4"/);
+  assert.match(read("src/local-database.js"), /DB_VERSION = 4/);
 });
 
 test("pares de contraste dos tokens atendem AA para texto e bordas de campos", () => {

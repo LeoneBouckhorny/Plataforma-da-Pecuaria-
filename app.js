@@ -35,6 +35,14 @@ if (typeof document !== "undefined") {
     activeAccount: null,
     properties: [],
     selectedPropertyId: null,
+    selectedLotId: null,
+    registeredLots: [],
+    registeredPaddocks: [],
+    lotRepository: null,
+    paddockRepository: null,
+    herdController: null,
+    herdRefreshGeneration: 0,
+    historyLotFilter: "all",
     historyPropertyFilter: "all",
     historySessions: [],
     filteredHistorySessions: [],
@@ -56,6 +64,7 @@ if (typeof document !== "undefined") {
     weighingName: document.querySelector("#weighing-name"),
     weighingDate: document.querySelector("#weighing-date"),
     propertySelect: document.querySelector("#property-select"),
+    registeredLot: document.querySelector("#registered-lot"),
     propertyName: document.querySelector("#property-name"),
     arrobaPrice: document.querySelector("#arroba-price"),
     yieldRate: document.querySelector("#yield-rate"),
@@ -225,6 +234,43 @@ if (typeof document !== "undefined") {
     return inputs.propertyName.value;
   }
 
+  function getSelectedLot() {
+    return window.HerdCore.selectLot(state.registeredLots, getActiveAccountId(), state.selectedPropertyId, state.selectedLotId);
+  }
+
+  function renderRegisteredLotSelect() {
+    const lot = getSelectedLot();
+    state.selectedLotId = lot ? lot.id : null;
+    inputs.registeredLot.replaceChildren(createElement("option", { value: "", text: "Sem lote cadastrado" }));
+    for (const candidate of state.registeredLots.filter((item) => item.propertyId === state.selectedPropertyId && item.status === "active")) {
+      inputs.registeredLot.append(createElement("option", { value: candidate.id, text: candidate.name }));
+    }
+    inputs.registeredLot.value = state.selectedLotId || "";
+    document.querySelector("#registered-lot-field").classList.toggle("hidden", !state.selectedPropertyId);
+  }
+
+  async function refreshRegisteredHerd() {
+    const generation = ++state.herdRefreshGeneration;
+    const lots = [];
+    const paddocks = [];
+    for (const property of state.properties) {
+      const lotResult = await state.lotRepository.listLots(getActiveAccountId(), property.id, { includeArchived: true });
+      const paddockResult = await state.paddockRepository.listPaddocks(getActiveAccountId(), property.id, { includeArchived: true });
+      if (generation !== state.herdRefreshGeneration) return;
+      if (lotResult.status !== "loaded" || paddockResult.status !== "loaded") {
+        setPersistenceWarning("Não foi possível atualizar os lotes cadastrados. Reabra o aplicativo antes de finalizar uma pesagem vinculada.");
+        return;
+      }
+      lots.push(...lotResult.lots);
+      paddocks.push(...paddockResult.paddocks);
+    }
+    if (generation !== state.herdRefreshGeneration) return;
+    state.registeredLots = lots;
+    state.registeredPaddocks = paddocks;
+    renderRegisteredLotSelect();
+    renderResults();
+  }
+
   function getPropertyDisplay(property) {
     return PropertyCore.formatPropertyIdentification(property);
   }
@@ -264,6 +310,10 @@ if (typeof document !== "undefined") {
     return {
       accountId: getActiveAccountId(),
       propertyId: state.selectedPropertyId,
+      lotId: getSelectedLot()?.id || null,
+      lotName: getSelectedLot()?.name || "",
+      paddockId: getSelectedLot()?.paddockId || null,
+      paddockName: state.registeredPaddocks.find((p) => p.id === getSelectedLot()?.paddockId)?.name || "",
       weighingName: inputs.weighingName.value,
       weighingDate: inputs.weighingDate.value,
       propertyName: getCurrentPropertyName(),
@@ -487,6 +537,9 @@ if (typeof document !== "undefined") {
     elements.reportDocument.textContent = "Romaneio de pesagem";
     elements.reportName.textContent = weighingName || "Pesagem sem nome";
     elements.reportProperty.textContent = propertyName || "Propriedade não informada";
+    const source = getDraftSource();
+    document.querySelector("#report-lot").textContent = source.lotName || "Sem vínculo";
+    document.querySelector("#report-paddock").textContent = source.paddockName || "Local não definido";
     elements.reportDate.textContent = formatDateInput(inputs.weighingDate.value);
     elements.reportIssuedAt.textContent = formatDateTime(new Date());
     elements.reportPrice.textContent = summary.settings.priceValid
@@ -748,6 +801,7 @@ if (typeof document !== "undefined") {
 
     inputs.propertySelect.value = state.selectedPropertyId || "";
     syncPropertyNameInput();
+    renderRegisteredLotSelect();
   }
 
   function renderHistoryFilterOptions() {
@@ -784,9 +838,10 @@ if (typeof document !== "undefined") {
     }
 
     elements.historyPropertyFilter.value = state.historyPropertyFilter;
+    renderHistoryLotFilter();
   }
 
-  function getFilteredHistorySessions() {
+  function getPropertyHistorySessions() {
     if (state.historyPropertyFilter === "all") {
       return state.historySessions;
     }
@@ -796,6 +851,26 @@ if (typeof document !== "undefined") {
     }
 
     return state.historySessions.filter((session) => session.propertyId === state.historyPropertyFilter);
+  }
+
+  function renderHistoryLotFilter() {
+    const select = document.querySelector("#history-lot-filter");
+    select.replaceChildren(createElement("option", { value: "all", text: "Todos os lotes" }),
+      createElement("option", { value: "unlinked", text: "Sem vínculo" }));
+    const seen = new Set();
+    for (const session of getPropertyHistorySessions()) {
+      if (!session.lotId || seen.has(session.lotId)) continue;
+      seen.add(session.lotId);
+      select.append(createElement("option", { value: session.lotId,
+        text: `${session.lotNameSnapshot} · ${session.propertyNameSnapshot}` }));
+    }
+    if (!["all", "unlinked"].includes(state.historyLotFilter) && !seen.has(state.historyLotFilter)) state.historyLotFilter = "all";
+    select.value = state.historyLotFilter;
+  }
+
+  function getFilteredHistorySessions() {
+    return getPropertyHistorySessions().filter((session) => state.historyLotFilter === "all"
+      || (state.historyLotFilter === "unlinked" ? session.lotId == null : session.lotId === state.historyLotFilter));
   }
 
   function showPropertyFeedback(message, type = "error") {
@@ -915,6 +990,8 @@ if (typeof document !== "undefined") {
     }
 
     state.properties = result.properties;
+    await refreshRegisteredHerd();
+    if (state.herdController) await state.herdController.refreshProperties();
     renderPropertySelect();
     renderHistoryFilterOptions();
     renderPropertyList();
@@ -1053,6 +1130,7 @@ if (typeof document !== "undefined") {
     state.paddocks = draftData.paddocks.map((paddock) => ({ ...paddock, demo: false }));
     state.demoMode = false;
     state.selectedPropertyId = draftData.propertyId;
+    state.selectedLotId = draftData.lotId;
     inputs.weighingName.value = draftData.weighingName;
     inputs.weighingDate.value = draftData.weighingDate;
     inputs.propertyName.value = draftData.propertyName;
@@ -1074,6 +1152,7 @@ if (typeof document !== "undefined") {
     state.paddocks = [];
     state.demoMode = false;
     state.selectedPropertyId = null;
+    state.selectedLotId = null;
     inputs.weighingName.value = "";
     inputs.propertyName.value = "";
     inputs.usePaddocks.checked = false;
@@ -1116,6 +1195,7 @@ if (typeof document !== "undefined") {
     }));
     state.demoMode = true;
     state.selectedPropertyId = null;
+    state.selectedLotId = null;
     inputs.weighingName.value = "Demonstração";
     inputs.propertyName.value = "";
     inputs.weighingDate.value = CalculatorCore.localDateInputValue();
@@ -1166,6 +1246,8 @@ if (typeof document !== "undefined") {
     [
       ["Nome", session.weighingName || "Pesagem sem nome"],
       ["Propriedade", session.propertyNameSnapshot || "Sem propriedade cadastrada"],
+      ["Lote", session.lotNameSnapshot || "Sem vínculo"],
+      ["Pasto do lote", session.paddockNameSnapshot || "Local não definido"],
       ["Data", formatDateInput(session.weighingDate)],
       ["Animais", String(session.totalAnimals)],
       ["Peso total", formatKg(session.totalWeight)],
@@ -1256,7 +1338,8 @@ if (typeof document !== "undefined") {
     elements.confirmFinalizeButton.disabled = false;
 
     if (result.status !== "saved") {
-      showGlobalMessage("Não foi possível salvar a pesagem finalizada neste dispositivo.");
+      showGlobalMessage("Não foi possível salvar a pesagem finalizada neste dispositivo. Verifique se o lote continua ativo na propriedade selecionada.");
+      closeFinalizeDialog();
       updateFinalizeAvailability();
       return;
     }
@@ -1342,7 +1425,7 @@ if (typeof document !== "undefined") {
 
     const title = createElement("strong", { text: session.weighingName || "Pesagem sem nome" });
     const details = createElement("span", {
-      text: `${formatDateInput(session.weighingDate)} · ${session.propertyNameSnapshot || "Propriedade não informada"}`,
+      text: `${formatDateInput(session.weighingDate)} · ${session.propertyNameSnapshot || "Propriedade não informada"} · ${session.lotNameSnapshot || "Sem lote"}`,
     });
     const metrics = createElement("span", { className: "history-item-metrics" });
 
@@ -1398,6 +1481,8 @@ if (typeof document !== "undefined") {
 
     elements.historyReportName.textContent = session.weighingName || "Pesagem sem nome";
     elements.historyReportProperty.textContent = session.propertyNameSnapshot || "Propriedade não informada";
+    document.querySelector("#history-report-lot").textContent = session.lotNameSnapshot || "Sem vínculo";
+    document.querySelector("#history-report-paddock").textContent = session.paddockNameSnapshot || "Local não definido";
     elements.historyReportDate.textContent = formatDateInput(session.weighingDate);
     elements.historyReportCreatedAt.textContent = formatDateTime(session.createdAt);
     elements.historyReportPrice.textContent = currencyFormatter.format(session.arrobaPriceSnapshot);
@@ -1510,6 +1595,8 @@ if (typeof document !== "undefined") {
         if (button.dataset.tab === "history") {
           await loadHistory();
         }
+        if (button.dataset.tab === "herd") await state.herdController.refreshProperties();
+        if (button.dataset.tab === "calculator") await refreshRegisteredHerd();
       });
     });
 
@@ -1531,6 +1618,7 @@ if (typeof document !== "undefined") {
     elements.deleteHistorySessionButton.addEventListener("click", deleteSelectedHistory);
     elements.historyPropertyFilter.addEventListener("change", () => {
       state.historyPropertyFilter = elements.historyPropertyFilter.value;
+      renderHistoryLotFilter();
       renderHistoryList();
 
       if (!state.selectedSession || !state.filteredHistorySessions.some((session) => session.id === state.selectedSession.id)) {
@@ -1542,7 +1630,18 @@ if (typeof document !== "undefined") {
       const selectedProperty = findProperty(state.selectedPropertyId);
       inputs.propertyName.value = selectedProperty ? selectedProperty.name : "";
       syncPropertyNameInput();
+      renderRegisteredLotSelect();
       handleDraftChanged();
+    });
+    inputs.registeredLot.addEventListener("change", () => {
+      state.selectedLotId = inputs.registeredLot.value || null;
+      renderRegisteredLotSelect();
+      handleDraftChanged();
+    });
+    document.querySelector("#history-lot-filter").addEventListener("change", (event) => {
+      state.historyLotFilter = event.target.value;
+      renderHistoryList();
+      if (!state.filteredHistorySessions.some((session) => session.id === state.selectedSession?.id)) renderHistoryDetailEmpty();
     });
     elements.saveAccountNameButton.addEventListener("click", saveAccountName);
     elements.accountName.addEventListener("input", () => {
@@ -1594,6 +1693,13 @@ if (typeof document !== "undefined") {
     state.accountRepository = AccountRepository.createAccountRepository({ database });
     state.propertyRepository = PropertyRepository.createPropertyRepository({ database });
     state.historyRepository = WeighingRepository.createWeighingRepository({ database });
+    state.lotRepository = window.LotRepository.createLotRepository({ database });
+    state.paddockRepository = window.PaddockRepository.createPaddockRepository({ database });
+    state.herdController = new window.HerdController.Controller({ database,
+      getAccountId: getActiveAccountId,
+      getProperties: () => state.properties,
+      onChanged: async () => { await refreshRegisteredHerd(); clearFinalizedStateIfDraftChanged(); },
+    });
     state.restoring = true;
     bindEvents();
     setActiveTab("calculator");

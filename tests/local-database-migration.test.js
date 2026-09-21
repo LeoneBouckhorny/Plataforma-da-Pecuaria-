@@ -35,7 +35,7 @@ function createFakeDb(initialStores = []) {
   };
 }
 
-test("migração inicial cria stores V3, preservando histórico e índices", () => {
+test("migração inicial cria stores atuais, preservando histórico e índices", () => {
   const db = createFakeDb();
 
   LocalDatabase.runMigrations(db, 0, null);
@@ -66,6 +66,22 @@ test("migração inicial cria stores V3, preservando histórico e índices", () 
       options: { unique: false },
     },
   ]);
+});
+
+test("migration V3 para V4 mantem as seis stores anteriores e adiciona indices do rebanho", () => {
+  const previous = ["drafts", "weighing-sessions", "weighing-items", "accounts", "properties", "app-settings"];
+  const db = createFakeDb(previous);
+  const before = new Map(db.stores);
+  LocalDatabase.runMigrations(db, 3, null);
+  assert.equal(LocalDatabase.DB_VERSION, 4);
+  for (const name of previous) assert.equal(db.stores.get(name), before.get(name));
+  for (const name of ["paddocks", "lots", "animals"]) {
+    assert.equal(db.stores.get(name).keyPath, "id");
+    assert.deepEqual(db.stores.get(name).createdIndexes.map((index) => index.indexName), ["accountId", "propertyId", "status"]);
+  }
+  const after = new Map(db.stores);
+  LocalDatabase.runMigrations(db, 4, null);
+  assert.deepEqual(db.stores, after);
 });
 
 test("migração V1 para V2 preserva drafts e cria stores históricos", () => {

@@ -26,7 +26,30 @@ const WeighingRepository = ((LocalDatabaseRef, WeighingHistoryCoreRef) => {
         await this.database.writeTransaction([
           LocalDatabase.WEIGHING_SESSIONS_STORE,
           LocalDatabase.WEIGHING_ITEMS_STORE,
-        ], ({ store, requestToPromise }) => {
+          ...(normalized.session.lotId ? ["properties", "lots", "paddocks"] : []),
+        ], async ({ store, requestToPromise }) => {
+          if (normalized.session.lotId) {
+            const session = normalized.session;
+            const lot = await requestToPromise(store("lots").get(session.lotId));
+            const property = await requestToPromise(store("properties").get(session.propertyId));
+            if (!property || property.accountId !== session.accountId || property.status !== "active"
+              || !lot || lot.accountId !== session.accountId || lot.propertyId !== session.propertyId || lot.status !== "active") {
+              throw new Error("O lote selecionado não está ativo nesta propriedade.");
+            }
+            const paddock = lot.paddockId ? await requestToPromise(store("paddocks").get(lot.paddockId)) : null;
+            if (lot.paddockId && (!paddock || paddock.accountId !== session.accountId || paddock.propertyId !== session.propertyId)) {
+              throw new Error("O pasto do lote não pertence à propriedade.");
+            }
+            // Capture current names/location atomically with the historical write.
+            session.propertyNameSnapshot = property.name;
+            session.lotNameSnapshot = lot.name;
+            session.paddockId = paddock ? paddock.id : null;
+            session.paddockNameSnapshot = paddock ? paddock.name : "";
+          } else {
+            normalized.session.lotNameSnapshot = "";
+            normalized.session.paddockId = null;
+            normalized.session.paddockNameSnapshot = "";
+          }
           const sessionStore = store(LocalDatabase.WEIGHING_SESSIONS_STORE);
           const itemStore = store(LocalDatabase.WEIGHING_ITEMS_STORE);
           const requests = [requestToPromise(sessionStore.put(normalized.session))];
@@ -60,8 +83,10 @@ const WeighingRepository = ((LocalDatabaseRef, WeighingHistoryCoreRef) => {
 
               if (hasPropertyFilter) {
                 const propertyId = options.propertyId == null ? null : String(options.propertyId);
-                return session.propertyId === propertyId;
+                if (session.propertyId !== propertyId) return false;
               }
+
+              if (options.lotId !== undefined && session.lotId !== (options.lotId == null ? null : String(options.lotId))) return false;
 
               return true;
             })

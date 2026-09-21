@@ -24,6 +24,10 @@ Base inicial da Plataforma da Pecuaria, com foco em uma porta de entrada simples
 - Historico local de pesagens finalizadas neste dispositivo.
 - Operacao local editavel neste dispositivo.
 - Multiplas propriedades locais, com arquivamento e reativacao.
+- Area Rebanho com pastos/piquetes, lotes e animais por propriedade.
+- Local atual do lote definido por pasto opcional; animal vinculado a lote opcional.
+- Cadastro individual com brinco ou nome, sem associacao automatica a itens de pesagem.
+- Pesagem opcionalmente vinculada a lote e filtro historico por ID do lote.
 - Selecao de propriedade por pesagem, sem tornar o cadastro obrigatorio.
 - Filtro de historico por propriedade ou por sessoes sem vinculo.
 - PWA instalavel em navegadores compativeis.
@@ -48,6 +52,14 @@ Na Sprint 004, a aplicacao cria uma operacao local e permite cadastrar varias pr
 
 Propriedades cadastradas recebem IDs estaveis e podem ser arquivadas ou reativadas. O arquivamento nao apaga historico. Pesagens finalizadas gravam `propertyId` quando ha propriedade selecionada e tambem gravam `propertyNameSnapshot`, preservando o nome usado no momento da finalizacao mesmo que o cadastro seja renomeado depois.
 
+Na Sprint 006, IndexedDB V4 adiciona `paddocks`, `lots` e `animals`, sem regravar
+os registros anteriores. Cada entidade pertence a uma operacao e propriedade.
+O animal possui `lotId`; sua localizacao e derivada do `paddockId` do lote.
+Um pasto com lote ativo e um lote com animal ativo nao podem ser arquivados.
+Nao ha exclusao definitiva desses cadastros nem transferencia entre propriedades.
+Historicos vinculados preservam os nomes do lote e pasto no momento da gravacao.
+Os contadores mostram animais ativos cadastrados, nao uma estimativa de todo o gado fisico.
+
 ## PWA e uso offline
 
 Na Sprint 003, a aplicacao passou a registrar um Service Worker e um Web App Manifest. Em navegadores compativeis, ela pode ser instalada como aplicativo e pode abrir sem internet depois de ter sido carregada online pelo menos uma vez em contexto compativel com Service Worker.
@@ -61,6 +73,9 @@ O funcionamento offline cobre:
 - consulta e exclusao de historico local;
 - criacao, edicao, arquivamento e reativacao de propriedades locais;
 - selecao de propriedade e filtro de historico;
+- cadastro, edicao e arquivamento/reativacao do rebanho conforme seus vinculos;
+- mudanca do pasto atual do lote e do lote atual do animal;
+- pesagem vinculada opcionalmente a lote e consulta dos snapshots historicos;
 - geracao de CSV em memoria;
 - preparacao do romaneio para impressao.
 
@@ -77,12 +92,10 @@ O navegador pode remover dados locais conforme suas proprias politicas de armaze
 
 ## Gestao premium futura
 
-- Pastos/piquetes opcionais por propriedade.
 - Lotacao maxima opcional por pasto.
-- Lotes e animais individuais.
-- Historico de peso.
+- Historico individual de peso vinculado explicitamente ao animal.
 - Vacinas, reproducao, nascimento, castracao, compra, venda e mortalidade.
-- Movimentacao entre propriedades e pastos.
+- Historico de movimentacoes e transferencia entre propriedades.
 - Despesas e permissoes para funcionarios.
 
 ## Como abrir para desenvolvimento
@@ -109,7 +122,7 @@ A Sprint 005 aplica o simbolo aprovado (bovino, dados e campo), com paleta
 centralizada e componentes reutilizaveis. `styles.css` agrega as camadas
 em `styles/`; a marca fica em `assets/branding/` e os icones em `assets/`.
 Montserrat permanece como referencia com fallback local system-ui/Segoe UI,
-sem fonte externa. O app shell v3 inclui todos os assets visuais essenciais.
+sem fonte externa. O app shell atual v4 preserva os assets visuais e inclui os modulos do rebanho.
 
 Detalhes: `docs/DESIGN_SYSTEM_V1.md`, `docs/ADR_005_IDENTIDADE_VISUAL.md`
 e `docs/QA_SPRINT_005.md`. Para servir com Node.js, tambem e possivel usar
@@ -140,3 +153,17 @@ Execute os testes automatizados:
 ```powershell
 node --test tests/*.test.js
 ```
+
+O QA da Sprint 006 esta em `scripts/qa-sprint-006.cjs`. Ele exige Playwright
+disponivel no ambiente de desenvolvimento (nao e dependencia do aplicativo).
+Use `QA_BROWSER_PATH` para indicar um Chromium/Edge local; sem essa variavel,
+o runner procura Edge/Chrome nos caminhos comuns de Windows e depois usa o
+Chromium do Playwright. Execute `node scripts/qa-sprint-006.cjs`.
+O runner cria dados em contexto isolado e usa um servidor temporario, sem
+alterar os registros da instalacao do produtor.
+
+Documentacao atual: `docs/MODELO_DE_DADOS_V4.md`,
+`docs/ADR_006_ESTRUTURA_REBANHO.md`, `docs/QA_SPRINT_006.md`.
+Ainda nao existem historico individual completo, movimentacoes historicas,
+transferencia entre propriedades, sanidade, reproducao, financeiro, nuvem
+ou sincronizacao. Nenhuma funcionalidade da Sprint 007 foi iniciada.

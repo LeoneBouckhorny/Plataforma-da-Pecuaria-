@@ -55,6 +55,15 @@
 .premium-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-5); }
 .premium-grid > div { border-top: 2px solid var(--color-earth); padding-top: var(--space-4); }
 .premium-grid p { color: var(--color-text-muted); margin-top: var(--space-3); }
+.herd-section { border-top: var(--border-width) solid var(--color-border); padding-block: var(--space-5); }
+.herd-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: var(--space-3); }
+.herd-card { min-width: 0; padding: var(--space-4); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); }
+.herd-card h4 { font-size: var(--font-md); margin: 0 0 var(--space-2); overflow-wrap: anywhere; }
+.herd-card p { margin-block: var(--space-2); overflow-wrap: anywhere; font-size: var(--font-sm); }
+.herd-card .property-actions { justify-content: flex-start; margin-top: var(--space-3); }
+.herd-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#herd-dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
+#herd-dialog h2 { margin-bottom: var(--space-4); }
 @media (max-width: 1100px) {
   .workspace, .history-workspace { grid-template-columns: minmax(0, 1fr); }
   .premium-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -67,6 +76,9 @@
   .brand h1 { font-size: 17px; }
   .topbar .tabs { grid-row: auto; padding-inline: var(--space-1); gap: 0; }
   .tab-button { flex: 1; min-width: 0; padding: var(--space-3) var(--space-1); font-size: var(--font-xs); }
+  .topbar .tabs { flex-wrap: wrap; }
+  .topbar .tab-button { flex-basis: 30%; }
+  .herd-metrics { grid-template-columns: minmax(0, 1fr); }
   .pwa-controls { grid-row: 3; justify-content: flex-start; max-width: 100%; padding: var(--space-2) var(--space-4); }
   .panel { padding: var(--space-4); }
   .form-grid, .property-grid, .operation-form, .premium-grid { grid-template-columns: minmax(0, 1fr); }

@@ -1,12 +1,15 @@
 const LocalDatabase = (() => {
   const DB_NAME = "plataforma-pecuaria";
-  const DB_VERSION = 3;
+  const DB_VERSION = 4;
   const DRAFT_STORE = "drafts";
   const WEIGHING_SESSIONS_STORE = "weighing-sessions";
   const WEIGHING_ITEMS_STORE = "weighing-items";
   const ACCOUNTS_STORE = "accounts";
   const PROPERTIES_STORE = "properties";
   const APP_SETTINGS_STORE = "app-settings";
+  const PADDOCKS_STORE = "paddocks";
+  const LOTS_STORE = "lots";
+  const ANIMALS_STORE = "animals";
   const SESSION_ID_INDEX = "sessionId";
   const ACCOUNT_ID_INDEX = "accountId";
   const STATUS_INDEX = "status";
@@ -73,6 +76,18 @@ const LocalDatabase = (() => {
 
       if (!db.objectStoreNames.contains(APP_SETTINGS_STORE)) {
         db.createObjectStore(APP_SETTINGS_STORE, { keyPath: "key" });
+      }
+    }
+    if (oldVersion < 4) migrateHerdStores(db);
+  }
+
+  function migrateHerdStores(db) {
+    for (const name of [PADDOCKS_STORE, LOTS_STORE, ANIMALS_STORE]) {
+      if (!db.objectStoreNames.contains(name)) {
+        const store = db.createObjectStore(name, { keyPath: "id" });
+        for (const key of ["accountId", "propertyId", "status"]) {
+          store.createIndex(key, key, { unique: false });
+        }
       }
     }
   }
@@ -212,9 +227,17 @@ const LocalDatabase = (() => {
         requestToPromise,
         deleteByIndex,
       };
-      const result = await operation(helpers);
-      await transactionDone;
-      return result;
+      // Observe failures immediately; abort partial writes if the callback throws.
+      transactionDone.catch(() => {});
+      try {
+        const result = await operation(helpers);
+        await transactionDone;
+        return result;
+      } catch (error) {
+        try { transaction.abort(); } catch { /* Already completed or aborted. */ }
+        await transactionDone.catch(() => {});
+        throw error;
+      }
     }
 
     close() {
@@ -239,6 +262,9 @@ const LocalDatabase = (() => {
     ACCOUNTS_STORE,
     PROPERTIES_STORE,
     APP_SETTINGS_STORE,
+    PADDOCKS_STORE,
+    LOTS_STORE,
+    ANIMALS_STORE,
     SESSION_ID_INDEX,
     ACCOUNT_ID_INDEX,
     STATUS_INDEX,

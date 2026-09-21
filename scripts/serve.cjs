@@ -21,7 +21,7 @@ function createServer(options = {}) {
       const absolute = path.resolve(root, name);
       if (!absolute.startsWith(root + path.sep) || name.split(/[\\/]/).some((part) => part.startsWith("."))) { res.writeHead(403).end(); return; }
       const data = options.baseline?.()
-        ? execFileSync("git", ["show", `043381f:${name}`], { cwd: root, windowsHide: true, stdio: ["ignore", "pipe", "ignore"] })
+        ? execFileSync("git", ["show", `${options.baselineRef || "043381f"}:${name}`], { cwd: root, windowsHide: true, stdio: ["ignore", "pipe", "ignore"] })
         : fs.readFileSync(absolute);
       res.writeHead(200, { "Content-Type": types[path.extname(name)] || "application/octet-stream", "Cache-Control": "no-store" });
       res.end(data);

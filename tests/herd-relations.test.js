@@ -1,0 +1,50 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const { fixture } = require("./herd-test-helpers.js");
+test("vinculos mesma propriedade e mudanca do lote derivam local de todos os animais", async () => {
+  const f = fixture();
+  const p1 = (await f.paddock.create("a", "p", { name: "P1" })).paddock;
+  const p2 = (await f.paddock.create("a", "p", { name: "P2" })).paddock;
+  const lot = (await f.lot.create("a", "p", { name: "L", paddockId: p1.id })).lot;
+  const animal = (await f.animal.create("a", "p", { tag: "101", lotId: lot.id })).animal;
+  assert.equal((await f.lot.changePaddock("a", "p", lot.id, p2.id)).status, "saved");
+  assert.deepEqual((await f.animal.get("a", "p", animal.id)).animal, animal);
+  assert.equal((await f.lot.get("a", "p", animal.lotId)).lot.paddockId, p2.id);
+  assert.equal("paddockId" in animal, false);
+});
+for (const [account, property] of [["a", "q"], ["b", "r"]]) test(`bloqueia pais cross-scope ${account}/${property} na criacao e edicao`, async () => {
+  const f = fixture();
+  const p = (await f.paddock.create(account, property, { name: "P" })).paddock;
+  const l = (await f.lot.create(account, property, { name: "L" })).lot;
+  assert.equal((await f.lot.create("a", "p", { name: "L", paddockId: p.id })).status, "invalid");
+  assert.equal((await f.animal.create("a", "p", { tag: "1", lotId: l.id })).status, "invalid");
+  const localLot = (await f.lot.create("a", "p", { name: "L" })).lot;
+  const animal = (await f.animal.create("a", "p", { tag: "1" })).animal;
+  assert.equal((await f.lot.changePaddock("a", "p", localLot.id, p.id)).status, "invalid");
+  assert.equal((await f.animal.changeLot("a", "p", animal.id, l.id)).status, "invalid");
+  assert.equal((await f.lot.get("a", "p", localLot.id)).lot.paddockId, null);
+  assert.equal((await f.animal.get("a", "p", animal.id)).animal.lotId, null);
+});
+test("arquivamento bloqueia filhos ativos; mover ou desvincular permite", async () => {
+  const f = fixture();
+  const p = (await f.paddock.create("a", "p", { name: "P" })).paddock;
+  const l = (await f.lot.create("a", "p", { name: "L", paddockId: p.id })).lot;
+  const a = (await f.animal.create("a", "p", { tag: "1", lotId: l.id })).animal;
+  assert.equal((await f.paddock.archive("a", "p", p.id)).status, "invalid");
+  assert.equal((await f.lot.archive("a", "p", l.id)).status, "invalid");
+  await f.animal.changeLot("a", "p", a.id, null);
+  assert.equal((await f.lot.archive("a", "p", l.id)).status, "saved");
+  assert.equal((await f.paddock.archive("a", "p", p.id)).status, "saved");
+  assert.equal((await f.lot.reactivate("a", "p", l.id)).status, "invalid");
+  await f.lot.changePaddock("a", "p", l.id, null);
+  assert.equal((await f.lot.reactivate("a", "p", l.id)).status, "saved");
+  assert.equal((await f.paddock.reactivate("a", "p", p.id)).status, "saved");
+});
+test("nao aceita vinculo inexistente ou arquivado em entidade ativa", async () => {
+  const f = fixture();
+  const l = (await f.lot.create("a", "p", { name: "L" })).lot;
+  await f.lot.archive("a", "p", l.id);
+  assert.equal((await f.animal.create("a", "p", { tag: "1", lotId: l.id })).status, "invalid");
+  assert.equal((await f.animal.create("a", "p", { tag: "1", lotId: "missing" })).status, "invalid");
+  assert.equal((await f.lot.create("a", "p", { name: "L", paddockId: "missing" })).status, "invalid");
+});
