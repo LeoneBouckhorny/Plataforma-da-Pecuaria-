@@ -53,8 +53,8 @@ test("manifest PWA possui configuracao instalavel e caminhos relativos", () => {
   assert.equal(manifest.scope, "./");
   assert.equal(manifest.display, "standalone");
   assert.equal(manifest.orientation, "any");
-  assert.equal(manifest.theme_color, "#2f6f4e");
-  assert.equal(manifest.background_color, "#eef1ed");
+  assert.equal(manifest.theme_color, "#0B3D2E");
+  assert.equal(manifest.background_color, "#F5F7F4");
   assert.equal(manifest.prefer_related_applications, false);
   assert.ok(manifest.description.includes("Calculadora"));
 
@@ -73,7 +73,7 @@ test("HTML referencia manifest, icone Apple e controlador PWA", () => {
   const html = readText("index.html");
 
   assert.match(html, /<link rel="manifest" href="\.\/manifest\.webmanifest">/);
-  assert.match(html, /<meta name="theme-color" content="#2f6f4e">/);
+  assert.match(html, /<meta name="theme-color" content="#0B3D2E">/);
   assert.match(html, /<link rel="apple-touch-icon" href="\.\/assets\/icons\/icon-180\.png">/);
   assert.match(html, /id="install-app"/);
   assert.match(html, /id="connection-status"/);
@@ -101,7 +101,7 @@ test("controlador PWA registra service worker relativo e nao usa API experimenta
 test("service worker possui cache versionado e regras de seguranca", () => {
   const serviceWorker = readText("sw.js");
 
-  assert.match(serviceWorker, /const CACHE_VERSION = "v2"/);
+  assert.match(serviceWorker, /const CACHE_VERSION = "v3"/);
   assert.match(serviceWorker, /const CACHE_PREFIX = "plataforma-pecuaria-shell-"/);
   assert.match(serviceWorker, /const CACHE_NAME = `\$\{CACHE_PREFIX\}\$\{CACHE_VERSION\}`/);
   assert.match(serviceWorker, /cache\.addAll\(APP_SHELL\)/);

@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const CACHE_PREFIX = "plataforma-pecuaria-shell-";
 const CACHE_NAME = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
@@ -6,6 +6,22 @@ const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css",
+  "./styles/tokens.css",
+  "./styles/base.css",
+  "./styles/components.css",
+  "./styles/layout.css",
+  "./styles/print.css",
+  "./assets/branding/symbol.svg",
+  "./assets/branding/symbol-inverse.svg",
+  "./assets/branding/logo-horizontal.svg",
+  "./assets/branding/logo-horizontal-inverse.svg",
+  "./assets/icons/favicon-32.png",
+  "./assets/ui/plus.svg",
+  "./assets/ui/x.svg",
+  "./assets/ui/printer.svg",
+  "./assets/ui/download.svg",
+  "./assets/ui/check.svg",
+  "./assets/ui/trash-2.svg",
   "./app.js",
   "./manifest.webmanifest",
   "./src/calculator-core.js",

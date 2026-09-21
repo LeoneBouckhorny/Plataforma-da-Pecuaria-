@@ -1,0 +1,280 @@
+{
+  "checks": [
+    {
+      "name": "cache-v2-to-v3-preserves-all-stores",
+      "passed": true,
+      "detail": {
+        "version": 3,
+        "counts": {
+          "accounts": 1,
+          "app-settings": 1,
+          "drafts": 1,
+          "properties": 1,
+          "weighing-items": 2,
+          "weighing-sessions": 1
+        },
+        "caches": [
+          "plataforma-pecuaria-shell-v3"
+        ]
+      }
+    },
+    {
+      "name": "index-cache-protection",
+      "passed": true,
+      "detail": "README navigation did not replace index HTML"
+    },
+    {
+      "name": "workflow-1280",
+      "passed": true,
+      "detail": {
+        "reference": "960kg / 480kg / 32@ / R$9600",
+        "csv": true,
+        "autosaveRace": true,
+        "editAfterFinalization": true,
+        "demoReload": true,
+        "historyFilter": true,
+        "printButtonsHidden": true,
+        "archiveReactivate": true,
+        "offlineReopenFinalizeHistory": true,
+        "deletion": true,
+        "collapsedHeaderHeight": 128
+      }
+    },
+    {
+      "name": "workflow-768",
+      "passed": true,
+      "detail": {
+        "reference": "960kg / 480kg / 32@ / R$9600",
+        "csv": true,
+        "autosaveRace": true,
+        "editAfterFinalization": true,
+        "demoReload": true,
+        "historyFilter": true,
+        "printButtonsHidden": true,
+        "archiveReactivate": true,
+        "offlineReopenFinalizeHistory": true,
+        "deletion": true,
+        "collapsedHeaderHeight": 128
+      }
+    },
+    {
+      "name": "workflow-360",
+      "passed": true,
+      "detail": {
+        "reference": "960kg / 480kg / 32@ / R$9600",
+        "csv": true,
+        "autosaveRace": true,
+        "editAfterFinalization": true,
+        "demoReload": true,
+        "historyFilter": true,
+        "printButtonsHidden": true,
+        "archiveReactivate": true,
+        "offlineReopenFinalizeHistory": true,
+        "deletion": true,
+        "collapsedHeaderHeight": 112
+      }
+    }
+  ],
+  "viewports": [
+    {
+      "name": "before-properties",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "before-history",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "before-calculator",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "after-calculator",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "after-properties",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "after-history",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-calculator-empty",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-history-empty",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-property-form",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-properties",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-calculator-filled",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-demo",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-history",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-archived",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-error",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-install-available",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-offline-history",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "768-calculator-empty",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-history-empty",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-property-form",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-properties",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-calculator-filled",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-demo",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-history",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-archived",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-error",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-install-available",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-offline-history",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "360-calculator-empty",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-history-empty",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-property-form",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-properties",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-calculator-filled",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-demo",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-history",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-archived",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-error",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-install-available",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-offline-history",
+      "width": 360,
+      "scrollWidth": 360
+    }
+  ],
+  "errors": [],
+  "limitations": [
+    "Android fisico e instalacao nativa nao executados",
+    "beforeinstallprompt/appinstalled simulados apenas para verificar layout e controlador"
+  ]
+}

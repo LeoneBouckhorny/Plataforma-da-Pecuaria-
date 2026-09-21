@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">Plataforma da Pecuária: bovino, pastagem e dados</title>
+  <defs>
+    <clipPath id="badge"><path d="M116 12H244V155C244 214 207 244 144 244H109C51 244 20 213 20 158V111C20 53 59 12 116 12Z"/></clipPath>
+  </defs>
+  <path fill="#0B3D2E" d="M116 12H244V155C244 214 207 244 144 244H109C51 244 20 213 20 158V111C20 53 59 12 116 12Z"/>
+  <g fill="#22C55E">
+    <path d="M158 83H175V119H158Z"/>
+    <path d="M183 62H200V115H183Z"/>
+    <path d="M208 37H225V112H208Z"/>
+  </g>
+  <g clip-path="url(#badge)">
+    <path fill="#317348" d="M89 221C119 163 173 126 250 126V163C188 169 150 192 120 236Z"/>
+    <path fill="#B88B6F" d="M111 244C143 191 188 165 250 160V193C193 196 156 216 139 248Z"/>
+    <g fill="none" stroke="#FFFFFF" stroke-width="7">
+      <path d="M89 221C119 163 173 126 250 126"/>
+      <path d="M111 244C143 191 188 165 250 160"/>
+      <path d="M138 248C157 216 194 194 250 193"/>
+    </g>
+    <path fill="#0B3D2E" stroke="#FFFFFF" stroke-width="7" d="M11 174C64 174 113 199 138 252H5Z"/>
+  </g>
+  <path fill="#FFFFFF" d="M68 65C73 52 84 49 95 49C111 49 120 56 125 68C129 76 140 79 153 76C155 86 149 97 137 99C132 100 128 97 124 93C119 105 116 117 119 130C121 141 116 154 108 159C102 163 83 163 77 158C68 152 66 142 69 132C73 117 66 103 62 94C56 101 48 102 41 98C33 94 29 86 27 78C40 72 48 74 57 79C62 76 65 71 68 65Z"/>
+  <path fill="#0B3D2E" d="M79 149C87 153 100 153 109 149C106 157 84 159 79 149Z"/>
+</svg>

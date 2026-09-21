@@ -103,7 +103,19 @@ Abrir o HTML diretamente pode funcionar para leitura visual, mas o teste de Inde
 
 Para QA de PWA e Service Worker, use `http://127.0.0.1:8026/index.html` ou outro localhost. Em producao, Service Worker exige HTTPS.
 
-## Testes
+## Identidade visual
+
+A Sprint 005 aplica o simbolo aprovado (bovino, dados e campo), com paleta
+centralizada e componentes reutilizaveis. `styles.css` agrega as camadas
+em `styles/`; a marca fica em `assets/branding/` e os icones em `assets/`.
+Montserrat permanece como referencia com fallback local system-ui/Segoe UI,
+sem fonte externa. O app shell v3 inclui todos os assets visuais essenciais.
+
+Detalhes: `docs/DESIGN_SYSTEM_V1.md`, `docs/ADR_005_IDENTIDADE_VISUAL.md`
+e `docs/QA_SPRINT_005.md`. Para servir com Node.js, tambem e possivel usar
+`node scripts/serve.cjs` e acessar `http://127.0.0.1:8026/index.html`.
+
+## Testes automatizados
 
 Execute a checagem de sintaxe:
 

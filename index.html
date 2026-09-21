@@ -5,21 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Plataforma da Pecuária</title>
     <meta name="description" content="Calculadora de pesagem e base inicial para gestão rural.">
-    <meta name="theme-color" content="#2f6f4e">
+    <meta name="theme-color" content="#0B3D2E">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Pecuária">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="apple-touch-icon" href="./assets/icons/icon-180.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/favicon-32.png">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <div class="app-shell">
       <header class="topbar no-print">
-        <div>
-          <p class="eyebrow">MVP inicial</p>
-          <h1>Plataforma da Pecuária</h1>
+        <div class="brand">
+          <img class="brand-symbol" src="./assets/branding/symbol.svg" alt="" width="48" height="48">
+          <h1>Plataforma<br><em>da</em> Pecuária</h1>
         </div>
         <nav class="tabs" aria-label="Navegação principal">
           <button class="tab-button active" id="calculator-tab" type="button" data-tab="calculator">Calculadora</button>
@@ -94,10 +95,10 @@
               </form>
 
               <div class="action-row">
-                <button class="primary-button" id="finalize-weighing" type="button">Finalizar pesagem</button>
-                <button class="secondary-button" id="export-current-csv" type="button">Exportar CSV</button>
+                <button class="primary-button action-icon confirm" id="finalize-weighing" type="button">Finalizar pesagem</button>
+                <button class="secondary-button action-icon download" id="export-current-csv" type="button">Exportar CSV</button>
                 <button class="secondary-button" id="load-demo" type="button">Carregar dados de exemplo</button>
-                <button class="secondary-button danger" id="clear-weighing" type="button">Limpar pesagem</button>
+                <button class="secondary-button danger action-icon delete" id="clear-weighing" type="button">Limpar pesagem</button>
               </div>
 
               <div id="finalize-feedback" class="success-message hidden" role="status" aria-live="polite">
@@ -120,7 +121,7 @@
                 <div id="paddock-config" class="paddock-config hidden">
                   <div class="table-toolbar">
                     <h3>Pastos da pesagem</h3>
-                    <button class="icon-button" id="add-paddock" type="button" aria-label="Adicionar pasto">+</button>
+                    <button class="icon-button" id="add-paddock" type="button" aria-label="Adicionar pasto" title="Adicionar pasto">+</button>
                   </div>
                   <div class="animal-table-wrap">
                     <table class="animal-table">
@@ -145,7 +146,7 @@
 
               <div class="table-toolbar">
                 <h3>Animais</h3>
-                <button class="icon-button" id="add-animal" type="button" aria-label="Adicionar animal">+</button>
+                <button class="icon-button" id="add-animal" type="button" aria-label="Adicionar animal" title="Adicionar animal">+</button>
               </div>
 
               <div class="animal-table-wrap">
@@ -173,7 +174,7 @@
                   <p class="eyebrow">Romaneio V1</p>
                   <h2>PLATAFORMA DA PECUÁRIA</h2>
                 </div>
-                <button id="print-report" class="secondary-button no-print" type="button">Imprimir</button>
+                <button id="print-report" class="secondary-button action-icon print no-print" type="button">Imprimir</button>
               </div>
 
               <section class="report-meta" aria-label="Identificação do romaneio">
@@ -255,9 +256,9 @@
                   <h2>PLATAFORMA DA PECUÁRIA</h2>
                 </div>
                 <div class="history-actions no-print">
-                  <button class="secondary-button" id="export-history-csv" type="button">Exportar CSV</button>
-                  <button class="secondary-button" id="print-history-report" type="button">Imprimir</button>
-                  <button class="secondary-button danger" id="delete-history-session" type="button">Excluir</button>
+                  <button class="secondary-button action-icon download" id="export-history-csv" type="button">Exportar CSV</button>
+                  <button class="secondary-button action-icon print" id="print-history-report" type="button">Imprimir</button>
+                  <button class="secondary-button danger action-icon delete" id="delete-history-session" type="button">Excluir</button>
                 </div>
               </div>
 
@@ -338,7 +339,7 @@
                   <p class="eyebrow">Propriedades</p>
                   <h3>Cadastro local</h3>
                 </div>
-                <button class="primary-button" id="new-property" type="button">+ Nova propriedade</button>
+                <button class="primary-button action-icon add" id="new-property" type="button">Nova propriedade</button>
               </div>
 
               <form id="property-form" class="property-form hidden">
