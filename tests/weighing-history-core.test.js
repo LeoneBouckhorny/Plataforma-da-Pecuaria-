@@ -5,6 +5,8 @@ const core = require("../src/weighing-history-core.js");
 const validSource = {
   weighingName: "Pesagem Histórica",
   weighingDate: "2026-08-12",
+  accountId: "account-1",
+  propertyId: "property-1",
   propertyName: "Fazenda Snapshot",
   settings: {
     arrobaPrice: "300,00",
@@ -37,6 +39,9 @@ test("cria snapshot histórico válido", () => {
   assert.equal(result.snapshot.session.id, "session-1");
   assert.equal(result.snapshot.session.status, "completed");
   assert.equal(result.snapshot.session.totalAnimals, 2);
+  assert.equal(result.snapshot.session.accountId, "account-1");
+  assert.equal(result.snapshot.session.propertyId, "property-1");
+  assert.equal(result.snapshot.session.propertyNameSnapshot, "Fazenda Snapshot");
   assert.equal(result.snapshot.session.totalWeight, 960);
   assert.equal(result.snapshot.session.totalArrobas, 32);
   assert.equal(result.snapshot.session.estimatedValue, 9600);
@@ -67,12 +72,30 @@ test("snapshot não muda quando o draft original é alterado depois", () => {
   const result = core.buildSnapshot(source, { idFactory });
 
   source.weighingName = "Alterado";
+  source.propertyName = "Nome atual alterado";
+  source.propertyId = "property-2";
   source.settings.arrobaPrice = "999";
   source.animals[0].weight = "999";
 
   assert.equal(result.snapshot.session.weighingName, "Pesagem Histórica");
+  assert.equal(result.snapshot.session.propertyId, "property-1");
+  assert.equal(result.snapshot.session.propertyNameSnapshot, "Fazenda Snapshot");
   assert.equal(result.snapshot.session.arrobaPriceSnapshot, 300);
   assert.equal(result.snapshot.items[0].weightSnapshot, 450);
+});
+
+test("sessão sem propriedade cadastrada mantém propertyId nulo e snapshot textual opcional", () => {
+  idFactory.counts = {};
+  const result = core.buildSnapshot({
+    ...validSource,
+    propertyId: null,
+    propertyName: "Nome livre para romaneio",
+  }, { idFactory });
+
+  assert.equal(result.valid, true);
+  assert.equal(result.snapshot.session.accountId, "account-1");
+  assert.equal(result.snapshot.session.propertyId, null);
+  assert.equal(result.snapshot.session.propertyNameSnapshot, "Nome livre para romaneio");
 });
 
 test("parâmetros inválidos são rejeitados", () => {

@@ -77,6 +77,9 @@ test("HTML referencia manifest, icone Apple e controlador PWA", () => {
   assert.match(html, /<link rel="apple-touch-icon" href="\.\/assets\/icons\/icon-180\.png">/);
   assert.match(html, /id="install-app"/);
   assert.match(html, /id="connection-status"/);
+  assert.match(html, /<script src="src\/property-core\.js"><\/script>/);
+  assert.match(html, /<script src="src\/account-repository\.js"><\/script>/);
+  assert.match(html, /<script src="src\/property-repository\.js"><\/script>/);
   assert.match(html, /<script src="src\/pwa-controller\.js"><\/script>/);
   assert.doesNotMatch(html, /<install[\s>]/i);
 });
@@ -98,7 +101,7 @@ test("controlador PWA registra service worker relativo e nao usa API experimenta
 test("service worker possui cache versionado e regras de seguranca", () => {
   const serviceWorker = readText("sw.js");
 
-  assert.match(serviceWorker, /const CACHE_VERSION = "v1"/);
+  assert.match(serviceWorker, /const CACHE_VERSION = "v2"/);
   assert.match(serviceWorker, /const CACHE_PREFIX = "plataforma-pecuaria-shell-"/);
   assert.match(serviceWorker, /const CACHE_NAME = `\$\{CACHE_PREFIX\}\$\{CACHE_VERSION\}`/);
   assert.match(serviceWorker, /cache\.addAll\(APP_SHELL\)/);
@@ -109,6 +112,9 @@ test("service worker possui cache versionado e regras de seguranca", () => {
   assert.match(serviceWorker, /event\.request\.mode === "navigate"/);
   assert.match(serviceWorker, /networkFirstNavigation\(event\.request\)/);
   assert.match(serviceWorker, /staleWhileRevalidate\(event\.request\)/);
+  assert.match(serviceWorker, /"\.\/src\/property-core\.js"/);
+  assert.match(serviceWorker, /"\.\/src\/account-repository\.js"/);
+  assert.match(serviceWorker, /"\.\/src\/property-repository\.js"/);
   assert.doesNotMatch(serviceWorker, /skipWaiting/);
   assert.doesNotMatch(serviceWorker, /workbox/i);
   assert.doesNotMatch(serviceWorker, /localStorage|sessionStorage|openDatabase|indexedDB/);

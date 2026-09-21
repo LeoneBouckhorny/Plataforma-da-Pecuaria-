@@ -10,8 +10,11 @@ if (typeof document !== "undefined") {
 
   const SAVE_DEBOUNCE_MS = 500;
   const CalculatorCore = window.CalculatorCore;
+  const PropertyCore = window.PropertyCore;
   const LocalDataCore = window.LocalDataCore;
   const LocalDatabase = window.LocalDatabase;
+  const AccountRepository = window.AccountRepository;
+  const PropertyRepository = window.PropertyRepository;
   const DraftRepository = window.DraftRepository;
   const WeighingHistoryCore = window.WeighingHistoryCore;
   const WeighingRepository = window.WeighingRepository;
@@ -26,8 +29,15 @@ if (typeof document !== "undefined") {
     clearing: false,
     finalizing: false,
     repository: null,
+    accountRepository: null,
+    propertyRepository: null,
     historyRepository: null,
+    activeAccount: null,
+    properties: [],
+    selectedPropertyId: null,
+    historyPropertyFilter: "all",
     historySessions: [],
+    filteredHistorySessions: [],
     selectedSession: null,
     selectedItems: [],
     pendingSnapshot: null,
@@ -45,6 +55,7 @@ if (typeof document !== "undefined") {
   const inputs = {
     weighingName: document.querySelector("#weighing-name"),
     weighingDate: document.querySelector("#weighing-date"),
+    propertySelect: document.querySelector("#property-select"),
     propertyName: document.querySelector("#property-name"),
     arrobaPrice: document.querySelector("#arroba-price"),
     yieldRate: document.querySelector("#yield-rate"),
@@ -109,6 +120,23 @@ if (typeof document !== "undefined") {
     exportHistoryCsvButton: document.querySelector("#export-history-csv"),
     printHistoryReportButton: document.querySelector("#print-history-report"),
     deleteHistorySessionButton: document.querySelector("#delete-history-session"),
+    historyPropertyFilter: document.querySelector("#history-property-filter"),
+    accountName: document.querySelector("#account-name"),
+    accountNameMessage: document.querySelector("#account-name-message"),
+    saveAccountNameButton: document.querySelector("#save-account-name"),
+    newPropertyButton: document.querySelector("#new-property"),
+    propertyForm: document.querySelector("#property-form"),
+    propertyId: document.querySelector("#property-id"),
+    propertyFormName: document.querySelector("#property-form-name"),
+    propertyNameMessage: document.querySelector("#property-name-message"),
+    propertyMunicipality: document.querySelector("#property-municipality"),
+    propertyState: document.querySelector("#property-state"),
+    propertyNotes: document.querySelector("#property-notes"),
+    savePropertyButton: document.querySelector("#save-property"),
+    cancelPropertyButton: document.querySelector("#cancel-property"),
+    propertyFeedback: document.querySelector("#property-feedback"),
+    propertyEmptyMessage: document.querySelector("#property-empty-message"),
+    propertyList: document.querySelector("#property-list"),
   };
 
   function createElement(tag, options = {}) {
@@ -175,6 +203,32 @@ if (typeof document !== "undefined") {
     return `Leve até ${formatKg(lightLimit)}; média até ${formatKg(mediumLimit)}; pesada acima de ${formatKg(mediumLimit)}.`;
   }
 
+  function getActiveAccountId() {
+    return state.activeAccount ? state.activeAccount.id : null;
+  }
+
+  function findProperty(propertyId) {
+    return state.properties.find((property) => property.id === propertyId) || null;
+  }
+
+  function findActiveProperty(propertyId) {
+    const property = findProperty(propertyId);
+    return property && property.status === PropertyCore.ACTIVE_STATUS ? property : null;
+  }
+
+  function getCurrentPropertyName() {
+    const selectedProperty = findProperty(state.selectedPropertyId);
+    if (selectedProperty) {
+      return selectedProperty.name;
+    }
+
+    return inputs.propertyName.value;
+  }
+
+  function getPropertyDisplay(property) {
+    return PropertyCore.formatPropertyIdentification(property);
+  }
+
   function setSaveStatus(status) {
     const messages = {
       saving: "Salvando...",
@@ -208,9 +262,11 @@ if (typeof document !== "undefined") {
 
   function getDraftSource() {
     return {
+      accountId: getActiveAccountId(),
+      propertyId: state.selectedPropertyId,
       weighingName: inputs.weighingName.value,
       weighingDate: inputs.weighingDate.value,
-      propertyName: inputs.propertyName.value,
+      propertyName: getCurrentPropertyName(),
       settings: getSettingsInput(),
       animals: state.animals,
       usePaddocks: inputs.usePaddocks.checked,
@@ -426,7 +482,7 @@ if (typeof document !== "undefined") {
 
   function renderReportMeta(summary) {
     const weighingName = inputs.weighingName.value.trim();
-    const propertyName = inputs.propertyName.value.trim();
+    const propertyName = getCurrentPropertyName().trim();
 
     elements.reportDocument.textContent = "Romaneio de pesagem";
     elements.reportName.textContent = weighingName || "Pesagem sem nome";
@@ -661,6 +717,300 @@ if (typeof document !== "undefined") {
     document.querySelector("#no-paddock-message").classList.toggle("hidden", enabled);
   }
 
+  function syncPropertyNameInput() {
+    const selectedProperty = findProperty(state.selectedPropertyId);
+    const hasRegisteredProperty = Boolean(selectedProperty);
+
+    inputs.propertyName.disabled = hasRegisteredProperty;
+    inputs.propertyName.value = hasRegisteredProperty ? selectedProperty.name : inputs.propertyName.value;
+    inputs.propertyName.placeholder = hasRegisteredProperty ? "Definido pelo cadastro selecionado" : "Opcional para romaneio";
+  }
+
+  function renderPropertySelect() {
+    clearChildren(inputs.propertySelect);
+    inputs.propertySelect.appendChild(createElement("option", {
+      value: "",
+      text: "Sem propriedade cadastrada",
+    }));
+
+    state.properties
+      .filter((property) => property.status === PropertyCore.ACTIVE_STATUS)
+      .forEach((property) => {
+        inputs.propertySelect.appendChild(createElement("option", {
+          value: property.id,
+          text: getPropertyDisplay(property),
+        }));
+      });
+
+    if (!findActiveProperty(state.selectedPropertyId)) {
+      state.selectedPropertyId = null;
+    }
+
+    inputs.propertySelect.value = state.selectedPropertyId || "";
+    syncPropertyNameInput();
+  }
+
+  function renderHistoryFilterOptions() {
+    clearChildren(elements.historyPropertyFilter);
+    elements.historyPropertyFilter.appendChild(createElement("option", {
+      value: "all",
+      text: "Todas as propriedades",
+    }));
+
+    const propertyIdsWithHistory = new Set(
+      state.historySessions
+        .map((session) => session.propertyId)
+        .filter(Boolean),
+    );
+    const propertiesForFilter = state.properties
+      .filter((property) => property.status === PropertyCore.ACTIVE_STATUS || propertyIdsWithHistory.has(property.id))
+      .sort((left, right) => left.name.localeCompare(right.name, "pt-BR"));
+
+    propertiesForFilter.forEach((property) => {
+      elements.historyPropertyFilter.appendChild(createElement("option", {
+        value: property.id,
+        text: getPropertyDisplay(property),
+      }));
+    });
+
+    elements.historyPropertyFilter.appendChild(createElement("option", {
+      value: "unlinked",
+      text: "Sem vínculo",
+    }));
+
+    const validValues = new Set(["all", "unlinked", ...propertiesForFilter.map((property) => property.id)]);
+    if (!validValues.has(state.historyPropertyFilter)) {
+      state.historyPropertyFilter = "all";
+    }
+
+    elements.historyPropertyFilter.value = state.historyPropertyFilter;
+  }
+
+  function getFilteredHistorySessions() {
+    if (state.historyPropertyFilter === "all") {
+      return state.historySessions;
+    }
+
+    if (state.historyPropertyFilter === "unlinked") {
+      return state.historySessions.filter((session) => session.propertyId == null);
+    }
+
+    return state.historySessions.filter((session) => session.propertyId === state.historyPropertyFilter);
+  }
+
+  function showPropertyFeedback(message, type = "error") {
+    elements.propertyFeedback.textContent = message || "";
+    elements.propertyFeedback.className = `app-message ${message ? "" : "hidden"} ${type === "success" ? "success-inline" : ""}`.trim();
+  }
+
+  function clearPropertyFormMessages() {
+    setFieldMessage(elements.propertyFormName, elements.propertyNameMessage, "", "");
+  }
+
+  function setPropertyFormVisible(visible) {
+    elements.propertyForm.classList.toggle("hidden", !visible);
+    if (!visible) {
+      elements.propertyId.value = "";
+      elements.propertyForm.reset();
+      clearPropertyFormMessages();
+    }
+  }
+
+  function startNewPropertyForm() {
+    setPropertyFormVisible(true);
+    elements.propertyId.value = "";
+    elements.propertyFormName.value = "";
+    elements.propertyMunicipality.value = "";
+    elements.propertyState.value = "";
+    elements.propertyNotes.value = "";
+    clearPropertyFormMessages();
+    showPropertyFeedback("");
+    elements.propertyFormName.focus();
+  }
+
+  function startEditPropertyForm(propertyId) {
+    const property = findProperty(propertyId);
+    if (!property) return;
+
+    setPropertyFormVisible(true);
+    elements.propertyId.value = property.id;
+    elements.propertyFormName.value = property.name;
+    elements.propertyMunicipality.value = property.municipality;
+    elements.propertyState.value = property.state;
+    elements.propertyNotes.value = property.notes;
+    clearPropertyFormMessages();
+    showPropertyFeedback("");
+    elements.propertyFormName.focus();
+  }
+
+  function createPropertyCard(property) {
+    const card = createElement("article", {
+      className: "property-card",
+      data: {
+        propertyId: property.id,
+        status: property.status,
+      },
+    });
+    const body = createElement("div", { className: "property-card-body" });
+    const name = createElement("strong", { text: property.name || "Propriedade sem nome" });
+    const location = PropertyCore.formatLocation(property);
+    const details = createElement("span", {
+      text: location || "Município/UF não informados",
+    });
+    const status = createElement("span", {
+      className: `status-pill ${property.status === PropertyCore.ARCHIVED_STATUS ? "archived" : "neutral"}`,
+      text: property.status === PropertyCore.ARCHIVED_STATUS ? "Arquivada" : "Ativa",
+    });
+    const actions = createElement("div", { className: "property-actions" });
+    const editButton = createElement("button", {
+      className: "secondary-button",
+      type: "button",
+      text: "Editar",
+    });
+    const archiveButton = createElement("button", {
+      className: property.status === PropertyCore.ARCHIVED_STATUS ? "secondary-button" : "secondary-button danger",
+      type: "button",
+      text: property.status === PropertyCore.ARCHIVED_STATUS ? "Reativar" : "Arquivar",
+    });
+
+    editButton.addEventListener("click", () => startEditPropertyForm(property.id));
+    archiveButton.addEventListener("click", async () => {
+      if (property.status === PropertyCore.ARCHIVED_STATUS) {
+        await reactivateProperty(property.id);
+      } else {
+        await archiveProperty(property.id);
+      }
+    });
+
+    body.append(name, details);
+    actions.append(editButton, archiveButton);
+    card.append(body, status, actions);
+    return card;
+  }
+
+  function renderPropertyList() {
+    clearChildren(elements.propertyList);
+    elements.propertyEmptyMessage.classList.toggle("hidden", state.properties.length > 0);
+
+    state.properties.forEach((property) => {
+      elements.propertyList.appendChild(createPropertyCard(property));
+    });
+  }
+
+  async function loadProperties() {
+    if (!state.activeAccount) {
+      state.properties = [];
+      renderPropertySelect();
+      renderPropertyList();
+      return;
+    }
+
+    const result = await state.propertyRepository.listProperties(state.activeAccount.id, { includeArchived: true });
+    if (result.status !== "loaded") {
+      state.properties = [];
+      renderPropertySelect();
+      renderPropertyList();
+      showPropertyFeedback("Não foi possível carregar as propriedades deste dispositivo.");
+      return;
+    }
+
+    state.properties = result.properties;
+    renderPropertySelect();
+    renderHistoryFilterOptions();
+    renderPropertyList();
+  }
+
+  async function saveAccountName() {
+    const result = await state.accountRepository.updateAccountName(elements.accountName.value);
+    if (result.status === "invalid") {
+      setFieldMessage(elements.accountName, elements.accountNameMessage, result.errors.name || "", "error");
+      return;
+    }
+
+    if (result.status !== "saved") {
+      setFieldMessage(elements.accountName, elements.accountNameMessage, "Não foi possível salvar a operação.", "error");
+      return;
+    }
+
+    state.activeAccount = result.account;
+    elements.accountName.value = result.account.name;
+    setFieldMessage(elements.accountName, elements.accountNameMessage, "", "");
+    showPropertyFeedback("Operação salva neste dispositivo.", "success");
+  }
+
+  async function saveProperty(event) {
+    event.preventDefault();
+
+    if (!state.activeAccount) {
+      showPropertyFeedback("Operação local não identificada.");
+      return;
+    }
+
+    const data = {
+      name: elements.propertyFormName.value,
+      municipality: elements.propertyMunicipality.value,
+      state: elements.propertyState.value,
+      notes: elements.propertyNotes.value,
+    };
+    const propertyId = elements.propertyId.value;
+    const result = propertyId
+      ? await state.propertyRepository.updateProperty(state.activeAccount.id, propertyId, data)
+      : await state.propertyRepository.createProperty(state.activeAccount.id, data);
+
+    if (result.status === "invalid") {
+      setFieldMessage(elements.propertyFormName, elements.propertyNameMessage, result.errors.name || "", "error");
+      return;
+    }
+
+    if (result.status !== "saved") {
+      showPropertyFeedback("Não foi possível salvar a propriedade neste dispositivo.");
+      return;
+    }
+
+    setPropertyFormVisible(false);
+    showPropertyFeedback("Propriedade salva neste dispositivo.", "success");
+    await loadProperties();
+    if (state.selectedPropertyId === result.property.id) {
+      inputs.propertyName.value = result.property.name;
+      handleDraftChanged();
+    }
+    await loadHistory();
+  }
+
+  async function archiveProperty(propertyId) {
+    if (!state.activeAccount) return;
+
+    const result = await state.propertyRepository.archiveProperty(state.activeAccount.id, propertyId);
+    if (result.status !== "saved") {
+      showPropertyFeedback("Não foi possível arquivar a propriedade neste dispositivo.");
+      return;
+    }
+
+    if (state.selectedPropertyId === propertyId) {
+      state.selectedPropertyId = null;
+      syncPropertyNameInput();
+      handleDraftChanged();
+    }
+
+    showPropertyFeedback("Propriedade arquivada. O histórico foi preservado.", "success");
+    await loadProperties();
+    await loadHistory();
+  }
+
+  async function reactivateProperty(propertyId) {
+    if (!state.activeAccount) return;
+
+    const result = await state.propertyRepository.reactivateProperty(state.activeAccount.id, propertyId);
+    if (result.status !== "saved") {
+      showPropertyFeedback("Não foi possível reativar a propriedade neste dispositivo.");
+      return;
+    }
+
+    showPropertyFeedback("Propriedade reativada neste dispositivo.", "success");
+    await loadProperties();
+    await loadHistory();
+  }
+
   function setActiveTab(tabId) {
     document.querySelectorAll(".tab-button").forEach((button) => {
       const isActive = button.dataset.tab === tabId;
@@ -702,6 +1052,7 @@ if (typeof document !== "undefined") {
     state.animals = draftData.animals.map((animal) => ({ ...animal, demo: false }));
     state.paddocks = draftData.paddocks.map((paddock) => ({ ...paddock, demo: false }));
     state.demoMode = false;
+    state.selectedPropertyId = draftData.propertyId;
     inputs.weighingName.value = draftData.weighingName;
     inputs.weighingDate.value = draftData.weighingDate;
     inputs.propertyName.value = draftData.propertyName;
@@ -713,6 +1064,7 @@ if (typeof document !== "undefined") {
     clearFinalizedState();
     renderAnimals();
     renderPaddocks();
+    renderPropertySelect();
     syncPaddockVisibility();
     renderResults();
   }
@@ -721,6 +1073,7 @@ if (typeof document !== "undefined") {
     state.animals = [];
     state.paddocks = [];
     state.demoMode = false;
+    state.selectedPropertyId = null;
     inputs.weighingName.value = "";
     inputs.propertyName.value = "";
     inputs.usePaddocks.checked = false;
@@ -732,6 +1085,7 @@ if (typeof document !== "undefined") {
     clearFinalizedState();
     renderAnimals();
     renderPaddocks();
+    renderPropertySelect();
     syncPaddockVisibility();
     renderResults();
   }
@@ -761,6 +1115,7 @@ if (typeof document !== "undefined") {
       ...animal,
     }));
     state.demoMode = true;
+    state.selectedPropertyId = null;
     inputs.weighingName.value = "Demonstração";
     inputs.propertyName.value = "";
     inputs.weighingDate.value = CalculatorCore.localDateInputValue();
@@ -769,12 +1124,13 @@ if (typeof document !== "undefined") {
     inputs.lightLimit.value = "300";
     inputs.mediumLimit.value = "480";
     renderAnimals();
+    renderPropertySelect();
     renderResults();
     setSaveStatus("demo");
   }
 
   async function restoreDraft() {
-    const result = await state.repository.loadDraft();
+    const result = await state.repository.loadDraft({ accountId: getActiveAccountId() });
 
     if (result.status === "loaded") {
       applyDraftData(result.draft.data);
@@ -809,6 +1165,7 @@ if (typeof document !== "undefined") {
 
     [
       ["Nome", session.weighingName || "Pesagem sem nome"],
+      ["Propriedade", session.propertyNameSnapshot || "Sem propriedade cadastrada"],
       ["Data", formatDateInput(session.weighingDate)],
       ["Animais", String(session.totalAnimals)],
       ["Peso total", formatKg(session.totalWeight)],
@@ -1006,9 +1363,10 @@ if (typeof document !== "undefined") {
 
   function renderHistoryList() {
     clearChildren(elements.historyList);
-    elements.historyEmptyMessage.classList.toggle("hidden", state.historySessions.length > 0);
+    state.filteredHistorySessions = getFilteredHistorySessions();
+    elements.historyEmptyMessage.classList.toggle("hidden", state.filteredHistorySessions.length > 0);
 
-    state.historySessions.forEach((session) => {
+    state.filteredHistorySessions.forEach((session) => {
       elements.historyList.appendChild(sessionToHistoryItem(session));
     });
   }
@@ -1070,7 +1428,7 @@ if (typeof document !== "undefined") {
   }
 
   async function loadHistory() {
-    const result = await state.historyRepository.listSessions();
+    const result = await state.historyRepository.listSessions({ accountId: getActiveAccountId() });
     if (result.status !== "loaded") {
       state.historySessions = [];
       renderHistoryList();
@@ -1079,11 +1437,14 @@ if (typeof document !== "undefined") {
     }
 
     state.historySessions = result.sessions;
+    renderHistoryFilterOptions();
     renderHistoryList();
 
-    if (state.selectedSession && state.historySessions.some((session) => session.id === state.selectedSession.id)) {
+    if (state.selectedSession && state.filteredHistorySessions.some((session) => session.id === state.selectedSession.id)) {
       await selectHistorySession(state.selectedSession.id);
     } else if (!state.historySessions.length) {
+      renderHistoryDetailEmpty();
+    } else if (!state.filteredHistorySessions.length) {
       renderHistoryDetailEmpty();
     }
   }
@@ -1168,6 +1529,34 @@ if (typeof document !== "undefined") {
     elements.viewSavedButton.addEventListener("click", viewLastSavedWeighing);
     elements.newWeighingButton.addEventListener("click", clearWeighing);
     elements.deleteHistorySessionButton.addEventListener("click", deleteSelectedHistory);
+    elements.historyPropertyFilter.addEventListener("change", () => {
+      state.historyPropertyFilter = elements.historyPropertyFilter.value;
+      renderHistoryList();
+
+      if (!state.selectedSession || !state.filteredHistorySessions.some((session) => session.id === state.selectedSession.id)) {
+        renderHistoryDetailEmpty();
+      }
+    });
+    inputs.propertySelect.addEventListener("change", () => {
+      state.selectedPropertyId = inputs.propertySelect.value || null;
+      const selectedProperty = findProperty(state.selectedPropertyId);
+      inputs.propertyName.value = selectedProperty ? selectedProperty.name : "";
+      syncPropertyNameInput();
+      handleDraftChanged();
+    });
+    elements.saveAccountNameButton.addEventListener("click", saveAccountName);
+    elements.accountName.addEventListener("input", () => {
+      setFieldMessage(elements.accountName, elements.accountNameMessage, "", "");
+    });
+    elements.newPropertyButton.addEventListener("click", startNewPropertyForm);
+    elements.propertyForm.addEventListener("submit", saveProperty);
+    elements.cancelPropertyButton.addEventListener("click", () => setPropertyFormVisible(false));
+    elements.propertyFormName.addEventListener("input", () => {
+      setFieldMessage(elements.propertyFormName, elements.propertyNameMessage, "", "");
+    });
+    elements.propertyState.addEventListener("input", () => {
+      elements.propertyState.value = PropertyCore.normalizeState(elements.propertyState.value);
+    });
 
     [inputs.weighingName, inputs.weighingDate, inputs.propertyName].forEach((input) => {
       input.addEventListener("input", handleDraftChanged);
@@ -1187,8 +1576,11 @@ if (typeof document !== "undefined") {
   async function init() {
     if (
       !CalculatorCore
+      || !PropertyCore
       || !LocalDataCore
       || !LocalDatabase
+      || !AccountRepository
+      || !PropertyRepository
       || !DraftRepository
       || !WeighingHistoryCore
       || !WeighingRepository
@@ -1199,12 +1591,24 @@ if (typeof document !== "undefined") {
 
     const database = LocalDatabase.createLocalDatabase();
     state.repository = DraftRepository.createDraftRepository({ database });
+    state.accountRepository = AccountRepository.createAccountRepository({ database });
+    state.propertyRepository = PropertyRepository.createPropertyRepository({ database });
     state.historyRepository = WeighingRepository.createWeighingRepository({ database });
     state.restoring = true;
     bindEvents();
     setActiveTab("calculator");
     setSaveStatus("saving");
     renderHistoryDetailEmpty();
+    const accountResult = await state.accountRepository.ensureLocalAccount();
+    if (accountResult.account) {
+      state.activeAccount = accountResult.account;
+      elements.accountName.value = accountResult.account.name;
+      await loadProperties();
+    } else {
+      setPersistenceWarning("A calculadora continua funcionando, mas não foi possível preparar a operação local neste dispositivo.");
+      renderPropertySelect();
+      renderPropertyList();
+    }
     await restoreDraft();
     await loadHistory();
     state.restoring = false;

@@ -1,10 +1,15 @@
 const LocalDatabase = (() => {
   const DB_NAME = "plataforma-pecuaria";
-  const DB_VERSION = 2;
+  const DB_VERSION = 3;
   const DRAFT_STORE = "drafts";
   const WEIGHING_SESSIONS_STORE = "weighing-sessions";
   const WEIGHING_ITEMS_STORE = "weighing-items";
+  const ACCOUNTS_STORE = "accounts";
+  const PROPERTIES_STORE = "properties";
+  const APP_SETTINGS_STORE = "app-settings";
   const SESSION_ID_INDEX = "sessionId";
+  const ACCOUNT_ID_INDEX = "accountId";
+  const STATUS_INDEX = "status";
 
   class LocalDatabaseError extends Error {
     constructor(message, cause) {
@@ -44,6 +49,30 @@ const LocalDatabase = (() => {
         if (!itemStore.indexNames.contains(SESSION_ID_INDEX)) {
           itemStore.createIndex(SESSION_ID_INDEX, "sessionId", { unique: false });
         }
+      }
+    }
+
+    if (oldVersion < 3) {
+      if (!db.objectStoreNames.contains(ACCOUNTS_STORE)) {
+        db.createObjectStore(ACCOUNTS_STORE, { keyPath: "id" });
+      }
+
+      if (!db.objectStoreNames.contains(PROPERTIES_STORE)) {
+        const propertyStore = db.createObjectStore(PROPERTIES_STORE, { keyPath: "id" });
+        propertyStore.createIndex(ACCOUNT_ID_INDEX, "accountId", { unique: false });
+        propertyStore.createIndex(STATUS_INDEX, "status", { unique: false });
+      } else if (transaction) {
+        const propertyStore = transaction.objectStore(PROPERTIES_STORE);
+        if (!propertyStore.indexNames.contains(ACCOUNT_ID_INDEX)) {
+          propertyStore.createIndex(ACCOUNT_ID_INDEX, "accountId", { unique: false });
+        }
+        if (!propertyStore.indexNames.contains(STATUS_INDEX)) {
+          propertyStore.createIndex(STATUS_INDEX, "status", { unique: false });
+        }
+      }
+
+      if (!db.objectStoreNames.contains(APP_SETTINGS_STORE)) {
+        db.createObjectStore(APP_SETTINGS_STORE, { keyPath: "key" });
       }
     }
   }
@@ -207,7 +236,12 @@ const LocalDatabase = (() => {
     DRAFT_STORE,
     WEIGHING_SESSIONS_STORE,
     WEIGHING_ITEMS_STORE,
+    ACCOUNTS_STORE,
+    PROPERTIES_STORE,
+    APP_SETTINGS_STORE,
     SESSION_ID_INDEX,
+    ACCOUNT_ID_INDEX,
+    STATUS_INDEX,
     LocalDatabaseError,
     Database,
     createLocalDatabase,

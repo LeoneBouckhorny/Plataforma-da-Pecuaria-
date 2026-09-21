@@ -33,7 +33,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -365,13 +366,19 @@ label {
 }
 
 input,
-select {
+select,
+textarea {
   min-height: 40px;
   width: 100%;
   border: 1px solid var(--border);
   background: #fff;
   color: var(--text);
   padding: 8px 10px;
+}
+
+textarea {
+  resize: vertical;
+  line-height: 1.4;
 }
 
 input[aria-invalid="true"] {
@@ -381,6 +388,7 @@ input[aria-invalid="true"] {
 
 input:focus,
 select:focus,
+textarea:focus,
 button:focus-visible {
   outline: 3px solid rgba(47, 111, 78, 0.22);
   outline-offset: 1px;
@@ -400,6 +408,12 @@ button:focus-visible {
 
 .field-message.warning {
   color: #8a681d;
+}
+
+.success-inline {
+  border-left-color: var(--brand);
+  background: #e9f2ec;
+  color: var(--brand-strong);
 }
 
 .animal-table-wrap {
@@ -594,6 +608,85 @@ button:focus-visible {
   display: none;
 }
 
+.temporary-paddocks {
+  margin-bottom: 18px;
+}
+
+.operation-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 20px;
+}
+
+.properties-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.property-form {
+  margin-bottom: 16px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+}
+
+.property-notes {
+  grid-column: span 3;
+}
+
+.property-list {
+  display: grid;
+  gap: 10px;
+}
+
+.property-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+
+.property-card-body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.property-card-body strong,
+.property-card-body span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.property-card-body span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.property-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.status-pill.archived {
+  background: #ece9e3;
+  color: var(--muted);
+}
+
+.history-filter {
+  margin-bottom: 12px;
+}
+
 .paddock-ok {
   color: var(--brand-strong);
   font-weight: 700;
@@ -749,14 +842,36 @@ button:focus-visible {
   .history-workspace,
   .form-grid,
   .property-grid,
+  .operation-form,
   .report-meta,
   .premium-grid {
     grid-template-columns: 1fr;
   }
 
   .toggle-row,
+  .property-notes,
   .metric.accent {
     grid-column: auto;
+  }
+
+  .properties-header,
+  .property-card {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .properties-header {
+    flex-direction: column;
+  }
+
+  .property-actions {
+    justify-content: stretch;
+  }
+
+  .property-actions .secondary-button,
+  .operation-form .secondary-button,
+  .properties-header .primary-button {
+    width: 100%;
   }
 
   .app-shell {

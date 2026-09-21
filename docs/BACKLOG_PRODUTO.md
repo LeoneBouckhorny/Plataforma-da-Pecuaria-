@@ -18,6 +18,15 @@ Este backlog registra ideias aprovadas para acompanhamento futuro. Os itens abai
 - Telemetria futura com privacidade e decisao explicita de produto.
 - Estrategia de recuperacao de dados para perda, troca ou limpeza de aparelho.
 
+## Backlog Pos-Sprint 004
+
+- Cadastro definitivo de pastos/piquetes vinculados a propriedade.
+- Cadastro de lotes/rebanhos por propriedade e pasto.
+- Cadastro individual de animais com ID interno estavel.
+- Movimentacao de animais entre propriedades, pastos e lotes.
+- Conversao futura de operacao local em conta na nuvem, sem perder IDs locais.
+- Estrategia de conflito para sincronizacao futura entre celular e computador.
+
 ## Epica Futura: Gestao de Arrendamentos e Parcerias
 
 Objetivo futuro: permitir que o produtor registre corretamente relacoes entre terra, posse fisica do animal e participacao economica.

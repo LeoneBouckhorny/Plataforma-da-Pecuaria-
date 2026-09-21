@@ -96,3 +96,21 @@ test("remover draft depois da finalização não altera registro histórico sepa
   });
   assert.equal(LocalDataCore.DRAFT_KEY, "calculator-current");
 });
+
+test("loadDraft aplica accountId atual em rascunho legado sem adivinhar propertyId", async () => {
+  const database = new FakeDatabase();
+  const repository = DraftRepository.createDraftRepository({ database });
+  const legacyDraft = LocalDataCore.createDraft(realDraft, { updatedAt: "2026-08-10T12:00:00.000Z" });
+  legacyDraft.schemaVersion = LocalDataCore.LEGACY_SCHEMA_VERSION;
+  delete legacyDraft.data.accountId;
+  delete legacyDraft.data.propertyId;
+  database.records.set(LocalDataCore.DRAFT_KEY, legacyDraft);
+
+  const loaded = await repository.loadDraft({ accountId: "account-atual" });
+
+  assert.equal(loaded.status, "loaded");
+  assert.equal(loaded.draft.data.accountId, "account-atual");
+  assert.equal(loaded.draft.data.propertyId, null);
+  assert.equal(loaded.draft.data.propertyName, "Fazenda Real");
+  assert.equal(loaded.draft.data.animals[0].id, "real-1");
+});

@@ -24,7 +24,7 @@
         <nav class="tabs" aria-label="Navegação principal">
           <button class="tab-button active" id="calculator-tab" type="button" data-tab="calculator">Calculadora</button>
           <button class="tab-button" id="history-tab" type="button" data-tab="history">Histórico</button>
-          <button class="tab-button" id="property-tab" type="button" data-tab="property">Propriedade</button>
+          <button class="tab-button" id="property-tab" type="button" data-tab="property">Propriedades</button>
           <button class="tab-button" id="premium-tab" type="button" data-tab="premium">Premium</button>
         </nav>
         <div class="pwa-controls no-print" aria-label="Aplicativo e conexão">
@@ -60,6 +60,16 @@
                 <label>
                   Data da pesagem
                   <input id="weighing-date" type="date">
+                </label>
+                <label>
+                  Propriedade
+                  <select id="property-select">
+                    <option value="">Sem propriedade cadastrada</option>
+                  </select>
+                </label>
+                <label>
+                  Identificação no romaneio
+                  <input id="property-name" type="text" value="" placeholder="Opcional">
                 </label>
                 <label>
                   Cotação regional da arroba (R$)
@@ -100,6 +110,38 @@
 
               <div id="global-message" class="app-message" role="status"></div>
               <div id="persistence-message" class="app-message persistence-message hidden" role="status"></div>
+
+              <section class="temporary-paddocks" aria-label="Pastos temporários da pesagem">
+                <label class="toggle-row">
+                  <input id="use-paddocks" type="checkbox">
+                  <span>Dividir esta pesagem em pastos/piquetes temporários</span>
+                </label>
+
+                <div id="paddock-config" class="paddock-config hidden">
+                  <div class="table-toolbar">
+                    <h3>Pastos da pesagem</h3>
+                    <button class="icon-button" id="add-paddock" type="button" aria-label="Adicionar pasto">+</button>
+                  </div>
+                  <div class="animal-table-wrap">
+                    <table class="animal-table">
+                      <thead>
+                        <tr>
+                          <th>Nome do pasto</th>
+                          <th>Lotação máxima</th>
+                          <th>Uso atual</th>
+                          <th>Situação</th>
+                          <th aria-label="Ações"></th>
+                        </tr>
+                      </thead>
+                      <tbody id="paddock-rows"></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div id="no-paddock-message" class="empty-state">
+                  A pesagem pode ser feita sem pastos. O cadastro definitivo de pastos fica para uma próxima etapa.
+                </div>
+              </section>
 
               <div class="table-toolbar">
                 <h3>Animais</h3>
@@ -195,6 +237,13 @@
                 </div>
                 <span class="status-pill neutral">Dados armazenados neste dispositivo.</span>
               </div>
+              <label class="history-filter">
+                Propriedade
+                <select id="history-property-filter">
+                  <option value="all">Todas as propriedades</option>
+                  <option value="unlinked">Sem vínculo</option>
+                </select>
+              </label>
               <p id="history-empty-message" class="empty-state">Nenhuma pesagem salva neste dispositivo.</p>
               <div id="history-list" class="history-list"></div>
             </section>
@@ -269,48 +318,59 @@
             <section class="panel">
               <div class="panel-heading">
                 <div>
-                  <p class="eyebrow">Gestão futura</p>
-                  <h2>Configuração da propriedade</h2>
+                  <p class="eyebrow">Minha operação</p>
+                  <h2>Propriedades</h2>
                 </div>
-                <span class="status-pill neutral">Opcional</span>
+                <span class="status-pill neutral">Dados armazenados neste dispositivo.</span>
               </div>
 
-              <div class="property-grid">
+              <div class="operation-form">
                 <label>
-                  Nome da propriedade
-                  <input id="property-name" type="text" value="" placeholder="Opcional">
+                  Nome da operação
+                  <input id="account-name" type="text" value="Minha operação" autocomplete="off" aria-describedby="account-name-message">
+                  <span id="account-name-message" class="field-message error"></span>
                 </label>
-                <label class="toggle-row">
-                  <input id="use-paddocks" type="checkbox">
-                  <span>Dividir esta propriedade em pastos/piquetes</span>
-                </label>
+                <button class="secondary-button" id="save-account-name" type="button">Salvar operação</button>
               </div>
 
-              <div id="paddock-config" class="paddock-config hidden">
-                <div class="table-toolbar">
-                  <h3>Pastos</h3>
-                  <button class="icon-button" id="add-paddock" type="button" aria-label="Adicionar pasto">+</button>
+              <div class="properties-header">
+                <div>
+                  <p class="eyebrow">Propriedades</p>
+                  <h3>Cadastro local</h3>
                 </div>
-                <div class="animal-table-wrap">
-                  <table class="animal-table">
-                    <thead>
-                      <tr>
-                        <th>Nome do pasto</th>
-                        <th>Lotação máxima</th>
-                        <th>Uso atual</th>
-                        <th>Situação</th>
-                        <th aria-label="Ações"></th>
-                      </tr>
-                    </thead>
-                    <tbody id="paddock-rows"></tbody>
-                  </table>
-                </div>
+                <button class="primary-button" id="new-property" type="button">+ Nova propriedade</button>
               </div>
 
-              <div id="no-paddock-message" class="empty-state">
-                A propriedade pode funcionar sem pastos cadastrados. Nesse caso,
-                os animais e lotes ficam vinculados diretamente à propriedade.
-              </div>
+              <form id="property-form" class="property-form hidden">
+                <input id="property-id" type="hidden" value="">
+                <div class="property-grid">
+                  <label>
+                    Nome *
+                    <input id="property-form-name" type="text" value="" autocomplete="off" aria-describedby="property-name-message">
+                    <span id="property-name-message" class="field-message error"></span>
+                  </label>
+                  <label>
+                    Município
+                    <input id="property-municipality" type="text" value="" autocomplete="off">
+                  </label>
+                  <label>
+                    Estado/UF
+                    <input id="property-state" type="text" value="" autocomplete="off" maxlength="2">
+                  </label>
+                  <label class="property-notes">
+                    Observações
+                    <textarea id="property-notes" rows="3"></textarea>
+                  </label>
+                </div>
+                <div class="action-row">
+                  <button class="primary-button" id="save-property" type="submit">Salvar propriedade</button>
+                  <button class="secondary-button" id="cancel-property" type="button">Cancelar</button>
+                </div>
+              </form>
+
+              <p id="property-feedback" class="app-message hidden" role="status"></p>
+              <p id="property-empty-message" class="empty-state">Nenhuma propriedade cadastrada neste dispositivo.</p>
+              <div id="property-list" class="property-list"></div>
             </section>
           </div>
         </section>
@@ -384,8 +444,11 @@
     </dialog>
 
     <script src="src/calculator-core.js"></script>
+    <script src="src/property-core.js"></script>
     <script src="src/local-data-core.js"></script>
     <script src="src/local-database.js"></script>
+    <script src="src/account-repository.js"></script>
+    <script src="src/property-repository.js"></script>
     <script src="src/draft-repository.js"></script>
     <script src="src/weighing-history-core.js"></script>
     <script src="src/weighing-repository.js"></script>

@@ -61,14 +61,17 @@ class FakeDatabase {
   }
 }
 
-function snapshot(sessionId, createdAt) {
+function snapshot(sessionId, createdAt, overrides = {}) {
   return historyCore.buildSnapshot({
     weighingName: `Sessão ${sessionId}`,
     weighingDate: "2026-08-12",
     propertyName: "Fazenda",
+    accountId: "account-1",
+    propertyId: "property-1",
     settings: { arrobaPrice: "300", yieldRate: "50", lightLimit: "300", mediumLimit: "480" },
     animals: [{ id: "a1", tag: "1", weight: "450", category: "Boi", note: "" }],
     demoMode: false,
+    ...overrides,
   }, {
     sessionId,
     createdAt,
@@ -119,4 +122,46 @@ test("exclui sessão e todos os itens vinculados", async () => {
   assert.equal(result.status, "deleted");
   assert.equal(loaded.status, "missing");
   assert.equal(orphanItems.length, 0);
+});
+
+test("filtra histórico por propertyId e mantém sessões sem vínculo separadas", async () => {
+  const repository = repoModule.createWeighingRepository({ database: new FakeDatabase() });
+  await repository.saveCompletedSession(snapshot("boa-vista", "2026-08-12T10:00:00.000Z", {
+    propertyId: "boa-vista",
+    propertyName: "Boa Vista",
+  }));
+  await repository.saveCompletedSession(snapshot("sao-romao", "2026-08-12T11:00:00.000Z", {
+    propertyId: "sao-romao",
+    propertyName: "São Romão",
+  }));
+  await repository.saveCompletedSession(snapshot("legado", "2026-08-12T12:00:00.000Z", {
+    propertyId: null,
+    propertyName: "Boa Vista",
+  }));
+
+  const boaVista = await repository.listSessions({ propertyId: "boa-vista" });
+  const saoRomao = await repository.listSessions({ propertyId: "sao-romao" });
+  const unlinked = await repository.listSessions({ propertyId: null });
+  const all = await repository.listSessions();
+
+  assert.deepEqual(boaVista.sessions.map((session) => session.id), ["boa-vista"]);
+  assert.deepEqual(saoRomao.sessions.map((session) => session.id), ["sao-romao"]);
+  assert.deepEqual(unlinked.sessions.map((session) => session.id), ["legado"]);
+  assert.equal(all.sessions.length, 3);
+});
+
+test("filtro por conta não mistura conta diferente quando accountId existe", async () => {
+  const repository = repoModule.createWeighingRepository({ database: new FakeDatabase() });
+  await repository.saveCompletedSession(snapshot("conta-1", "2026-08-12T10:00:00.000Z", {
+    accountId: "account-1",
+    propertyId: "property-a",
+  }));
+  await repository.saveCompletedSession(snapshot("conta-2", "2026-08-12T11:00:00.000Z", {
+    accountId: "account-2",
+    propertyId: "property-a",
+  }));
+
+  const result = await repository.listSessions({ accountId: "account-1" });
+
+  assert.deepEqual(result.sessions.map((session) => session.id), ["conta-1"]);
 });

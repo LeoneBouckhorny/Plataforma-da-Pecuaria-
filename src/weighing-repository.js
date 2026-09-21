@@ -44,13 +44,27 @@ const WeighingRepository = ((LocalDatabaseRef, WeighingHistoryCoreRef) => {
       }
     }
 
-    async listSessions() {
+    async listSessions(options = {}) {
       try {
         const sessions = await this.database.getAll(LocalDatabase.WEIGHING_SESSIONS_STORE);
+        const hasAccountFilter = options.accountId !== undefined;
+        const hasPropertyFilter = options.propertyId !== undefined;
         return {
           status: "loaded",
           sessions: sessions
             .map(WeighingHistoryCore.normalizeSession)
+            .filter((session) => {
+              if (hasAccountFilter && session.accountId !== null && session.accountId !== String(options.accountId || "")) {
+                return false;
+              }
+
+              if (hasPropertyFilter) {
+                const propertyId = options.propertyId == null ? null : String(options.propertyId);
+                return session.propertyId === propertyId;
+              }
+
+              return true;
+            })
             .sort((left, right) => right.createdAt.localeCompare(left.createdAt)),
           error: null,
         };
