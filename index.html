@@ -5,39 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Plataforma da Pecuária</title>
     <meta name="description" content="Calculadora de pesagem e base inicial para gestão rural.">
+    <meta name="theme-color" content="#2f6f4e">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Pecuária">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="apple-touch-icon" href="./assets/icons/icon-180.png">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <div class="app-shell">
-      <header class="topbar">
+      <header class="topbar no-print">
         <div>
           <p class="eyebrow">MVP inicial</p>
           <h1>Plataforma da Pecuária</h1>
         </div>
         <nav class="tabs" aria-label="Navegação principal">
           <button class="tab-button active" id="calculator-tab" type="button" data-tab="calculator">Calculadora</button>
-          <button class="tab-button" id="property-tab" type="button" data-tab="property">Propriedade</button>
+          <button class="tab-button" id="history-tab" type="button" data-tab="history">Histórico</button>
+          <button class="tab-button" id="property-tab" type="button" data-tab="property">Propriedades</button>
           <button class="tab-button" id="premium-tab" type="button" data-tab="premium">Premium</button>
         </nav>
+        <div class="pwa-controls no-print" aria-label="Aplicativo e conexão">
+          <button class="secondary-button install-button hidden" id="install-app" type="button">Instalar aplicativo</button>
+          <span class="connection-status hidden" id="connection-status" role="status" aria-live="polite"></span>
+        </div>
       </header>
 
       <main>
         <section class="tab-panel active" id="calculator" aria-labelledby="calculator-tab">
           <div class="workspace">
-            <section class="panel input-panel" aria-label="Dados da pesagem">
+            <section class="panel input-panel no-print" aria-label="Dados da pesagem">
               <div class="panel-heading">
                 <div>
                   <p class="eyebrow">Plano gratuito</p>
                   <h2>Pesagem rápida</h2>
                 </div>
                 <div class="heading-actions">
-                  <span class="status-pill">Sem cadastro definitivo</span>
+                  <span class="status-pill">Rascunho local</span>
                   <span id="save-status" class="save-status saving" role="status" aria-live="polite">Salvando...</span>
                 </div>
               </div>
 
               <div id="demo-banner" class="demo-banner hidden" role="status">
-                Estes dados são fictícios. Limpe a pesagem antes de iniciar um lançamento real.
+                Modo demonstração. Estes dados são fictícios e não podem ser finalizados no histórico.
               </div>
 
               <form id="weighing-form" class="form-grid">
@@ -48,6 +60,16 @@
                 <label>
                   Data da pesagem
                   <input id="weighing-date" type="date">
+                </label>
+                <label>
+                  Propriedade
+                  <select id="property-select">
+                    <option value="">Sem propriedade cadastrada</option>
+                  </select>
+                </label>
+                <label>
+                  Identificação no romaneio
+                  <input id="property-name" type="text" value="" placeholder="Opcional">
                 </label>
                 <label>
                   Cotação regional da arroba (R$)
@@ -71,13 +93,55 @@
                 </label>
               </form>
 
-              <div class="action-row no-print">
+              <div class="action-row">
+                <button class="primary-button" id="finalize-weighing" type="button">Finalizar pesagem</button>
+                <button class="secondary-button" id="export-current-csv" type="button">Exportar CSV</button>
                 <button class="secondary-button" id="load-demo" type="button">Carregar dados de exemplo</button>
                 <button class="secondary-button danger" id="clear-weighing" type="button">Limpar pesagem</button>
               </div>
 
+              <div id="finalize-feedback" class="success-message hidden" role="status" aria-live="polite">
+                <strong>Pesagem salva neste dispositivo.</strong>
+                <div class="feedback-actions">
+                  <button class="secondary-button" id="view-saved-weighing" type="button">Ver pesagem</button>
+                  <button class="secondary-button" id="new-weighing" type="button">Nova pesagem</button>
+                </div>
+              </div>
+
               <div id="global-message" class="app-message" role="status"></div>
               <div id="persistence-message" class="app-message persistence-message hidden" role="status"></div>
+
+              <section class="temporary-paddocks" aria-label="Pastos temporários da pesagem">
+                <label class="toggle-row">
+                  <input id="use-paddocks" type="checkbox">
+                  <span>Dividir esta pesagem em pastos/piquetes temporários</span>
+                </label>
+
+                <div id="paddock-config" class="paddock-config hidden">
+                  <div class="table-toolbar">
+                    <h3>Pastos da pesagem</h3>
+                    <button class="icon-button" id="add-paddock" type="button" aria-label="Adicionar pasto">+</button>
+                  </div>
+                  <div class="animal-table-wrap">
+                    <table class="animal-table">
+                      <thead>
+                        <tr>
+                          <th>Nome do pasto</th>
+                          <th>Lotação máxima</th>
+                          <th>Uso atual</th>
+                          <th>Situação</th>
+                          <th aria-label="Ações"></th>
+                        </tr>
+                      </thead>
+                      <tbody id="paddock-rows"></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div id="no-paddock-message" class="empty-state">
+                  A pesagem pode ser feita sem pastos. O cadastro definitivo de pastos fica para uma próxima etapa.
+                </div>
+              </section>
 
               <div class="table-toolbar">
                 <h3>Animais</h3>
@@ -103,20 +167,24 @@
               </p>
             </section>
 
-            <aside class="panel results-panel" aria-label="Resultado da pesagem">
+            <aside class="panel results-panel print-area" aria-label="Resultado da pesagem">
               <div class="panel-heading">
                 <div>
-                  <p class="eyebrow">Resultado estimado</p>
-                  <h2 id="result-title">Pesagem sem nome</h2>
+                  <p class="eyebrow">Romaneio V1</p>
+                  <h2>PLATAFORMA DA PECUÁRIA</h2>
                 </div>
                 <button id="print-report" class="secondary-button no-print" type="button">Imprimir</button>
               </div>
 
-              <section class="report-meta" aria-label="Dados do romaneio">
+              <section class="report-meta" aria-label="Identificação do romaneio">
+                <div><span>Documento</span><strong id="report-document">Romaneio de pesagem</strong></div>
+                <div><span>Nome</span><strong id="report-name">Pesagem sem nome</strong></div>
                 <div><span>Propriedade</span><strong id="report-property">Propriedade não informada</strong></div>
-                <div><span>Data</span><strong id="report-date">Data não informada</strong></div>
+                <div><span>Data da pesagem</span><strong id="report-date">Data não informada</strong></div>
+                <div><span>Emitido em</span><strong id="report-issued-at">Emissão não informada</strong></div>
                 <div><span>Preço por arroba</span><strong id="report-price">R$ 0,00</strong></div>
                 <div><span>Rendimento</span><strong id="report-yield">0%</strong></div>
+                <div><span>Faixas</span><strong id="report-band-params">Faixas não informadas</strong></div>
               </section>
 
               <div class="metrics">
@@ -147,19 +215,100 @@
                 <div id="weight-bands" class="band-list"></div>
               </section>
 
-              <section class="breakdown" aria-label="Romaneio">
-                <h3>Romaneio simples</h3>
+              <section class="breakdown" aria-label="Animais do romaneio">
+                <h3>Animais</h3>
                 <div id="report-list" class="report-list"></div>
               </section>
 
               <p id="report-estimate-note" class="estimate-note">
                 Valores calculados como estimativas.
               </p>
+            </aside>
+          </div>
+        </section>
 
-              <p class="premium-note">
-                Com o plano premium, esta pesagem poderia ficar salva no histórico do lote,
-                vinculada à propriedade, ao pasto e aos animais individuais.
-              </p>
+        <section class="tab-panel" id="history" aria-labelledby="history-tab">
+          <div class="workspace history-workspace">
+            <section class="panel history-list-panel no-print" aria-label="Histórico de pesagens">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Histórico local</p>
+                  <h2>Pesagens salvas</h2>
+                </div>
+                <span class="status-pill neutral">Dados armazenados neste dispositivo.</span>
+              </div>
+              <label class="history-filter">
+                Propriedade
+                <select id="history-property-filter">
+                  <option value="all">Todas as propriedades</option>
+                  <option value="unlinked">Sem vínculo</option>
+                </select>
+              </label>
+              <p id="history-empty-message" class="empty-state">Nenhuma pesagem salva neste dispositivo.</p>
+              <div id="history-list" class="history-list"></div>
+            </section>
+
+            <aside class="panel results-panel history-detail print-area" aria-label="Detalhe da pesagem salva">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Romaneio salvo</p>
+                  <h2>PLATAFORMA DA PECUÁRIA</h2>
+                </div>
+                <div class="history-actions no-print">
+                  <button class="secondary-button" id="export-history-csv" type="button">Exportar CSV</button>
+                  <button class="secondary-button" id="print-history-report" type="button">Imprimir</button>
+                  <button class="secondary-button danger" id="delete-history-session" type="button">Excluir</button>
+                </div>
+              </div>
+
+              <div id="history-detail-empty" class="empty-state">
+                Selecione uma pesagem salva para ver o romaneio.
+              </div>
+
+              <div id="history-detail-content" class="hidden">
+                <section class="report-meta" aria-label="Identificação da pesagem salva">
+                  <div><span>Documento</span><strong>Romaneio de pesagem</strong></div>
+                  <div><span>Nome</span><strong id="history-report-name">Pesagem sem nome</strong></div>
+                  <div><span>Propriedade</span><strong id="history-report-property">Propriedade não informada</strong></div>
+                  <div><span>Data da pesagem</span><strong id="history-report-date">Data não informada</strong></div>
+                  <div><span>Salvo em</span><strong id="history-report-created-at">Salvamento não informado</strong></div>
+                  <div><span>Preço por arroba</span><strong id="history-report-price">R$ 0,00</strong></div>
+                  <div><span>Rendimento</span><strong id="history-report-yield">0%</strong></div>
+                  <div><span>Faixas</span><strong id="history-report-band-params">Faixas não informadas</strong></div>
+                </section>
+
+                <div class="metrics">
+                  <div class="metric">
+                    <span>Animais</span>
+                    <strong id="history-total-animals">0</strong>
+                  </div>
+                  <div class="metric">
+                    <span>Peso total</span>
+                    <strong id="history-total-weight">0 kg</strong>
+                  </div>
+                  <div class="metric">
+                    <span>Peso médio</span>
+                    <strong id="history-average-weight">0 kg</strong>
+                  </div>
+                  <div class="metric">
+                    <span>Arrobas estimadas</span>
+                    <strong id="history-total-arrobas">0 @</strong>
+                  </div>
+                  <div class="metric accent">
+                    <span>Valor estimado</span>
+                    <strong id="history-estimated-value">R$ 0,00</strong>
+                  </div>
+                </div>
+
+                <section class="breakdown" aria-label="Animais da pesagem salva">
+                  <h3>Animais</h3>
+                  <div id="history-report-list" class="report-list"></div>
+                </section>
+
+                <p class="estimate-note">
+                  Valores calculados como estimativas, usando o rendimento e a cotação informados no momento da finalização.
+                </p>
+              </div>
             </aside>
           </div>
         </section>
@@ -169,48 +318,59 @@
             <section class="panel">
               <div class="panel-heading">
                 <div>
-                  <p class="eyebrow">Gestão futura</p>
-                  <h2>Configuração da propriedade</h2>
+                  <p class="eyebrow">Minha operação</p>
+                  <h2>Propriedades</h2>
                 </div>
-                <span class="status-pill neutral">Opcional</span>
+                <span class="status-pill neutral">Dados armazenados neste dispositivo.</span>
               </div>
 
-              <div class="property-grid">
+              <div class="operation-form">
                 <label>
-                  Nome da propriedade
-                  <input id="property-name" type="text" value="" placeholder="Opcional">
+                  Nome da operação
+                  <input id="account-name" type="text" value="Minha operação" autocomplete="off" aria-describedby="account-name-message">
+                  <span id="account-name-message" class="field-message error"></span>
                 </label>
-                <label class="toggle-row">
-                  <input id="use-paddocks" type="checkbox">
-                  <span>Dividir esta propriedade em pastos/piquetes</span>
-                </label>
+                <button class="secondary-button" id="save-account-name" type="button">Salvar operação</button>
               </div>
 
-              <div id="paddock-config" class="paddock-config hidden">
-                <div class="table-toolbar">
-                  <h3>Pastos</h3>
-                  <button class="icon-button" id="add-paddock" type="button" aria-label="Adicionar pasto">+</button>
+              <div class="properties-header">
+                <div>
+                  <p class="eyebrow">Propriedades</p>
+                  <h3>Cadastro local</h3>
                 </div>
-                <div class="animal-table-wrap">
-                  <table class="animal-table">
-                    <thead>
-                      <tr>
-                        <th>Nome do pasto</th>
-                        <th>Lotação máxima</th>
-                        <th>Uso atual</th>
-                        <th>Situação</th>
-                        <th aria-label="Ações"></th>
-                      </tr>
-                    </thead>
-                    <tbody id="paddock-rows"></tbody>
-                  </table>
-                </div>
+                <button class="primary-button" id="new-property" type="button">+ Nova propriedade</button>
               </div>
 
-              <div id="no-paddock-message" class="empty-state">
-                A propriedade pode funcionar sem pastos cadastrados. Nesse caso,
-                os animais e lotes ficam vinculados diretamente à propriedade.
-              </div>
+              <form id="property-form" class="property-form hidden">
+                <input id="property-id" type="hidden" value="">
+                <div class="property-grid">
+                  <label>
+                    Nome *
+                    <input id="property-form-name" type="text" value="" autocomplete="off" aria-describedby="property-name-message">
+                    <span id="property-name-message" class="field-message error"></span>
+                  </label>
+                  <label>
+                    Município
+                    <input id="property-municipality" type="text" value="" autocomplete="off">
+                  </label>
+                  <label>
+                    Estado/UF
+                    <input id="property-state" type="text" value="" autocomplete="off" maxlength="2">
+                  </label>
+                  <label class="property-notes">
+                    Observações
+                    <textarea id="property-notes" rows="3"></textarea>
+                  </label>
+                </div>
+                <div class="action-row">
+                  <button class="primary-button" id="save-property" type="submit">Salvar propriedade</button>
+                  <button class="secondary-button" id="cancel-property" type="button">Cancelar</button>
+                </div>
+              </form>
+
+              <p id="property-feedback" class="app-message hidden" role="status"></p>
+              <p id="property-empty-message" class="empty-state">Nenhuma propriedade cadastrada neste dispositivo.</p>
+              <div id="property-list" class="property-list"></div>
             </section>
           </div>
         </section>
@@ -249,10 +409,51 @@
       </main>
     </div>
 
+    <dialog id="finalize-dialog" class="finalize-dialog">
+      <form method="dialog">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Confirmar</p>
+            <h2>Finalizar pesagem</h2>
+          </div>
+        </div>
+        <div id="finalize-summary" class="finalize-summary"></div>
+        <p class="estimate-note">A pesagem será salva neste dispositivo como histórico local.</p>
+        <div class="dialog-actions">
+          <button class="secondary-button" id="cancel-finalize" value="cancel" type="button">Cancelar</button>
+          <button class="primary-button" id="confirm-finalize" value="confirm" type="button">Finalizar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="delete-dialog" class="finalize-dialog">
+      <form method="dialog">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Excluir</p>
+            <h2>Excluir pesagem</h2>
+          </div>
+        </div>
+        <p class="delete-warning">Excluir esta pesagem deste dispositivo?</p>
+        <p class="estimate-note">Esta ação não pode ser desfeita.</p>
+        <div class="dialog-actions">
+          <button class="secondary-button" id="cancel-delete" value="cancel" type="button">Cancelar</button>
+          <button class="secondary-button danger" id="confirm-delete" value="confirm" type="button">Excluir</button>
+        </div>
+      </form>
+    </dialog>
+
     <script src="src/calculator-core.js"></script>
+    <script src="src/property-core.js"></script>
     <script src="src/local-data-core.js"></script>
     <script src="src/local-database.js"></script>
+    <script src="src/account-repository.js"></script>
+    <script src="src/property-repository.js"></script>
     <script src="src/draft-repository.js"></script>
+    <script src="src/weighing-history-core.js"></script>
+    <script src="src/weighing-repository.js"></script>
+    <script src="src/csv-export-core.js"></script>
     <script src="app.js"></script>
+    <script src="src/pwa-controller.js"></script>
   </body>
 </html>

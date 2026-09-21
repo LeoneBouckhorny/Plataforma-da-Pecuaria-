@@ -10,8 +10,15 @@ if (typeof document !== "undefined") {
 
   const SAVE_DEBOUNCE_MS = 500;
   const CalculatorCore = window.CalculatorCore;
+  const PropertyCore = window.PropertyCore;
   const LocalDataCore = window.LocalDataCore;
+  const LocalDatabase = window.LocalDatabase;
+  const AccountRepository = window.AccountRepository;
+  const PropertyRepository = window.PropertyRepository;
   const DraftRepository = window.DraftRepository;
+  const WeighingHistoryCore = window.WeighingHistoryCore;
+  const WeighingRepository = window.WeighingRepository;
+  const CsvExportCore = window.CsvExportCore;
 
   const state = {
     animals: [],
@@ -20,7 +27,24 @@ if (typeof document !== "undefined") {
     saveTimer: null,
     restoring: false,
     clearing: false,
+    finalizing: false,
     repository: null,
+    accountRepository: null,
+    propertyRepository: null,
+    historyRepository: null,
+    activeAccount: null,
+    properties: [],
+    selectedPropertyId: null,
+    historyPropertyFilter: "all",
+    historySessions: [],
+    filteredHistorySessions: [],
+    selectedSession: null,
+    selectedItems: [],
+    pendingSnapshot: null,
+    pendingDeleteSessionId: "",
+    finalizedDraftSignature: "",
+    lastSavedSessionId: "",
+    currentSummary: null,
   };
 
   const sampleAnimals = [
@@ -31,6 +55,7 @@ if (typeof document !== "undefined") {
   const inputs = {
     weighingName: document.querySelector("#weighing-name"),
     weighingDate: document.querySelector("#weighing-date"),
+    propertySelect: document.querySelector("#property-select"),
     propertyName: document.querySelector("#property-name"),
     arrobaPrice: document.querySelector("#arroba-price"),
     yieldRate: document.querySelector("#yield-rate"),
@@ -46,20 +71,72 @@ if (typeof document !== "undefined") {
     persistenceMessage: document.querySelector("#persistence-message"),
     saveStatus: document.querySelector("#save-status"),
     demoBanner: document.querySelector("#demo-banner"),
+    finalizeFeedback: document.querySelector("#finalize-feedback"),
+    finalizeButton: document.querySelector("#finalize-weighing"),
+    exportCurrentCsvButton: document.querySelector("#export-current-csv"),
+    viewSavedButton: document.querySelector("#view-saved-weighing"),
+    newWeighingButton: document.querySelector("#new-weighing"),
+    finalizeDialog: document.querySelector("#finalize-dialog"),
+    finalizeSummary: document.querySelector("#finalize-summary"),
+    confirmFinalizeButton: document.querySelector("#confirm-finalize"),
+    cancelFinalizeButton: document.querySelector("#cancel-finalize"),
+    deleteDialog: document.querySelector("#delete-dialog"),
+    confirmDeleteButton: document.querySelector("#confirm-delete"),
+    cancelDeleteButton: document.querySelector("#cancel-delete"),
     animalEmptyMessage: document.querySelector("#animal-empty-message"),
     totalAnimals: document.querySelector("#total-animals"),
     totalWeight: document.querySelector("#total-weight"),
     averageWeight: document.querySelector("#average-weight"),
     totalArrobas: document.querySelector("#total-arrobas"),
     estimatedValue: document.querySelector("#estimated-value"),
-    resultTitle: document.querySelector("#result-title"),
     weightBands: document.querySelector("#weight-bands"),
     reportList: document.querySelector("#report-list"),
+    reportDocument: document.querySelector("#report-document"),
+    reportName: document.querySelector("#report-name"),
     reportProperty: document.querySelector("#report-property"),
     reportDate: document.querySelector("#report-date"),
+    reportIssuedAt: document.querySelector("#report-issued-at"),
     reportPrice: document.querySelector("#report-price"),
     reportYield: document.querySelector("#report-yield"),
+    reportBandParams: document.querySelector("#report-band-params"),
     reportEstimateNote: document.querySelector("#report-estimate-note"),
+    historyList: document.querySelector("#history-list"),
+    historyEmptyMessage: document.querySelector("#history-empty-message"),
+    historyDetailEmpty: document.querySelector("#history-detail-empty"),
+    historyDetailContent: document.querySelector("#history-detail-content"),
+    historyReportName: document.querySelector("#history-report-name"),
+    historyReportProperty: document.querySelector("#history-report-property"),
+    historyReportDate: document.querySelector("#history-report-date"),
+    historyReportCreatedAt: document.querySelector("#history-report-created-at"),
+    historyReportPrice: document.querySelector("#history-report-price"),
+    historyReportYield: document.querySelector("#history-report-yield"),
+    historyReportBandParams: document.querySelector("#history-report-band-params"),
+    historyTotalAnimals: document.querySelector("#history-total-animals"),
+    historyTotalWeight: document.querySelector("#history-total-weight"),
+    historyAverageWeight: document.querySelector("#history-average-weight"),
+    historyTotalArrobas: document.querySelector("#history-total-arrobas"),
+    historyEstimatedValue: document.querySelector("#history-estimated-value"),
+    historyReportList: document.querySelector("#history-report-list"),
+    exportHistoryCsvButton: document.querySelector("#export-history-csv"),
+    printHistoryReportButton: document.querySelector("#print-history-report"),
+    deleteHistorySessionButton: document.querySelector("#delete-history-session"),
+    historyPropertyFilter: document.querySelector("#history-property-filter"),
+    accountName: document.querySelector("#account-name"),
+    accountNameMessage: document.querySelector("#account-name-message"),
+    saveAccountNameButton: document.querySelector("#save-account-name"),
+    newPropertyButton: document.querySelector("#new-property"),
+    propertyForm: document.querySelector("#property-form"),
+    propertyId: document.querySelector("#property-id"),
+    propertyFormName: document.querySelector("#property-form-name"),
+    propertyNameMessage: document.querySelector("#property-name-message"),
+    propertyMunicipality: document.querySelector("#property-municipality"),
+    propertyState: document.querySelector("#property-state"),
+    propertyNotes: document.querySelector("#property-notes"),
+    savePropertyButton: document.querySelector("#save-property"),
+    cancelPropertyButton: document.querySelector("#cancel-property"),
+    propertyFeedback: document.querySelector("#property-feedback"),
+    propertyEmptyMessage: document.querySelector("#property-empty-message"),
+    propertyList: document.querySelector("#property-list"),
   };
 
   function createElement(tag, options = {}) {
@@ -71,7 +148,9 @@ if (typeof document !== "undefined") {
     if (options.value !== undefined) element.value = options.value;
     if (options.id) element.id = options.id;
     if (options.inputMode) element.inputMode = options.inputMode;
+    if (options.disabled !== undefined) element.disabled = Boolean(options.disabled);
     if (options.ariaLabel) element.setAttribute("aria-label", options.ariaLabel);
+    if (options.title) element.title = options.title;
     if (options.data) {
       Object.entries(options.data).forEach(([key, value]) => {
         element.dataset[key] = value;
@@ -99,11 +178,63 @@ if (typeof document !== "undefined") {
     return value === null ? "Indisponível" : currencyFormatter.format(value);
   }
 
+  function formatDateInput(value) {
+    if (!value) return "Data não informada";
+    const date = new Date(`${value}T00:00:00`);
+    return Number.isNaN(date.getTime()) ? "Data não informada" : date.toLocaleDateString("pt-BR");
+  }
+
+  function formatDateTime(value) {
+    const date = value ? new Date(value) : new Date();
+    if (Number.isNaN(date.getTime())) {
+      return "Data não informada";
+    }
+
+    return date.toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function formatBandParams(lightLimit, mediumLimit) {
+    return `Leve até ${formatKg(lightLimit)}; média até ${formatKg(mediumLimit)}; pesada acima de ${formatKg(mediumLimit)}.`;
+  }
+
+  function getActiveAccountId() {
+    return state.activeAccount ? state.activeAccount.id : null;
+  }
+
+  function findProperty(propertyId) {
+    return state.properties.find((property) => property.id === propertyId) || null;
+  }
+
+  function findActiveProperty(propertyId) {
+    const property = findProperty(propertyId);
+    return property && property.status === PropertyCore.ACTIVE_STATUS ? property : null;
+  }
+
+  function getCurrentPropertyName() {
+    const selectedProperty = findProperty(state.selectedPropertyId);
+    if (selectedProperty) {
+      return selectedProperty.name;
+    }
+
+    return inputs.propertyName.value;
+  }
+
+  function getPropertyDisplay(property) {
+    return PropertyCore.formatPropertyIdentification(property);
+  }
+
   function setSaveStatus(status) {
     const messages = {
       saving: "Salvando...",
       saved: "Salvo neste dispositivo",
       failed: "Não foi possível salvar neste dispositivo",
+      demo: "Demonstração não salva",
     };
 
     elements.saveStatus.textContent = messages[status] || "";
@@ -113,6 +244,11 @@ if (typeof document !== "undefined") {
   function setPersistenceWarning(message) {
     elements.persistenceMessage.textContent = message || "";
     elements.persistenceMessage.classList.toggle("hidden", !message);
+  }
+
+  function showGlobalMessage(message) {
+    elements.globalMessage.textContent = message || "";
+    elements.globalMessage.classList.toggle("hidden", !message);
   }
 
   function getSettingsInput() {
@@ -126,9 +262,11 @@ if (typeof document !== "undefined") {
 
   function getDraftSource() {
     return {
+      accountId: getActiveAccountId(),
+      propertyId: state.selectedPropertyId,
       weighingName: inputs.weighingName.value,
       weighingDate: inputs.weighingDate.value,
-      propertyName: inputs.propertyName.value,
+      propertyName: getCurrentPropertyName(),
       settings: getSettingsInput(),
       animals: state.animals,
       usePaddocks: inputs.usePaddocks.checked,
@@ -137,8 +275,40 @@ if (typeof document !== "undefined") {
     };
   }
 
+  function getDraftSignature() {
+    return JSON.stringify(LocalDataCore.normalizeDraftData(getDraftSource()));
+  }
+
+  function clearFinalizedState() {
+    state.finalizedDraftSignature = "";
+    state.lastSavedSessionId = "";
+    state.pendingSnapshot = null;
+    elements.finalizeFeedback.classList.add("hidden");
+  }
+
+  function clearFinalizedStateIfDraftChanged() {
+    if (!state.finalizedDraftSignature) {
+      return;
+    }
+
+    if (getDraftSignature() !== state.finalizedDraftSignature) {
+      clearFinalizedState();
+    }
+  }
+
+  function cancelPendingDraftSave() {
+    window.clearTimeout(state.saveTimer);
+    state.saveTimer = null;
+  }
+
   async function saveDraftNow() {
+    state.saveTimer = null;
+
     if (state.restoring || state.clearing || state.demoMode) {
+      return;
+    }
+
+    if (state.finalizedDraftSignature && getDraftSignature() === state.finalizedDraftSignature) {
       return;
     }
 
@@ -156,11 +326,16 @@ if (typeof document !== "undefined") {
   }
 
   function scheduleDraftSave() {
-    if (state.restoring || state.clearing || state.demoMode) {
+    if (state.restoring || state.clearing) {
       return;
     }
 
-    window.clearTimeout(state.saveTimer);
+    if (state.demoMode) {
+      setSaveStatus("demo");
+      return;
+    }
+
+    cancelPendingDraftSave();
     setSaveStatus("saving");
     state.saveTimer = window.setTimeout(saveDraftNow, SAVE_DEBOUNCE_MS);
   }
@@ -188,9 +363,7 @@ if (typeof document !== "undefined") {
   }
 
   function renderMessages(summary) {
-    elements.globalMessage.textContent = summary.generalMessages.join(" ");
-    elements.globalMessage.classList.toggle("hidden", summary.generalMessages.length === 0);
-
+    showGlobalMessage(summary.generalMessages.join(" "));
     setFormError(inputs.arrobaPrice, "arroba-price-message", summary.settings.errors.arrobaPrice);
     setFormError(inputs.yieldRate, "yield-rate-message", summary.settings.errors.yieldRate);
     setFormError(inputs.lightLimit, "light-limit-message", summary.settings.errors.lightLimit);
@@ -248,69 +421,128 @@ if (typeof document !== "undefined") {
     });
   }
 
-  function renderReport(summary) {
-    clearChildren(elements.reportList);
+  function createReportRow(index, animal, options = {}) {
+    const row = createElement("div", {
+      className: options.header ? "report-row report-header" : "report-row",
+    });
 
-    if (summary.reportAnimals.length === 0) {
-      elements.reportList.appendChild(createElement("p", {
+    if (options.header) {
+      ["#", "Brinco", "Categoria", "Peso", "Faixa", "Arrobas", "Observação"].forEach((label) => {
+        row.appendChild(createElement("strong", { text: label }));
+      });
+      return row;
+    }
+
+    const values = [
+      String(index + 1),
+      animal.tag || "Sem brinco",
+      animal.category || "Sem categoria",
+      formatKg(animal.weight),
+      animal.band || "Faixa indisponível",
+      formatArrobas(animal.arrobas),
+      animal.note || "Sem observação",
+    ];
+
+    values.forEach((value, valueIndex) => {
+      row.appendChild(createElement(valueIndex === 1 ? "strong" : "span", { text: value }));
+    });
+
+    return row;
+  }
+
+  function renderReportList(container, animals, emptyText) {
+    clearChildren(container);
+
+    if (animals.length === 0) {
+      container.appendChild(createElement("p", {
         className: "empty-report",
-        text: "Nenhum animal válido informado.",
+        text: emptyText,
       }));
       return;
     }
 
-    summary.reportAnimals.forEach((animal) => {
-      const row = createElement("div", { className: "report-row" });
-      const tag = createElement("strong", { text: animal.tag || "Sem brinco" });
-      const detail = createElement("span", {
-        text: `${animal.category} · ${animal.band || "Faixa indisponível"}`,
-      });
-      const metrics = createElement("span", {
-        text: `${formatKg(animal.weight)} · ${formatArrobas(animal.arrobas)}`,
-      });
-
-      row.append(tag, detail, metrics);
-      elements.reportList.appendChild(row);
+    container.appendChild(createReportRow(0, null, { header: true }));
+    animals.forEach((animal, index) => {
+      container.appendChild(createReportRow(index, animal));
     });
   }
 
-  function renderReportMeta(summary) {
-    const propertyName = inputs.propertyName.value.trim();
-    const dateValue = inputs.weighingDate.value;
+  function renderCurrentReport(summary) {
+    const reportAnimals = summary.reportAnimals.map((animal) => ({
+      tag: animal.tag,
+      category: animal.category,
+      weight: animal.weight,
+      band: animal.band,
+      arrobas: animal.arrobas,
+      note: animal.note,
+    }));
 
+    renderReportList(elements.reportList, reportAnimals, "Nenhum animal válido informado.");
+  }
+
+  function renderReportMeta(summary) {
+    const weighingName = inputs.weighingName.value.trim();
+    const propertyName = getCurrentPropertyName().trim();
+
+    elements.reportDocument.textContent = "Romaneio de pesagem";
+    elements.reportName.textContent = weighingName || "Pesagem sem nome";
     elements.reportProperty.textContent = propertyName || "Propriedade não informada";
-    elements.reportDate.textContent = dateValue
-      ? new Date(`${dateValue}T00:00:00`).toLocaleDateString("pt-BR")
-      : "Data não informada";
+    elements.reportDate.textContent = formatDateInput(inputs.weighingDate.value);
+    elements.reportIssuedAt.textContent = formatDateTime(new Date());
     elements.reportPrice.textContent = summary.settings.priceValid
       ? currencyFormatter.format(summary.settings.values.arrobaPrice)
       : "Preço inválido";
     elements.reportYield.textContent = summary.settings.yieldValid
       ? `${numberFormatter.format(summary.settings.values.yieldRate)}%`
       : "Rendimento inválido";
+    elements.reportBandParams.textContent = summary.settings.bandsValid
+      ? formatBandParams(summary.settings.values.lightLimit, summary.settings.values.mediumLimit)
+      : "Faixas inválidas";
     elements.reportEstimateNote.textContent = summary.totalAnimals
       ? "Valores calculados como estimativas, usando o rendimento e a cotação informados."
       : "Sem animais válidos para estimativa.";
   }
 
+  function updateFinalizeAvailability() {
+    const alreadySaved = Boolean(state.finalizedDraftSignature)
+      && getDraftSignature() === state.finalizedDraftSignature;
+    const disabled = state.demoMode || state.finalizing || alreadySaved;
+
+    elements.finalizeButton.disabled = disabled;
+    elements.finalizeButton.title = "";
+
+    if (state.demoMode) {
+      elements.finalizeButton.title = "Limpe a demonstração antes de finalizar uma pesagem real.";
+    } else if (alreadySaved) {
+      elements.finalizeButton.title = "Esta pesagem já foi salva neste dispositivo.";
+    }
+  }
+
   function renderResults() {
     const summary = CalculatorCore.calculateSummary(getSettingsInput(), state.animals);
+    state.currentSummary = summary;
 
     renderMessages(summary);
     renderRowValidation(summary);
     renderBands(summary);
-    renderReport(summary);
+    renderCurrentReport(summary);
     renderReportMeta(summary);
 
     elements.demoBanner.classList.toggle("hidden", !state.demoMode);
-    elements.resultTitle.textContent = inputs.weighingName.value.trim() || "Pesagem sem nome";
     elements.totalAnimals.textContent = String(summary.totalAnimals);
     elements.totalWeight.textContent = formatKg(summary.totalWeight);
     elements.averageWeight.textContent = formatKg(summary.averageWeight);
     elements.totalArrobas.textContent = formatArrobas(summary.totalArrobas);
     elements.estimatedValue.textContent = formatMoney(summary.estimatedValue);
+    updateFinalizeAvailability();
 
     return summary;
+  }
+
+  function handleDraftChanged() {
+    clearFinalizedStateIfDraftChanged();
+    renderResults();
+    scheduleDraftSave();
   }
 
   function createAnimalRow(animal, index) {
@@ -358,29 +590,24 @@ if (typeof document !== "undefined") {
 
     tagInput.addEventListener("input", () => {
       animal.tag = tagInput.value;
-      renderResults();
-      scheduleDraftSave();
+      handleDraftChanged();
     });
     weightInput.addEventListener("input", () => {
       animal.weight = weightInput.value;
-      renderResults();
-      scheduleDraftSave();
+      handleDraftChanged();
     });
     categorySelect.addEventListener("change", () => {
       animal.category = categorySelect.value;
-      renderResults();
-      scheduleDraftSave();
+      handleDraftChanged();
     });
     noteInput.addEventListener("input", () => {
       animal.note = noteInput.value;
-      renderResults();
-      scheduleDraftSave();
+      handleDraftChanged();
     });
     removeButton.addEventListener("click", () => {
       state.animals = state.animals.filter((item) => item.id !== animal.id);
       renderAnimals();
-      renderResults();
-      scheduleDraftSave();
+      handleDraftChanged();
     });
 
     tagCell.append(tagInput, tagMessage);
@@ -448,22 +675,22 @@ if (typeof document !== "undefined") {
 
     nameInput.addEventListener("input", () => {
       paddock.name = nameInput.value;
-      scheduleDraftSave();
+      handleDraftChanged();
     });
     maxInput.addEventListener("input", () => {
       paddock.max = maxInput.value;
       updateStatus();
-      scheduleDraftSave();
+      handleDraftChanged();
     });
     currentInput.addEventListener("input", () => {
       paddock.current = currentInput.value;
       updateStatus();
-      scheduleDraftSave();
+      handleDraftChanged();
     });
     removeButton.addEventListener("click", () => {
       state.paddocks = state.paddocks.filter((item) => item.id !== paddock.id);
       renderPaddocks();
-      scheduleDraftSave();
+      handleDraftChanged();
     });
 
     nameCell.appendChild(nameInput);
@@ -490,6 +717,300 @@ if (typeof document !== "undefined") {
     document.querySelector("#no-paddock-message").classList.toggle("hidden", enabled);
   }
 
+  function syncPropertyNameInput() {
+    const selectedProperty = findProperty(state.selectedPropertyId);
+    const hasRegisteredProperty = Boolean(selectedProperty);
+
+    inputs.propertyName.disabled = hasRegisteredProperty;
+    inputs.propertyName.value = hasRegisteredProperty ? selectedProperty.name : inputs.propertyName.value;
+    inputs.propertyName.placeholder = hasRegisteredProperty ? "Definido pelo cadastro selecionado" : "Opcional para romaneio";
+  }
+
+  function renderPropertySelect() {
+    clearChildren(inputs.propertySelect);
+    inputs.propertySelect.appendChild(createElement("option", {
+      value: "",
+      text: "Sem propriedade cadastrada",
+    }));
+
+    state.properties
+      .filter((property) => property.status === PropertyCore.ACTIVE_STATUS)
+      .forEach((property) => {
+        inputs.propertySelect.appendChild(createElement("option", {
+          value: property.id,
+          text: getPropertyDisplay(property),
+        }));
+      });
+
+    if (!findActiveProperty(state.selectedPropertyId)) {
+      state.selectedPropertyId = null;
+    }
+
+    inputs.propertySelect.value = state.selectedPropertyId || "";
+    syncPropertyNameInput();
+  }
+
+  function renderHistoryFilterOptions() {
+    clearChildren(elements.historyPropertyFilter);
+    elements.historyPropertyFilter.appendChild(createElement("option", {
+      value: "all",
+      text: "Todas as propriedades",
+    }));
+
+    const propertyIdsWithHistory = new Set(
+      state.historySessions
+        .map((session) => session.propertyId)
+        .filter(Boolean),
+    );
+    const propertiesForFilter = state.properties
+      .filter((property) => property.status === PropertyCore.ACTIVE_STATUS || propertyIdsWithHistory.has(property.id))
+      .sort((left, right) => left.name.localeCompare(right.name, "pt-BR"));
+
+    propertiesForFilter.forEach((property) => {
+      elements.historyPropertyFilter.appendChild(createElement("option", {
+        value: property.id,
+        text: getPropertyDisplay(property),
+      }));
+    });
+
+    elements.historyPropertyFilter.appendChild(createElement("option", {
+      value: "unlinked",
+      text: "Sem vínculo",
+    }));
+
+    const validValues = new Set(["all", "unlinked", ...propertiesForFilter.map((property) => property.id)]);
+    if (!validValues.has(state.historyPropertyFilter)) {
+      state.historyPropertyFilter = "all";
+    }
+
+    elements.historyPropertyFilter.value = state.historyPropertyFilter;
+  }
+
+  function getFilteredHistorySessions() {
+    if (state.historyPropertyFilter === "all") {
+      return state.historySessions;
+    }
+
+    if (state.historyPropertyFilter === "unlinked") {
+      return state.historySessions.filter((session) => session.propertyId == null);
+    }
+
+    return state.historySessions.filter((session) => session.propertyId === state.historyPropertyFilter);
+  }
+
+  function showPropertyFeedback(message, type = "error") {
+    elements.propertyFeedback.textContent = message || "";
+    elements.propertyFeedback.className = `app-message ${message ? "" : "hidden"} ${type === "success" ? "success-inline" : ""}`.trim();
+  }
+
+  function clearPropertyFormMessages() {
+    setFieldMessage(elements.propertyFormName, elements.propertyNameMessage, "", "");
+  }
+
+  function setPropertyFormVisible(visible) {
+    elements.propertyForm.classList.toggle("hidden", !visible);
+    if (!visible) {
+      elements.propertyId.value = "";
+      elements.propertyForm.reset();
+      clearPropertyFormMessages();
+    }
+  }
+
+  function startNewPropertyForm() {
+    setPropertyFormVisible(true);
+    elements.propertyId.value = "";
+    elements.propertyFormName.value = "";
+    elements.propertyMunicipality.value = "";
+    elements.propertyState.value = "";
+    elements.propertyNotes.value = "";
+    clearPropertyFormMessages();
+    showPropertyFeedback("");
+    elements.propertyFormName.focus();
+  }
+
+  function startEditPropertyForm(propertyId) {
+    const property = findProperty(propertyId);
+    if (!property) return;
+
+    setPropertyFormVisible(true);
+    elements.propertyId.value = property.id;
+    elements.propertyFormName.value = property.name;
+    elements.propertyMunicipality.value = property.municipality;
+    elements.propertyState.value = property.state;
+    elements.propertyNotes.value = property.notes;
+    clearPropertyFormMessages();
+    showPropertyFeedback("");
+    elements.propertyFormName.focus();
+  }
+
+  function createPropertyCard(property) {
+    const card = createElement("article", {
+      className: "property-card",
+      data: {
+        propertyId: property.id,
+        status: property.status,
+      },
+    });
+    const body = createElement("div", { className: "property-card-body" });
+    const name = createElement("strong", { text: property.name || "Propriedade sem nome" });
+    const location = PropertyCore.formatLocation(property);
+    const details = createElement("span", {
+      text: location || "Município/UF não informados",
+    });
+    const status = createElement("span", {
+      className: `status-pill ${property.status === PropertyCore.ARCHIVED_STATUS ? "archived" : "neutral"}`,
+      text: property.status === PropertyCore.ARCHIVED_STATUS ? "Arquivada" : "Ativa",
+    });
+    const actions = createElement("div", { className: "property-actions" });
+    const editButton = createElement("button", {
+      className: "secondary-button",
+      type: "button",
+      text: "Editar",
+    });
+    const archiveButton = createElement("button", {
+      className: property.status === PropertyCore.ARCHIVED_STATUS ? "secondary-button" : "secondary-button danger",
+      type: "button",
+      text: property.status === PropertyCore.ARCHIVED_STATUS ? "Reativar" : "Arquivar",
+    });
+
+    editButton.addEventListener("click", () => startEditPropertyForm(property.id));
+    archiveButton.addEventListener("click", async () => {
+      if (property.status === PropertyCore.ARCHIVED_STATUS) {
+        await reactivateProperty(property.id);
+      } else {
+        await archiveProperty(property.id);
+      }
+    });
+
+    body.append(name, details);
+    actions.append(editButton, archiveButton);
+    card.append(body, status, actions);
+    return card;
+  }
+
+  function renderPropertyList() {
+    clearChildren(elements.propertyList);
+    elements.propertyEmptyMessage.classList.toggle("hidden", state.properties.length > 0);
+
+    state.properties.forEach((property) => {
+      elements.propertyList.appendChild(createPropertyCard(property));
+    });
+  }
+
+  async function loadProperties() {
+    if (!state.activeAccount) {
+      state.properties = [];
+      renderPropertySelect();
+      renderPropertyList();
+      return;
+    }
+
+    const result = await state.propertyRepository.listProperties(state.activeAccount.id, { includeArchived: true });
+    if (result.status !== "loaded") {
+      state.properties = [];
+      renderPropertySelect();
+      renderPropertyList();
+      showPropertyFeedback("Não foi possível carregar as propriedades deste dispositivo.");
+      return;
+    }
+
+    state.properties = result.properties;
+    renderPropertySelect();
+    renderHistoryFilterOptions();
+    renderPropertyList();
+  }
+
+  async function saveAccountName() {
+    const result = await state.accountRepository.updateAccountName(elements.accountName.value);
+    if (result.status === "invalid") {
+      setFieldMessage(elements.accountName, elements.accountNameMessage, result.errors.name || "", "error");
+      return;
+    }
+
+    if (result.status !== "saved") {
+      setFieldMessage(elements.accountName, elements.accountNameMessage, "Não foi possível salvar a operação.", "error");
+      return;
+    }
+
+    state.activeAccount = result.account;
+    elements.accountName.value = result.account.name;
+    setFieldMessage(elements.accountName, elements.accountNameMessage, "", "");
+    showPropertyFeedback("Operação salva neste dispositivo.", "success");
+  }
+
+  async function saveProperty(event) {
+    event.preventDefault();
+
+    if (!state.activeAccount) {
+      showPropertyFeedback("Operação local não identificada.");
+      return;
+    }
+
+    const data = {
+      name: elements.propertyFormName.value,
+      municipality: elements.propertyMunicipality.value,
+      state: elements.propertyState.value,
+      notes: elements.propertyNotes.value,
+    };
+    const propertyId = elements.propertyId.value;
+    const result = propertyId
+      ? await state.propertyRepository.updateProperty(state.activeAccount.id, propertyId, data)
+      : await state.propertyRepository.createProperty(state.activeAccount.id, data);
+
+    if (result.status === "invalid") {
+      setFieldMessage(elements.propertyFormName, elements.propertyNameMessage, result.errors.name || "", "error");
+      return;
+    }
+
+    if (result.status !== "saved") {
+      showPropertyFeedback("Não foi possível salvar a propriedade neste dispositivo.");
+      return;
+    }
+
+    setPropertyFormVisible(false);
+    showPropertyFeedback("Propriedade salva neste dispositivo.", "success");
+    await loadProperties();
+    if (state.selectedPropertyId === result.property.id) {
+      inputs.propertyName.value = result.property.name;
+      handleDraftChanged();
+    }
+    await loadHistory();
+  }
+
+  async function archiveProperty(propertyId) {
+    if (!state.activeAccount) return;
+
+    const result = await state.propertyRepository.archiveProperty(state.activeAccount.id, propertyId);
+    if (result.status !== "saved") {
+      showPropertyFeedback("Não foi possível arquivar a propriedade neste dispositivo.");
+      return;
+    }
+
+    if (state.selectedPropertyId === propertyId) {
+      state.selectedPropertyId = null;
+      syncPropertyNameInput();
+      handleDraftChanged();
+    }
+
+    showPropertyFeedback("Propriedade arquivada. O histórico foi preservado.", "success");
+    await loadProperties();
+    await loadHistory();
+  }
+
+  async function reactivateProperty(propertyId) {
+    if (!state.activeAccount) return;
+
+    const result = await state.propertyRepository.reactivateProperty(state.activeAccount.id, propertyId);
+    if (result.status !== "saved") {
+      showPropertyFeedback("Não foi possível reativar a propriedade neste dispositivo.");
+      return;
+    }
+
+    showPropertyFeedback("Propriedade reativada neste dispositivo.", "success");
+    await loadProperties();
+    await loadHistory();
+  }
+
   function setActiveTab(tabId) {
     document.querySelectorAll(".tab-button").forEach((button) => {
       const isActive = button.dataset.tab === tabId;
@@ -511,8 +1032,7 @@ if (typeof document !== "undefined") {
       demo: Boolean(animal.demo),
     });
     renderAnimals();
-    renderResults();
-    scheduleDraftSave();
+    handleDraftChanged();
   }
 
   function addPaddock(paddock = {}) {
@@ -524,7 +1044,7 @@ if (typeof document !== "undefined") {
       demo: Boolean(paddock.demo),
     });
     renderPaddocks();
-    scheduleDraftSave();
+    handleDraftChanged();
   }
 
   function applyDraftData(data) {
@@ -532,6 +1052,7 @@ if (typeof document !== "undefined") {
     state.animals = draftData.animals.map((animal) => ({ ...animal, demo: false }));
     state.paddocks = draftData.paddocks.map((paddock) => ({ ...paddock, demo: false }));
     state.demoMode = false;
+    state.selectedPropertyId = draftData.propertyId;
     inputs.weighingName.value = draftData.weighingName;
     inputs.weighingDate.value = draftData.weighingDate;
     inputs.propertyName.value = draftData.propertyName;
@@ -540,8 +1061,10 @@ if (typeof document !== "undefined") {
     inputs.lightLimit.value = draftData.settings.lightLimit;
     inputs.mediumLimit.value = draftData.settings.mediumLimit;
     inputs.usePaddocks.checked = draftData.usePaddocks;
+    clearFinalizedState();
     renderAnimals();
     renderPaddocks();
+    renderPropertySelect();
     syncPaddockVisibility();
     renderResults();
   }
@@ -550,6 +1073,7 @@ if (typeof document !== "undefined") {
     state.animals = [];
     state.paddocks = [];
     state.demoMode = false;
+    state.selectedPropertyId = null;
     inputs.weighingName.value = "";
     inputs.propertyName.value = "";
     inputs.usePaddocks.checked = false;
@@ -558,15 +1082,17 @@ if (typeof document !== "undefined") {
     inputs.lightLimit.value = CalculatorCore.DEFAULT_SETTINGS.lightLimit;
     inputs.mediumLimit.value = CalculatorCore.DEFAULT_SETTINGS.mediumLimit;
     inputs.weighingDate.value = CalculatorCore.localDateInputValue();
+    clearFinalizedState();
     renderAnimals();
     renderPaddocks();
+    renderPropertySelect();
     syncPaddockVisibility();
     renderResults();
   }
 
   async function clearWeighing() {
     state.clearing = true;
-    window.clearTimeout(state.saveTimer);
+    cancelPendingDraftSave();
     applyEmptyState();
 
     const result = await state.repository.deleteDraft();
@@ -581,24 +1107,30 @@ if (typeof document !== "undefined") {
     state.clearing = false;
   }
 
-  function loadDemoData() {
-    window.clearTimeout(state.saveTimer);
+  async function loadDemoData() {
+    cancelPendingDraftSave();
+    clearFinalizedState();
     state.animals = sampleAnimals.map((animal) => ({
       id: CalculatorCore.createId("animal"),
       ...animal,
     }));
     state.demoMode = true;
+    state.selectedPropertyId = null;
     inputs.weighingName.value = "Demonstração";
+    inputs.propertyName.value = "";
+    inputs.weighingDate.value = CalculatorCore.localDateInputValue();
     inputs.arrobaPrice.value = "300,00";
     inputs.yieldRate.value = "50";
     inputs.lightLimit.value = "300";
     inputs.mediumLimit.value = "480";
     renderAnimals();
+    renderPropertySelect();
     renderResults();
+    setSaveStatus("demo");
   }
 
   async function restoreDraft() {
-    const result = await state.repository.loadDraft();
+    const result = await state.repository.loadDraft({ accountId: getActiveAccountId() });
 
     if (result.status === "loaded") {
       applyDraftData(result.draft.data);
@@ -624,9 +1156,361 @@ if (typeof document !== "undefined") {
     setPersistenceWarning("A calculadora continua funcionando, mas não foi possível acessar o salvamento neste dispositivo.");
   }
 
+  function buildCurrentSnapshot() {
+    return WeighingHistoryCore.buildSnapshot(getDraftSource());
+  }
+
+  function renderFinalizeSummary(session) {
+    clearChildren(elements.finalizeSummary);
+
+    [
+      ["Nome", session.weighingName || "Pesagem sem nome"],
+      ["Propriedade", session.propertyNameSnapshot || "Sem propriedade cadastrada"],
+      ["Data", formatDateInput(session.weighingDate)],
+      ["Animais", String(session.totalAnimals)],
+      ["Peso total", formatKg(session.totalWeight)],
+      ["Peso médio", formatKg(session.averageWeight)],
+      ["Arrobas", formatArrobas(session.totalArrobas)],
+      ["Valor estimado", formatMoney(session.estimatedValue)],
+    ].forEach(([label, value]) => {
+      const row = createElement("div");
+      row.append(
+        createElement("span", { text: label }),
+        createElement("strong", { text: value }),
+      );
+      elements.finalizeSummary.appendChild(row);
+    });
+  }
+
+  function openFinalizeDialog() {
+    if (typeof elements.finalizeDialog.showModal === "function") {
+      elements.finalizeDialog.showModal();
+    } else {
+      elements.finalizeDialog.setAttribute("open", "");
+    }
+  }
+
+  function closeFinalizeDialog() {
+    if (elements.finalizeDialog.open && typeof elements.finalizeDialog.close === "function") {
+      elements.finalizeDialog.close();
+    } else {
+      elements.finalizeDialog.removeAttribute("open");
+    }
+  }
+
+  function openDeleteDialog() {
+    if (typeof elements.deleteDialog.showModal === "function") {
+      elements.deleteDialog.showModal();
+    } else {
+      elements.deleteDialog.setAttribute("open", "");
+    }
+  }
+
+  function closeDeleteDialog() {
+    state.pendingDeleteSessionId = "";
+
+    if (elements.deleteDialog.open && typeof elements.deleteDialog.close === "function") {
+      elements.deleteDialog.close();
+    } else {
+      elements.deleteDialog.removeAttribute("open");
+    }
+  }
+
+  function handleFinalizeClick() {
+    const result = buildCurrentSnapshot();
+    renderResults();
+
+    if (!result.valid) {
+      state.pendingSnapshot = null;
+      showGlobalMessage(result.errors.join(" "));
+      return;
+    }
+
+    state.pendingSnapshot = result.snapshot;
+    renderFinalizeSummary(result.snapshot.session);
+    openFinalizeDialog();
+  }
+
+  async function confirmFinalize() {
+    if (state.finalizing) {
+      return;
+    }
+
+    let snapshot = state.pendingSnapshot;
+    if (!snapshot) {
+      const result = buildCurrentSnapshot();
+      if (!result.valid) {
+        showGlobalMessage(result.errors.join(" "));
+        return;
+      }
+      snapshot = result.snapshot;
+    }
+
+    state.finalizing = true;
+    elements.confirmFinalizeButton.disabled = true;
+    updateFinalizeAvailability();
+
+    const result = await state.historyRepository.saveCompletedSession(snapshot);
+
+    state.finalizing = false;
+    elements.confirmFinalizeButton.disabled = false;
+
+    if (result.status !== "saved") {
+      showGlobalMessage("Não foi possível salvar a pesagem finalizada neste dispositivo.");
+      updateFinalizeAvailability();
+      return;
+    }
+
+    state.finalizedDraftSignature = getDraftSignature();
+    state.lastSavedSessionId = result.session.id;
+    state.pendingSnapshot = null;
+
+    cancelPendingDraftSave();
+    const draftDeleteResult = await state.repository.deleteDraft();
+    if (draftDeleteResult.status === "deleted") {
+      setPersistenceWarning("");
+    } else {
+      setPersistenceWarning("A pesagem foi salva no histórico, mas não foi possível remover o rascunho deste dispositivo.");
+    }
+
+    setSaveStatus("saved");
+    closeFinalizeDialog();
+    elements.finalizeFeedback.classList.remove("hidden");
+    showGlobalMessage("");
+    await loadHistory();
+    updateFinalizeAvailability();
+  }
+
+  function snapshotFromCurrentDraft() {
+    const result = buildCurrentSnapshot();
+    renderResults();
+
+    if (!result.valid) {
+      showGlobalMessage(result.errors.join(" "));
+      return null;
+    }
+
+    return result.snapshot;
+  }
+
+  function downloadTextFile(content, fileName, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const anchor = createElement("a");
+
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.rel = "noopener";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
+
+  function exportSnapshotCsv(snapshot) {
+    const csv = CsvExportCore.generateCsv(snapshot.session, snapshot.items);
+    downloadTextFile(csv, CsvExportCore.buildFileName(snapshot.session), "text/csv;charset=utf-8");
+  }
+
+  function exportCurrentCsv() {
+    const snapshot = snapshotFromCurrentDraft();
+    if (!snapshot) {
+      return;
+    }
+
+    exportSnapshotCsv(snapshot);
+  }
+
+  async function exportHistoryCsv() {
+    if (!state.selectedSession) {
+      return;
+    }
+
+    exportSnapshotCsv({ session: state.selectedSession, items: state.selectedItems });
+  }
+
+  function sessionToHistoryItem(session) {
+    const button = createElement("button", {
+      className: "history-item",
+      type: "button",
+      data: { sessionId: session.id },
+    });
+
+    if (state.selectedSession && state.selectedSession.id === session.id) {
+      button.classList.add("active");
+    }
+
+    const title = createElement("strong", { text: session.weighingName || "Pesagem sem nome" });
+    const details = createElement("span", {
+      text: `${formatDateInput(session.weighingDate)} · ${session.propertyNameSnapshot || "Propriedade não informada"}`,
+    });
+    const metrics = createElement("span", { className: "history-item-metrics" });
+
+    [
+      `${session.totalAnimals} animais`,
+      `Peso: ${formatKg(session.totalWeight)}`,
+      `Média: ${formatKg(session.averageWeight)}`,
+      `Arrobas: ${formatArrobas(session.totalArrobas)}`,
+      `Valor: ${formatMoney(session.estimatedValue)}`,
+    ].forEach((text) => {
+      metrics.appendChild(createElement("span", { text }));
+    });
+
+    button.append(title, details, metrics);
+    button.addEventListener("click", () => selectHistorySession(session.id));
+    return button;
+  }
+
+  function renderHistoryList() {
+    clearChildren(elements.historyList);
+    state.filteredHistorySessions = getFilteredHistorySessions();
+    elements.historyEmptyMessage.classList.toggle("hidden", state.filteredHistorySessions.length > 0);
+
+    state.filteredHistorySessions.forEach((session) => {
+      elements.historyList.appendChild(sessionToHistoryItem(session));
+    });
+  }
+
+  function renderHistoryDetailEmpty() {
+    state.selectedSession = null;
+    state.selectedItems = [];
+    elements.historyDetailEmpty.classList.remove("hidden");
+    elements.historyDetailContent.classList.add("hidden");
+    elements.exportHistoryCsvButton.disabled = true;
+    elements.printHistoryReportButton.disabled = true;
+    elements.deleteHistorySessionButton.disabled = true;
+  }
+
+  function renderHistoryDetail() {
+    const session = state.selectedSession;
+    const items = state.selectedItems;
+
+    if (!session) {
+      renderHistoryDetailEmpty();
+      return;
+    }
+
+    elements.historyDetailEmpty.classList.add("hidden");
+    elements.historyDetailContent.classList.remove("hidden");
+    elements.exportHistoryCsvButton.disabled = false;
+    elements.printHistoryReportButton.disabled = false;
+    elements.deleteHistorySessionButton.disabled = false;
+
+    elements.historyReportName.textContent = session.weighingName || "Pesagem sem nome";
+    elements.historyReportProperty.textContent = session.propertyNameSnapshot || "Propriedade não informada";
+    elements.historyReportDate.textContent = formatDateInput(session.weighingDate);
+    elements.historyReportCreatedAt.textContent = formatDateTime(session.createdAt);
+    elements.historyReportPrice.textContent = currencyFormatter.format(session.arrobaPriceSnapshot);
+    elements.historyReportYield.textContent = `${numberFormatter.format(session.yieldRateSnapshot)}%`;
+    elements.historyReportBandParams.textContent = formatBandParams(
+      session.lightLimitSnapshot,
+      session.mediumLimitSnapshot,
+    );
+
+    elements.historyTotalAnimals.textContent = String(session.totalAnimals);
+    elements.historyTotalWeight.textContent = formatKg(session.totalWeight);
+    elements.historyAverageWeight.textContent = formatKg(session.averageWeight);
+    elements.historyTotalArrobas.textContent = formatArrobas(session.totalArrobas);
+    elements.historyEstimatedValue.textContent = formatMoney(session.estimatedValue);
+
+    renderReportList(
+      elements.historyReportList,
+      items.map((item) => ({
+        tag: item.tagSnapshot,
+        category: item.categorySnapshot,
+        weight: item.weightSnapshot,
+        band: item.weightBandSnapshot,
+        arrobas: item.arrobasSnapshot,
+        note: item.noteSnapshot,
+      })),
+      "Nenhum animal encontrado para esta pesagem.",
+    );
+  }
+
+  async function loadHistory() {
+    const result = await state.historyRepository.listSessions({ accountId: getActiveAccountId() });
+    if (result.status !== "loaded") {
+      state.historySessions = [];
+      renderHistoryList();
+      renderHistoryDetailEmpty();
+      return;
+    }
+
+    state.historySessions = result.sessions;
+    renderHistoryFilterOptions();
+    renderHistoryList();
+
+    if (state.selectedSession && state.filteredHistorySessions.some((session) => session.id === state.selectedSession.id)) {
+      await selectHistorySession(state.selectedSession.id);
+    } else if (!state.historySessions.length) {
+      renderHistoryDetailEmpty();
+    } else if (!state.filteredHistorySessions.length) {
+      renderHistoryDetailEmpty();
+    }
+  }
+
+  async function selectHistorySession(sessionId) {
+    const result = await state.historyRepository.getSessionWithItems(sessionId);
+
+    if (result.status !== "loaded") {
+      renderHistoryDetailEmpty();
+      return;
+    }
+
+    state.selectedSession = result.session;
+    state.selectedItems = result.items;
+    renderHistoryList();
+    renderHistoryDetail();
+  }
+
+  async function viewLastSavedWeighing() {
+    if (!state.lastSavedSessionId) {
+      return;
+    }
+
+    setActiveTab("history");
+    await selectHistorySession(state.lastSavedSessionId);
+  }
+
+  async function deleteSelectedHistory() {
+    if (!state.selectedSession) {
+      return;
+    }
+
+    state.pendingDeleteSessionId = state.selectedSession.id;
+    openDeleteDialog();
+  }
+
+  async function confirmDeleteSelectedHistory() {
+    const deletedSessionId = state.pendingDeleteSessionId;
+    if (!deletedSessionId) {
+      closeDeleteDialog();
+      return;
+    }
+
+    const result = await state.historyRepository.deleteSession(deletedSessionId);
+    if (result.status !== "deleted") {
+      renderHistoryDetail();
+      return;
+    }
+
+    if (state.lastSavedSessionId === deletedSessionId) {
+      clearFinalizedState();
+    }
+
+    renderHistoryDetailEmpty();
+    closeDeleteDialog();
+    await loadHistory();
+  }
+
   function bindEvents() {
     document.querySelectorAll(".tab-button").forEach((button) => {
-      button.addEventListener("click", () => setActiveTab(button.dataset.tab));
+      button.addEventListener("click", async () => {
+        setActiveTab(button.dataset.tab);
+        if (button.dataset.tab === "history") {
+          await loadHistory();
+        }
+      });
     });
 
     document.querySelector("#add-animal").addEventListener("click", () => addAnimal());
@@ -634,42 +1518,99 @@ if (typeof document !== "undefined") {
     document.querySelector("#load-demo").addEventListener("click", loadDemoData);
     document.querySelector("#add-paddock").addEventListener("click", () => addPaddock());
     document.querySelector("#print-report").addEventListener("click", () => window.print());
+    document.querySelector("#print-history-report").addEventListener("click", () => window.print());
+    elements.finalizeButton.addEventListener("click", handleFinalizeClick);
+    elements.confirmFinalizeButton.addEventListener("click", confirmFinalize);
+    elements.cancelFinalizeButton.addEventListener("click", closeFinalizeDialog);
+    elements.confirmDeleteButton.addEventListener("click", confirmDeleteSelectedHistory);
+    elements.cancelDeleteButton.addEventListener("click", closeDeleteDialog);
+    elements.exportCurrentCsvButton.addEventListener("click", exportCurrentCsv);
+    elements.exportHistoryCsvButton.addEventListener("click", exportHistoryCsv);
+    elements.viewSavedButton.addEventListener("click", viewLastSavedWeighing);
+    elements.newWeighingButton.addEventListener("click", clearWeighing);
+    elements.deleteHistorySessionButton.addEventListener("click", deleteSelectedHistory);
+    elements.historyPropertyFilter.addEventListener("change", () => {
+      state.historyPropertyFilter = elements.historyPropertyFilter.value;
+      renderHistoryList();
+
+      if (!state.selectedSession || !state.filteredHistorySessions.some((session) => session.id === state.selectedSession.id)) {
+        renderHistoryDetailEmpty();
+      }
+    });
+    inputs.propertySelect.addEventListener("change", () => {
+      state.selectedPropertyId = inputs.propertySelect.value || null;
+      const selectedProperty = findProperty(state.selectedPropertyId);
+      inputs.propertyName.value = selectedProperty ? selectedProperty.name : "";
+      syncPropertyNameInput();
+      handleDraftChanged();
+    });
+    elements.saveAccountNameButton.addEventListener("click", saveAccountName);
+    elements.accountName.addEventListener("input", () => {
+      setFieldMessage(elements.accountName, elements.accountNameMessage, "", "");
+    });
+    elements.newPropertyButton.addEventListener("click", startNewPropertyForm);
+    elements.propertyForm.addEventListener("submit", saveProperty);
+    elements.cancelPropertyButton.addEventListener("click", () => setPropertyFormVisible(false));
+    elements.propertyFormName.addEventListener("input", () => {
+      setFieldMessage(elements.propertyFormName, elements.propertyNameMessage, "", "");
+    });
+    elements.propertyState.addEventListener("input", () => {
+      elements.propertyState.value = PropertyCore.normalizeState(elements.propertyState.value);
+    });
 
     [inputs.weighingName, inputs.weighingDate, inputs.propertyName].forEach((input) => {
-      input.addEventListener("input", () => {
-        renderResults();
-        scheduleDraftSave();
-      });
-      input.addEventListener("change", () => {
-        renderResults();
-        scheduleDraftSave();
-      });
+      input.addEventListener("input", handleDraftChanged);
+      input.addEventListener("change", handleDraftChanged);
     });
 
     [inputs.arrobaPrice, inputs.yieldRate, inputs.lightLimit, inputs.mediumLimit].forEach((input) => {
-      input.addEventListener("input", () => {
-        renderResults();
-        scheduleDraftSave();
-      });
+      input.addEventListener("input", handleDraftChanged);
     });
 
     inputs.usePaddocks.addEventListener("change", () => {
       syncPaddockVisibility();
-      scheduleDraftSave();
+      handleDraftChanged();
     });
   }
 
   async function init() {
-    if (!CalculatorCore || !LocalDataCore || !DraftRepository) {
+    if (
+      !CalculatorCore
+      || !PropertyCore
+      || !LocalDataCore
+      || !LocalDatabase
+      || !AccountRepository
+      || !PropertyRepository
+      || !DraftRepository
+      || !WeighingHistoryCore
+      || !WeighingRepository
+      || !CsvExportCore
+    ) {
       throw new Error("Módulos locais obrigatórios não foram carregados.");
     }
 
-    state.repository = DraftRepository.createDraftRepository();
+    const database = LocalDatabase.createLocalDatabase();
+    state.repository = DraftRepository.createDraftRepository({ database });
+    state.accountRepository = AccountRepository.createAccountRepository({ database });
+    state.propertyRepository = PropertyRepository.createPropertyRepository({ database });
+    state.historyRepository = WeighingRepository.createWeighingRepository({ database });
     state.restoring = true;
     bindEvents();
     setActiveTab("calculator");
     setSaveStatus("saving");
+    renderHistoryDetailEmpty();
+    const accountResult = await state.accountRepository.ensureLocalAccount();
+    if (accountResult.account) {
+      state.activeAccount = accountResult.account;
+      elements.accountName.value = accountResult.account.name;
+      await loadProperties();
+    } else {
+      setPersistenceWarning("A calculadora continua funcionando, mas não foi possível preparar a operação local neste dispositivo.");
+      renderPropertySelect();
+      renderPropertyList();
+    }
     await restoreDraft();
+    await loadHistory();
     state.restoring = false;
   }
 
