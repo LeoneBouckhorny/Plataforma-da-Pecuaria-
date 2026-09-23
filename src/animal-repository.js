@@ -9,7 +9,8 @@ const AnimalRepository = ((baseRef, coreRef) => {
     listAnimals(accountId, propertyId, options) { return this.list(accountId, propertyId, options); }
     archiveAnimal(accountId, propertyId, id) { return this.archive(accountId, propertyId, id); }
     reactivateAnimal(accountId, propertyId, id) { return this.reactivate(accountId, propertyId, id); }
-    changeLot(accountId, propertyId, id, lotId) { return this.update(accountId, propertyId, id, { lotId }); }
+    changeAnimalLot(accountId, propertyId, id, lotId) { return this.mutate(accountId, propertyId, id, { lotId }, "changeLot"); }
+    changeLot(accountId, propertyId, id, lotId) { return this.changeAnimalLot(accountId, propertyId, id, lotId); }
   }
   return { Repository, createAnimalRepository: (options) => new Repository(options) };
 })(typeof window !== "undefined" ? window.HerdRepository : undefined,

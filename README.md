@@ -25,6 +25,8 @@ Base inicial da Plataforma da Pecuaria, com foco em uma porta de entrada simples
 - Operacao local editavel neste dispositivo.
 - Multiplas propriedades locais, com arquivamento e reativacao.
 - Area Rebanho com pastos/piquetes, lotes e animais por propriedade.
+- Ficha individual com linha do tempo, observacoes datadas e mudancas de lote.
+- Pesagens explicitamente vinculadas a animais; ultimo peso e contagem derivados.
 - Local atual do lote definido por pasto opcional; animal vinculado a lote opcional.
 - Cadastro individual com brinco ou nome, sem associacao automatica a itens de pesagem.
 - Pesagem opcionalmente vinculada a lote e filtro historico por ID do lote.
@@ -60,6 +62,18 @@ Nao ha exclusao definitiva desses cadastros nem transferencia entre propriedades
 Historicos vinculados preservam os nomes do lote e pasto no momento da gravacao.
 Os contadores mostram animais ativos cadastrados, nao uma estimativa de todo o gado fisico.
 
+Na Sprint 007, IndexedDB V5 adiciona `animal-events` e o indice `animalId` nos
+itens de pesagem existentes. A ficha combina eventos administrativos/observacoes
+com pesagens vinculadas, sem duplicar peso em eventos. Cadastro, mudanca de lote,
+arquivamento e reativacao geram eventos atomicamente. Observacoes podem ser
+editadas; eventos automaticos nao. Nascimento e cadastro legado sao marcos
+derivados, sem inventar eventos retroativos.
+
+A vinculacao individual exige selecionar explicitamente o animal na linha da
+calculadora. Brinco igual nunca cria vinculo. Animais arquivados continuam com
+historico, mas nao ficam disponiveis para nova pesagem. Trocar propriedade/lote
+limpa somente vinculos incompativeis, preservando pesos e textos digitados.
+
 ## PWA e uso offline
 
 Na Sprint 003, a aplicacao passou a registrar um Service Worker e um Web App Manifest. Em navegadores compativeis, ela pode ser instalada como aplicativo e pode abrir sem internet depois de ter sido carregada online pelo menos uma vez em contexto compativel com Service Worker.
@@ -76,6 +90,8 @@ O funcionamento offline cobre:
 - cadastro, edicao e arquivamento/reativacao do rebanho conforme seus vinculos;
 - mudanca do pasto atual do lote e do lote atual do animal;
 - pesagem vinculada opcionalmente a lote e consulta dos snapshots historicos;
+- ficha individual, timeline, observacoes, mudanca de lote e status com eventos;
+- pesagens vinculadas explicitamente e ultimo peso derivado;
 - geracao de CSV em memoria;
 - preparacao do romaneio para impressao.
 
@@ -93,7 +109,7 @@ O navegador pode remover dados locais conforme suas proprias politicas de armaze
 ## Gestao premium futura
 
 - Lotacao maxima opcional por pasto.
-- Historico individual de peso vinculado explicitamente ao animal.
+- GMD e graficos de evolucao, apos consolidacao do historico individual.
 - Vacinas, reproducao, nascimento, castracao, compra, venda e mortalidade.
 - Historico de movimentacoes e transferencia entre propriedades.
 - Despesas e permissoes para funcionarios.
@@ -122,7 +138,7 @@ A Sprint 005 aplica o simbolo aprovado (bovino, dados e campo), com paleta
 centralizada e componentes reutilizaveis. `styles.css` agrega as camadas
 em `styles/`; a marca fica em `assets/branding/` e os icones em `assets/`.
 Montserrat permanece como referencia com fallback local system-ui/Segoe UI,
-sem fonte externa. O app shell atual v4 preserva os assets visuais e inclui os modulos do rebanho.
+sem fonte externa. O app shell atual v5 preserva os assets visuais e inclui os modulos de rebanho e historico individual.
 
 Detalhes: `docs/DESIGN_SYSTEM_V1.md`, `docs/ADR_005_IDENTIDADE_VISUAL.md`
 e `docs/QA_SPRINT_005.md`. Para servir com Node.js, tambem e possivel usar
@@ -162,8 +178,13 @@ Chromium do Playwright. Execute `node scripts/qa-sprint-006.cjs`.
 O runner cria dados em contexto isolado e usa um servidor temporario, sem
 alterar os registros da instalacao do produtor.
 
-Documentacao atual: `docs/MODELO_DE_DADOS_V4.md`,
-`docs/ADR_006_ESTRUTURA_REBANHO.md`, `docs/QA_SPRINT_006.md`.
-Ainda nao existem historico individual completo, movimentacoes historicas,
-transferencia entre propriedades, sanidade, reproducao, financeiro, nuvem
-ou sincronizacao. Nenhuma funcionalidade da Sprint 007 foi iniciada.
+Documentacao atual: `docs/MODELO_DE_DADOS_V5.md`,
+`docs/ADR_007_HISTORICO_ANIMAL.md`, `docs/QA_SPRINT_007.md`.
+Runner atual: `node scripts/qa-sprint-007.cjs`, com Playwright disponivel no
+ambiente de QA e `QA_BROWSER_PATH` opcional. Nenhuma dependencia do aplicativo
+foi adicionada. O runner serve a base aprovada `1682473` para testar o upgrade
+real V4 -> V5 e encerra o servidor durante o teste offline.
+
+Ainda nao existem GMD, graficos de peso, movimentacao historica de lotes entre
+pastos, compra/venda/morte, transferencia entre propriedades, sanidade,
+reproducao, financeiro, nuvem ou sincronizacao. Sprint 008 nao iniciada.

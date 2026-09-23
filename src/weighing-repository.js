@@ -26,7 +26,7 @@ const WeighingRepository = ((LocalDatabaseRef, WeighingHistoryCoreRef) => {
         await this.database.writeTransaction([
           LocalDatabase.WEIGHING_SESSIONS_STORE,
           LocalDatabase.WEIGHING_ITEMS_STORE,
-          ...(normalized.session.lotId ? ["properties", "lots", "paddocks"] : []),
+          ...((normalized.session.lotId || normalized.items.some((item) => item.animalId)) ? ["accounts", "properties", "lots", "paddocks", "animals"] : []),
         ], async ({ store, requestToPromise }) => {
           if (normalized.session.lotId) {
             const session = normalized.session;
@@ -49,6 +49,23 @@ const WeighingRepository = ((LocalDatabaseRef, WeighingHistoryCoreRef) => {
             normalized.session.lotNameSnapshot = "";
             normalized.session.paddockId = null;
             normalized.session.paddockNameSnapshot = "";
+          }
+          for (const item of normalized.items) {
+            item.animalTagSnapshot = null;
+            item.animalNameSnapshot = null;
+            if (!item.animalId) continue;
+            const session = normalized.session;
+            const account = await requestToPromise(store("accounts").get(session.accountId));
+            const property = await requestToPromise(store("properties").get(session.propertyId));
+            const animal = await requestToPromise(store("animals").get(item.animalId));
+            if (!account || property?.accountId !== session.accountId || property.status !== "active"
+              || !animal || animal.accountId !== session.accountId || animal.propertyId !== session.propertyId
+              || animal.status !== "active" || (session.lotId && animal.lotId !== session.lotId)) {
+              throw new Error("Animal vinculado inexistente, arquivado ou incompatível com a propriedade/lote.");
+            }
+            item.animalTagSnapshot = animal.tag;
+            item.animalNameSnapshot = animal.name;
+            session.propertyNameSnapshot = property.name;
           }
           const sessionStore = store(LocalDatabase.WEIGHING_SESSIONS_STORE);
           const itemStore = store(LocalDatabase.WEIGHING_ITEMS_STORE);

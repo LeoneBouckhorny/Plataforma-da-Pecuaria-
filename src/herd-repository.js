@@ -1,5 +1,6 @@
-const HerdRepository = ((ref) => {
+const HerdRepository = ((ref, eventRef) => {
   const DB = ref || require("./local-database.js");
+  const Events = eventRef || require("./animal-event-core.js");
   const stores = ["accounts", "properties", "paddocks", "lots", "animals"];
   const scoped = (entity, accountId, propertyId) => Boolean(entity)
     && entity.accountId === accountId && entity.propertyId === propertyId;
@@ -37,7 +38,7 @@ const HerdRepository = ((ref) => {
     async mutate(accountId, propertyId, id, data, action) {
       try {
         // One overlapping read/write transaction protects references and archive guards.
-        return await this.database.writeTransaction(stores, async ({ store, requestToPromise: request }) => {
+        return await this.database.writeTransaction(this.kind === "animal" ? [...stores, "animal-events"] : stores, async ({ store, requestToPromise: request }) => {
           const account = await request(store("accounts").get(accountId));
           const property = await request(store("properties").get(propertyId));
           if (!account || !property || property.accountId !== accountId) {
@@ -47,9 +48,11 @@ const HerdRepository = ((ref) => {
           const target = store(this.storeName);
           const existing = id ? await request(target.get(id)) : null;
           if (action !== "create" && !scoped(existing, accountId, propertyId)) return { status: "missing" };
+          if (this.kind === "animal" && action === "update" && data.lotId !== undefined
+            && (data.lotId || null) !== existing.lotId) return invalid("lotId", "Use a ação Alterar lote para registrar a mudança no histórico.");
           let result;
           if (action === "create") result = this.core.create(accountId, propertyId, data, this.options);
-          else if (action === "update") result = this.core.update(existing, data, this.options);
+          else if (action === "update" || action === "changeLot") result = this.core.update(existing, data, this.options);
           else result = this.core.validate(this.core[action](existing, this.options));
           if (!result.valid) return { status: "invalid", errors: result.errors };
           const entity = result[this.kind];
@@ -72,6 +75,26 @@ const HerdRepository = ((ref) => {
                 : "Este lote possui animais ativos. Mova ou desvincule os animais antes de arquivar.");
             }
           }
+          if (this.kind === "animal") {
+            const type = action === "create" ? "registered" : existing.lotId !== entity.lotId ? "lot_changed"
+              : existing.status !== entity.status ? "status_changed" : null;
+            if (type) {
+              const snapshot = async (lotId, prefix) => {
+                const lot = lotId ? await request(store("lots").get(lotId)) : null;
+                if (lotId && !scoped(lot, accountId, propertyId)) throw new Error("Vínculo histórico de lote inválido.");
+                const paddock = lot?.paddockId ? await request(store("paddocks").get(lot.paddockId)) : null;
+                if (lot?.paddockId && !scoped(paddock, accountId, propertyId)) throw new Error("Vínculo histórico de pasto inválido.");
+                return Events.locationSnapshot(prefix, lot, paddock);
+              };
+              const event = Events.createEvent({ accountId, propertyId, animalId: entity.id, type,
+                ...(type === "lot_changed" ? await snapshot(existing.lotId, "from") : {}),
+                ...(["registered", "lot_changed"].includes(type) ? await snapshot(entity.lotId, "to") : {}),
+                ...(type === "status_changed" ? { fromStatus: existing.status, toStatus: entity.status } : {}),
+              }, this.options);
+              if (!event.valid) throw new Error("Não foi possível validar o evento administrativo.");
+              await request(store("animal-events").add(event.event));
+            }
+          }
           await request(action === "create" ? target.add(entity) : target.put(entity));
           return { status: "saved", [this.kind]: entity };
         });
@@ -83,6 +106,6 @@ const HerdRepository = ((ref) => {
     reactivate(accountId, propertyId, id) { return this.mutate(accountId, propertyId, id, {}, "reactivate"); }
   }
   return { Repository };
-})(typeof window !== "undefined" ? window.LocalDatabase : undefined);
+})(typeof window !== "undefined" ? window.LocalDatabase : undefined, typeof window !== "undefined" ? window.AnimalEventCore : undefined);
 if (typeof module !== "undefined") module.exports = HerdRepository;
 if (typeof window !== "undefined") window.HerdRepository = HerdRepository;

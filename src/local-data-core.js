@@ -36,6 +36,7 @@ const LocalDataCore = ((CalculatorCoreRef) => {
   function normalizeAnimal(animal = {}) {
     return {
       id: stableId(animal.id, "animal"),
+      animalId: animal.animalId == null ? null : asString(animal.animalId),
       tag: asString(animal.tag),
       weight: asString(animal.weight),
       category: CalculatorCore.normalizeCategory(animal.category),

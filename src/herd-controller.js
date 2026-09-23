@@ -41,6 +41,8 @@ const HerdController = (() => {
       this.propertyId = null;
       this.generation = 0;
       this.busy = false;
+      this.detail = new window.AnimalDetailController.Controller({ ...options,
+        onChanged: async () => { await this.refresh(); await options.onChanged(); } });
       this.selector = document.querySelector("#herd-property");
       this.feedback = document.querySelector("#herd-feedback");
       this.sections = document.querySelector("#herd-sections");
@@ -141,6 +143,7 @@ const HerdController = (() => {
       }
       detail("Observações", record.notes);
       const actions = el("div", undefined, "property-actions");
+      if (kind === "animal") actions.append(button("Ver ficha", "primary-button", () => this.detail.open(this.options.getAccountId(), this.propertyId, record.id)));
       actions.append(button("Editar", "secondary-button", () => this.openForm(kind, record)));
       if (kind !== "paddock") actions.append(button(kind === "lot" ? "Alterar pasto" : "Alterar lote", "secondary-button",
         () => this.openForm(kind, record, kind === "lot" ? "paddockId" : "lotId")));
@@ -151,7 +154,8 @@ const HerdController = (() => {
     }
     openForm(kind, record = null, focusField = null) {
       if (!this.propertyId || this.busy) return;
-      this.editing = { kind, record, propertyId: this.propertyId, accountId: this.options.getAccountId() };
+      const changingLot = kind === "animal" && record && focusField === "lotId";
+      this.editing = { kind, record, changingLot, propertyId: this.propertyId, accountId: this.options.getAccountId() };
       this.fields = {};
       this.messages = {};
       this.form.replaceChildren();
@@ -160,6 +164,7 @@ const HerdController = (() => {
       this.form.append(heading);
       const grid = el("div", undefined, "form-grid");
       for (const [key, label, type = "text"] of definitions[kind].fields) {
+        if (kind === "animal" && record && (changingLot ? key !== "lotId" : key === "lotId")) continue;
         const wrapper = el("label", label);
         const input = el(type === "select" ? "select" : type === "textarea" ? "textarea" : "input");
         input.id = `herd-field-${key}`;
@@ -200,12 +205,13 @@ const HerdController = (() => {
     }
     async save() {
       if (this.busy || !this.editing) return;
-      const { kind, record, accountId, propertyId } = this.editing;
+      const { kind, record, changingLot, accountId, propertyId } = this.editing;
       const data = Object.fromEntries(Object.entries(this.fields).map(([key, input]) => [key, input.value]));
       this.busy = true;
       this.submit.disabled = true;
       this.cancel.disabled = true;
-      const result = record ? await this.repos[kind].update(accountId, propertyId, record.id, data)
+      const result = changingLot ? await this.repos.animal.changeAnimalLot(accountId, propertyId, record.id, data.lotId || null)
+        : record ? await this.repos[kind].update(accountId, propertyId, record.id, data)
         : await this.repos[kind].create(accountId, propertyId, data);
       this.busy = false;
       this.submit.disabled = false;

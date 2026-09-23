@@ -1,6 +1,6 @@
 class MemoryDatabase {
   constructor() {
-    this.stores = Object.fromEntries(["accounts", "properties", "paddocks", "lots", "animals", "weighing-sessions", "weighing-items"].map((name) => [name, new Map()]));
+    this.stores = Object.fromEntries(["accounts", "properties", "paddocks", "lots", "animals", "animal-events", "weighing-sessions", "weighing-items"].map((name) => [name, new Map()]));
     this.stores.accounts.set("a", { id: "a" });
     this.stores.accounts.set("b", { id: "b" });
     for (const [id, accountId] of [["p", "a"], ["q", "a"], ["r", "b"]]) {
@@ -15,8 +15,12 @@ class MemoryDatabase {
     this.lastTransaction = names;
     const store = (name) => ({
       get: (key) => ({ result: structuredClone(this.stores[name].get(key)) }),
-      put: (value) => ({ result: this.stores[name].set(value.id, structuredClone(value)) }),
+      put: (value) => {
+        if (this.failStore === name) throw new Error("Injected failure");
+        return { result: this.stores[name].set(value.id, structuredClone(value)) };
+      },
       add: (value) => {
+        if (this.failStore === name) throw new Error("Injected failure");
         if (this.stores[name].has(value.id)) throw new Error("ConstraintError");
         return { result: this.stores[name].set(value.id, structuredClone(value)) };
       },

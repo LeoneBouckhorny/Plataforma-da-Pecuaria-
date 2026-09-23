@@ -12,7 +12,7 @@ test("animal CRUD, listagem e ciclo de status preservam ID", async () => {
   assert.equal((await repo.list("a", "p")).animals.length, 0);
   assert.equal((await repo.list("a", "p", { includeArchived: true })).animals.length, 1);
   assert.equal((await repo.reactivate("a", "p", id)).animal.id, id);
-  assert.deepEqual(f.database.lastTransaction, ["accounts", "properties", "paddocks", "lots", "animals"]);
+  assert.deepEqual(f.database.lastTransaction, ["accounts", "properties", "paddocks", "lots", "animals", "animal-events"]);
 });
 test("animal isola conta e propriedade mesmo com nomes/brincos iguais", async () => {
   const f = fixture(); const repo = f.animal;

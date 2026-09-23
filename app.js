@@ -37,6 +37,9 @@ if (typeof document !== "undefined") {
     selectedPropertyId: null,
     selectedLotId: null,
     registeredLots: [],
+    registeredAnimals: [],
+    linkWarning: "",
+    animalRepository: null,
     registeredPaddocks: [],
     lotRepository: null,
     paddockRepository: null,
@@ -249,25 +252,48 @@ if (typeof document !== "undefined") {
     document.querySelector("#registered-lot-field").classList.toggle("hidden", !state.selectedPropertyId);
   }
 
+  function availableRegisteredAnimals() {
+    return state.registeredAnimals.filter((animal) => animal.accountId === getActiveAccountId()
+      && animal.propertyId === state.selectedPropertyId && animal.status === "active"
+      && (!state.selectedLotId || animal.lotId === state.selectedLotId));
+  }
+
+  function syncAnimalLinks() {
+    const valid = new Set(availableRegisteredAnimals().map((animal) => animal.id));
+    let cleared = false;
+    for (const item of state.animals) {
+      if (item.animalId && !valid.has(item.animalId)) { item.animalId = null; cleared = true; }
+    }
+    if (cleared) state.linkWarning = "Vínculos de animais incompatíveis foram removidos. Pesos e textos foram preservados.";
+    return cleared;
+  }
+
   async function refreshRegisteredHerd() {
     const generation = ++state.herdRefreshGeneration;
     const lots = [];
     const paddocks = [];
+    const animals = [];
     for (const property of state.properties) {
       const lotResult = await state.lotRepository.listLots(getActiveAccountId(), property.id, { includeArchived: true });
       const paddockResult = await state.paddockRepository.listPaddocks(getActiveAccountId(), property.id, { includeArchived: true });
+      const animalResult = await state.animalRepository.listAnimals(getActiveAccountId(), property.id, { includeArchived: true });
       if (generation !== state.herdRefreshGeneration) return;
-      if (lotResult.status !== "loaded" || paddockResult.status !== "loaded") {
+      if (lotResult.status !== "loaded" || paddockResult.status !== "loaded" || animalResult.status !== "loaded") {
         setPersistenceWarning("Não foi possível atualizar os lotes cadastrados. Reabra o aplicativo antes de finalizar uma pesagem vinculada.");
         return;
       }
       lots.push(...lotResult.lots);
       paddocks.push(...paddockResult.paddocks);
+      animals.push(...animalResult.animals);
     }
     if (generation !== state.herdRefreshGeneration) return;
     state.registeredLots = lots;
     state.registeredPaddocks = paddocks;
+    state.registeredAnimals = animals;
     renderRegisteredLotSelect();
+    const changed = syncAnimalLinks();
+    renderAnimals();
+    if (changed) handleDraftChanged();
     renderResults();
   }
 
@@ -413,7 +439,7 @@ if (typeof document !== "undefined") {
   }
 
   function renderMessages(summary) {
-    showGlobalMessage(summary.generalMessages.join(" "));
+    showGlobalMessage([...summary.generalMessages, state.linkWarning].filter(Boolean).join(" "));
     setFormError(inputs.arrobaPrice, "arroba-price-message", summary.settings.errors.arrobaPrice);
     setFormError(inputs.yieldRate, "yield-rate-message", summary.settings.errors.yieldRate);
     setFormError(inputs.lightLimit, "light-limit-message", summary.settings.errors.lightLimit);
@@ -485,7 +511,7 @@ if (typeof document !== "undefined") {
 
     const values = [
       String(index + 1),
-      animal.tag || "Sem brinco",
+      animal.animalIdentification ? `${animal.tag || "Sem brinco"} (Vinculado: ${animal.animalIdentification})` : animal.tag || "Sem brinco",
       animal.category || "Sem categoria",
       formatKg(animal.weight),
       animal.band || "Faixa indisponível",
@@ -664,6 +690,25 @@ if (typeof document !== "undefined") {
     });
 
     tagCell.append(tagInput, tagMessage);
+    if (state.selectedPropertyId) {
+      const label = createElement("label", { text: "Animal cadastrado" });
+      const select = createElement("select", { ariaLabel: `Animal cadastrado do item ${index + 1}`, data: { field: "animalId" } });
+      select.append(createElement("option", { value: "", text: "Nenhum vínculo" }));
+      for (const registered of availableRegisteredAnimals()) {
+        select.append(createElement("option", { value: registered.id,
+          text: [registered.tag ? `Brinco ${registered.tag}` : "Sem brinco", registered.name].filter(Boolean).join(" · ") }));
+      }
+      select.value = animal.animalId || "";
+      select.addEventListener("change", () => {
+        state.linkWarning = "";
+        animal.animalId = select.value || null;
+        const selected = availableRegisteredAnimals().find((item) => item.id === animal.animalId);
+        if (selected && !animal.tag) { animal.tag = selected.tag; tagInput.value = selected.tag; }
+        handleDraftChanged();
+      });
+      label.append(select);
+      tagCell.append(label);
+    }
     weightCell.append(weightInput, weightMessage);
     categoryCell.appendChild(categorySelect);
     noteCell.appendChild(noteInput);
@@ -1102,6 +1147,7 @@ if (typeof document !== "undefined") {
   function addAnimal(animal = {}) {
     state.animals.push({
       id: animal.id || CalculatorCore.createId("animal"),
+      animalId: animal.animalId || null,
       tag: animal.tag || "",
       weight: animal.weight || "",
       category: CalculatorCore.normalizeCategory(animal.category),
@@ -1143,11 +1189,14 @@ if (typeof document !== "undefined") {
     renderAnimals();
     renderPaddocks();
     renderPropertySelect();
+    syncAnimalLinks();
+    renderAnimals();
     syncPaddockVisibility();
     renderResults();
   }
 
   function applyEmptyState() {
+    state.linkWarning = "";
     state.animals = [];
     state.paddocks = [];
     state.demoMode = false;
@@ -1338,7 +1387,7 @@ if (typeof document !== "undefined") {
     elements.confirmFinalizeButton.disabled = false;
 
     if (result.status !== "saved") {
-      showGlobalMessage("Não foi possível salvar a pesagem finalizada neste dispositivo. Verifique se o lote continua ativo na propriedade selecionada.");
+      showGlobalMessage("Não foi possível salvar a pesagem finalizada neste dispositivo. Verifique se o lote e os animais vinculados continuam ativos e compatíveis com a propriedade selecionada.");
       closeFinalizeDialog();
       updateFinalizeAvailability();
       return;
@@ -1507,6 +1556,7 @@ if (typeof document !== "undefined") {
         band: item.weightBandSnapshot,
         arrobas: item.arrobasSnapshot,
         note: item.noteSnapshot,
+        animalIdentification: item.animalId ? [item.animalTagSnapshot, item.animalNameSnapshot].filter(Boolean).join(" · ") : "",
       })),
       "Nenhum animal encontrado para esta pesagem.",
     );
@@ -1631,11 +1681,15 @@ if (typeof document !== "undefined") {
       inputs.propertyName.value = selectedProperty ? selectedProperty.name : "";
       syncPropertyNameInput();
       renderRegisteredLotSelect();
+      syncAnimalLinks();
+      renderAnimals();
       handleDraftChanged();
     });
     inputs.registeredLot.addEventListener("change", () => {
       state.selectedLotId = inputs.registeredLot.value || null;
       renderRegisteredLotSelect();
+      syncAnimalLinks();
+      renderAnimals();
       handleDraftChanged();
     });
     document.querySelector("#history-lot-filter").addEventListener("change", (event) => {
@@ -1695,6 +1749,7 @@ if (typeof document !== "undefined") {
     state.historyRepository = WeighingRepository.createWeighingRepository({ database });
     state.lotRepository = window.LotRepository.createLotRepository({ database });
     state.paddockRepository = window.PaddockRepository.createPaddockRepository({ database });
+    state.animalRepository = window.AnimalRepository.createAnimalRepository({ database });
     state.herdController = new window.HerdController.Controller({ database,
       getAccountId: getActiveAccountId,
       getProperties: () => state.properties,

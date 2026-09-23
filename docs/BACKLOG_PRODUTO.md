@@ -43,7 +43,24 @@ entrega, sujeita a auditoria do CTO. Permanecem futuros:
 - Capacidade/lotacao de pastagem e UA/ha.
 - Sincronizacao, backup e recuperacao.
 
-## Epica Futura: Gestao de Arrendamentos e Parcerias (Detalhamento)
+## Atualizacao Pos-Sprint 007
+
+Ficha individual, eventos administrativos, observacoes e pesagens explicitamente
+vinculadas entregues para auditoria. Ultimo peso e timeline sao derivados.
+Mudanca de lote do animal registra historico; mudanca de pasto do lote ainda
+representa somente estado atual. Permanecem futuros, sem implementacao:
+
+- Associacao manual retroativa de pesagens antigas, com auditoria propria.
+- Historico de movimentacao do lote entre pastos.
+- GMD, curva de crescimento e graficos de peso.
+- Compra, venda, morte, nascimento formal e castracao.
+- Sanidade, medicamentos, vacinacao e reproducao.
+- Transferencia formal entre propriedades.
+- Importacao em massa, RFID e integracao com balanca.
+- Nuvem, sincronizacao e backup/recuperacao.
+- Medicao de escala para busca/paginacao/virtualizacao, sem antecipar complexidade.
+
+## Epica Futura: Gestao de Arrendamentos e Parcerias (Requisitos)
 
 Objetivo futuro: permitir que o produtor registre corretamente relacoes entre terra, posse fisica do animal e participacao economica.
 

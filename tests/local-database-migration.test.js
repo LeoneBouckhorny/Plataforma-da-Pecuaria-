@@ -24,6 +24,7 @@ function createFakeDb(initialStores = []) {
 
   return {
     stores,
+    transaction: { objectStore: (name) => stores.get(name) },
     objectStoreNames: {
       contains: (storeName) => stores.has(storeName),
     },
@@ -38,7 +39,7 @@ function createFakeDb(initialStores = []) {
 test("migração inicial cria stores atuais, preservando histórico e índices", () => {
   const db = createFakeDb();
 
-  LocalDatabase.runMigrations(db, 0, null);
+  LocalDatabase.runMigrations(db, 0, db.transaction);
 
   assert.equal(db.stores.has(LocalDatabase.DRAFT_STORE), true);
   assert.equal(db.stores.has(LocalDatabase.WEIGHING_SESSIONS_STORE), true);
@@ -53,7 +54,7 @@ test("migração inicial cria stores atuais, preservando histórico e índices",
     indexName: LocalDatabase.SESSION_ID_INDEX,
     keyPath: "sessionId",
     options: { unique: false },
-  }]);
+  }, { indexName: "animalId", keyPath: "animalId", options: { unique: false } }]);
   assert.deepEqual(db.stores.get(LocalDatabase.PROPERTIES_STORE).createdIndexes, [
     {
       indexName: LocalDatabase.ACCOUNT_ID_INDEX,
@@ -68,26 +69,37 @@ test("migração inicial cria stores atuais, preservando histórico e índices",
   ]);
 });
 
+test("V4 para V5 preserva objetos existentes, cria eventos e adiciona indice sem recriar itens", () => {
+  const previous = ["accounts", "properties", "app-settings", "drafts", "paddocks", "lots", "animals", "weighing-sessions", "weighing-items"];
+  const db = createFakeDb(previous); const before = new Map(db.stores);
+  db.stores.get("weighing-items").createIndex("sessionId", "sessionId", { unique: false });
+  LocalDatabase.runMigrations(db, 4, db.transaction);
+  for (const name of previous) assert.equal(db.stores.get(name), before.get(name));
+  assert.deepEqual(db.stores.get("animal-events").createdIndexes.map((i) => i.indexName), ["accountId", "propertyId", "animalId", "type", "occurredAt"]);
+  assert.ok(db.stores.get("weighing-items").indexNames.contains("sessionId"));
+  assert.ok(db.stores.get("weighing-items").indexNames.contains("animalId"));
+});
+
 test("migration V3 para V4 mantem as seis stores anteriores e adiciona indices do rebanho", () => {
   const previous = ["drafts", "weighing-sessions", "weighing-items", "accounts", "properties", "app-settings"];
   const db = createFakeDb(previous);
   const before = new Map(db.stores);
-  LocalDatabase.runMigrations(db, 3, null);
-  assert.equal(LocalDatabase.DB_VERSION, 4);
+  LocalDatabase.runMigrations(db, 3, db.transaction);
+  assert.equal(LocalDatabase.DB_VERSION, 5);
   for (const name of previous) assert.equal(db.stores.get(name), before.get(name));
   for (const name of ["paddocks", "lots", "animals"]) {
     assert.equal(db.stores.get(name).keyPath, "id");
     assert.deepEqual(db.stores.get(name).createdIndexes.map((index) => index.indexName), ["accountId", "propertyId", "status"]);
   }
   const after = new Map(db.stores);
-  LocalDatabase.runMigrations(db, 4, null);
+  LocalDatabase.runMigrations(db, 5, db.transaction);
   assert.deepEqual(db.stores, after);
 });
 
 test("migração V1 para V2 preserva drafts e cria stores históricos", () => {
   const db = createFakeDb([LocalDatabase.DRAFT_STORE]);
 
-  LocalDatabase.runMigrations(db, 1, null);
+  LocalDatabase.runMigrations(db, 1, db.transaction);
 
   assert.equal(db.stores.has(LocalDatabase.DRAFT_STORE), true);
   assert.equal(db.stores.has(LocalDatabase.WEIGHING_SESSIONS_STORE), true);
@@ -95,7 +107,7 @@ test("migração V1 para V2 preserva drafts e cria stores históricos", () => {
   assert.equal(db.stores.has(LocalDatabase.ACCOUNTS_STORE), true);
   assert.equal(db.stores.has(LocalDatabase.PROPERTIES_STORE), true);
   assert.equal(db.stores.has(LocalDatabase.APP_SETTINGS_STORE), true);
-  assert.equal(db.stores.get(LocalDatabase.WEIGHING_ITEMS_STORE).createdIndexes.length, 1);
+  assert.equal(db.stores.get(LocalDatabase.WEIGHING_ITEMS_STORE).createdIndexes.length, 2);
 });
 
 test("migração V2 cria índice sessionId quando store de itens já existe", () => {
@@ -116,7 +128,7 @@ test("migração V2 cria índice sessionId quando store de itens já existe", ()
     indexName: LocalDatabase.SESSION_ID_INDEX,
     keyPath: "sessionId",
     options: { unique: false },
-  }]);
+  }, { indexName: "animalId", keyPath: "animalId", options: { unique: false } }]);
 });
 
 test("migração V2 para V3 preserva stores existentes e cria conta/propriedade/settings", () => {
@@ -126,7 +138,7 @@ test("migração V2 para V3 preserva stores existentes e cria conta/propriedade/
     LocalDatabase.WEIGHING_ITEMS_STORE,
   ]);
 
-  LocalDatabase.runMigrations(db, 2, null);
+  LocalDatabase.runMigrations(db, 2, db.transaction);
 
   assert.equal(db.stores.has(LocalDatabase.DRAFT_STORE), true);
   assert.equal(db.stores.has(LocalDatabase.WEIGHING_SESSIONS_STORE), true);

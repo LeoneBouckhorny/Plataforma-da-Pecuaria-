@@ -485,6 +485,17 @@
     <script src="src/paddock-core.js"></script>
     <script src="src/lot-core.js"></script>
     <script src="src/animal-core.js"></script>
+    <script src="src/animal-event-core.js"></script>
+    <script src="src/animal-event-repository.js"></script>
+    <script src="src/animal-history-core.js"></script>
+    <script src="src/animal-history-repository.js"></script>
+    <script src="src/animal-detail-controller.js"></script>
+    <dialog id="animal-detail-dialog" class="finalize-dialog" aria-labelledby="animal-detail-title">
+      <div class="panel-heading"><h2 id="animal-detail-title">Ficha do animal</h2><button id="close-animal-detail" class="secondary-button" type="button">Voltar ao rebanho</button></div>
+      <p id="animal-detail-message" role="status" aria-live="polite"></p>
+      <form id="animal-detail-form" class="hidden" novalidate></form>
+      <div id="animal-detail-content"></div>
+    </dialog>
     <script src="src/herd-repository.js"></script>
     <script src="src/paddock-repository.js"></script>
     <script src="src/lot-repository.js"></script>

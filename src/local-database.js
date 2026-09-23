@@ -1,6 +1,6 @@
 const LocalDatabase = (() => {
   const DB_NAME = "plataforma-pecuaria";
-  const DB_VERSION = 4;
+  const DB_VERSION = 5;
   const DRAFT_STORE = "drafts";
   const WEIGHING_SESSIONS_STORE = "weighing-sessions";
   const WEIGHING_ITEMS_STORE = "weighing-items";
@@ -10,6 +10,7 @@ const LocalDatabase = (() => {
   const PADDOCKS_STORE = "paddocks";
   const LOTS_STORE = "lots";
   const ANIMALS_STORE = "animals";
+  const ANIMAL_EVENTS_STORE = "animal-events";
   const SESSION_ID_INDEX = "sessionId";
   const ACCOUNT_ID_INDEX = "accountId";
   const STATUS_INDEX = "status";
@@ -79,6 +80,16 @@ const LocalDatabase = (() => {
       }
     }
     if (oldVersion < 4) migrateHerdStores(db);
+    if (oldVersion < 5) {
+      if (!db.objectStoreNames.contains(ANIMAL_EVENTS_STORE)) {
+        const events = db.createObjectStore(ANIMAL_EVENTS_STORE, { keyPath: "id" });
+        for (const key of ["accountId", "propertyId", "animalId", "type", "occurredAt"]) {
+          events.createIndex(key, key, { unique: false });
+        }
+      }
+      const items = transaction.objectStore(WEIGHING_ITEMS_STORE);
+      if (!items.indexNames.contains("animalId")) items.createIndex("animalId", "animalId", { unique: false });
+    }
   }
 
   function migrateHerdStores(db) {
@@ -265,6 +276,7 @@ const LocalDatabase = (() => {
     PADDOCKS_STORE,
     LOTS_STORE,
     ANIMALS_STORE,
+    ANIMAL_EVENTS_STORE,
     SESSION_ID_INDEX,
     ACCOUNT_ID_INDEX,
     STATUS_INDEX,

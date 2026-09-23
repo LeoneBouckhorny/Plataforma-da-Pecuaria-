@@ -1,0 +1,466 @@
+{
+  "checks": [
+    {
+      "name": "Migration populada V4 -> V5 e cache v4 -> v5",
+      "passed": true,
+      "detail": {
+        "preserved": [
+          "accounts",
+          "animals",
+          "app-settings",
+          "drafts",
+          "lots",
+          "paddocks",
+          "properties",
+          "weighing-items",
+          "weighing-sessions"
+        ],
+        "indexes": {
+          "accounts": [],
+          "animal-events": [
+            "accountId",
+            "animalId",
+            "occurredAt",
+            "propertyId",
+            "type"
+          ],
+          "animals": [
+            "accountId",
+            "propertyId",
+            "status"
+          ],
+          "app-settings": [],
+          "drafts": [],
+          "lots": [
+            "accountId",
+            "propertyId",
+            "status"
+          ],
+          "paddocks": [
+            "accountId",
+            "propertyId",
+            "status"
+          ],
+          "properties": [
+            "accountId",
+            "status"
+          ],
+          "weighing-items": [
+            "animalId",
+            "sessionId"
+          ],
+          "weighing-sessions": []
+        },
+        "syntheticEvents": 0
+      }
+    },
+    {
+      "name": "QA A ficha legado",
+      "passed": true,
+      "detail": "Último pesoSem pesagens vinculadasPesagens vinculadas0Última pesagemSem pesagens vinculadasBrinco101NomeEstrelaLote atualNovilhas 2026Local atualPiquete 01StatusAtivoSexoFêmeaCategoriaNovilhaRaçaNeloreNascimento10/08/2025Observações cadastraisNão informadoRegistrar observaçãoAlterar loteArquivarLinha do tempo21/09/2026, 16:23:51Cadastrado em (cadastro legado)10/08/2025Nascimento (cadastro)"
+    },
+    {
+      "name": "QA B note persiste e permite edicao",
+      "passed": true,
+      "detail": "Nota mantida apos fechar/reload; edicao sem novo evento."
+    },
+    {
+      "name": "QA C mudanca atomica",
+      "passed": true,
+      "detail": {
+        "id": "2c8918df-a3b1-4ec1-82d7-e7224ff33816",
+        "accountId": "35d98648-2df5-48d8-b1b1-f2595326fac9",
+        "propertyId": "82e42b25-0a70-4e4b-8188-c6cecaad1874",
+        "animalId": "5fc4ddf2-9de2-4da7-8209-57acc96349ed",
+        "type": "lot_changed",
+        "occurredAt": "2026-09-21T19:23:55.851Z",
+        "createdAt": "2026-09-21T19:23:55.851Z",
+        "updatedAt": "2026-09-21T19:23:55.851Z",
+        "fromLotId": "611df4f8-3cf9-4630-8836-0df055176d1e",
+        "fromLotNameSnapshot": "Novilhas 2026",
+        "fromPaddockId": "9c9f03e8-6709-43a8-8512-3c98d67953e5",
+        "fromPaddockNameSnapshot": "Piquete 01",
+        "toLotId": "34ea299a-730b-4b40-86ae-64fcb724f59f",
+        "toLotNameSnapshot": "Recria",
+        "toPaddockId": "4d87a183-d348-4afe-92f3-1e42667756ba",
+        "toPaddockNameSnapshot": "Piquete 02",
+        "fromStatus": null,
+        "toStatus": null,
+        "notes": null
+      }
+    },
+    {
+      "name": "QA D snapshot de lote imutavel",
+      "passed": true,
+      "detail": "2c8918df-a3b1-4ec1-82d7-e7224ff33816"
+    },
+    {
+      "name": "Novo cadastro gera registered",
+      "passed": true,
+      "detail": "aa74567c-d15c-4bf3-bb2b-f37a9cd1342b"
+    },
+    {
+      "name": "QA E selecao explicita, draft/reload e pesagem individual",
+      "passed": true,
+      "detail": {
+        "weight": 450,
+        "count": 1
+      }
+    },
+    {
+      "name": "QA F sem auto-link por tag",
+      "passed": true,
+      "detail": "Tag 101 nao vinculada nao aparece na ficha."
+    },
+    {
+      "name": "QA G duplicidade bloqueada",
+      "passed": true,
+      "detail": "Mesmo ID com tags textuais diferentes."
+    },
+    {
+      "name": "QA H ultimo peso derivado",
+      "passed": true,
+      "detail": {
+        "weight": 475,
+        "count": 2
+      }
+    },
+    {
+      "name": "QA I arquivar/reativar",
+      "passed": true,
+      "detail": "Historico preservado e seletor ativo filtrado."
+    },
+    {
+      "name": "QA J isolamento entre homonimos",
+      "passed": true,
+      "detail": {
+        "boaAnimal": "5fc4ddf2-9de2-4da7-8209-57acc96349ed",
+        "saoAnimal": "97d76b8a-23a9-4697-8c23-708eece3eaaf"
+      }
+    },
+    {
+      "name": "Troca de propriedade/lote preserva peso e texto e limpa somente vinculos",
+      "passed": true,
+      "detail": true
+    },
+    {
+      "name": "Snapshots de animal imutaveis e DOM seguro",
+      "passed": true,
+      "detail": "Pesagens conservam 101/Estrela, nota HTML exibida como texto."
+    },
+    {
+      "name": "Rollback real nos dois lados das quatro operacoes",
+      "passed": true,
+      "detail": [
+        {
+          "action": "create",
+          "failure": "animals",
+          "status": "failed",
+          "unchanged": true
+        },
+        {
+          "action": "create",
+          "failure": "animal-events",
+          "status": "failed",
+          "unchanged": true
+        },
+        {
+          "action": "change",
+          "failure": "animals",
+          "status": "failed",
+          "unchanged": true
+        },
+        {
+          "action": "change",
+          "failure": "animal-events",
+          "status": "failed",
+          "unchanged": true
+        },
+        {
+          "action": "archive",
+          "failure": "animals",
+          "status": "failed",
+          "unchanged": true
+        },
+        {
+          "action": "archive",
+          "failure": "animal-events",
+          "status": "failed",
+          "unchanged": true
+        },
+        {
+          "action": "reactivate",
+          "failure": "animals",
+          "status": "failed",
+          "unchanged": true
+        },
+        {
+          "action": "reactivate",
+          "failure": "animal-events",
+          "status": "failed",
+          "unchanged": true
+        }
+      ]
+    },
+    {
+      "name": "QA responsivo",
+      "passed": true,
+      "detail": [
+        {
+          "name": "360-lista",
+          "width": 360,
+          "scrollWidth": 360
+        },
+        {
+          "name": "360-ficha",
+          "width": 360,
+          "scrollWidth": 360
+        },
+        {
+          "name": "360-timeline",
+          "width": 360,
+          "scrollWidth": 360
+        },
+        {
+          "name": "360-note",
+          "width": 360,
+          "scrollWidth": 360
+        },
+        {
+          "name": "360-mudar-lote",
+          "width": 360,
+          "scrollWidth": 360
+        },
+        {
+          "name": "360-calculadora",
+          "width": 360,
+          "scrollWidth": 360
+        },
+        {
+          "name": "360-historico",
+          "width": 360,
+          "scrollWidth": 360
+        },
+        {
+          "name": "768-lista",
+          "width": 768,
+          "scrollWidth": 768
+        },
+        {
+          "name": "768-ficha",
+          "width": 768,
+          "scrollWidth": 768
+        },
+        {
+          "name": "768-timeline",
+          "width": 768,
+          "scrollWidth": 768
+        },
+        {
+          "name": "768-note",
+          "width": 768,
+          "scrollWidth": 768
+        },
+        {
+          "name": "768-mudar-lote",
+          "width": 768,
+          "scrollWidth": 768
+        },
+        {
+          "name": "768-calculadora",
+          "width": 768,
+          "scrollWidth": 768
+        },
+        {
+          "name": "768-historico",
+          "width": 768,
+          "scrollWidth": 768
+        },
+        {
+          "name": "1280-lista",
+          "width": 1280,
+          "scrollWidth": 1280
+        },
+        {
+          "name": "1280-ficha",
+          "width": 1280,
+          "scrollWidth": 1280
+        },
+        {
+          "name": "1280-timeline",
+          "width": 1280,
+          "scrollWidth": 1280
+        },
+        {
+          "name": "1280-note",
+          "width": 1280,
+          "scrollWidth": 1280
+        },
+        {
+          "name": "1280-mudar-lote",
+          "width": 1280,
+          "scrollWidth": 1280
+        },
+        {
+          "name": "1280-calculadora",
+          "width": 1280,
+          "scrollWidth": 1280
+        },
+        {
+          "name": "1280-historico",
+          "width": 1280,
+          "scrollWidth": 1280
+        },
+        {
+          "name": "offline-ficha",
+          "width": 1280,
+          "scrollWidth": 1280
+        }
+      ]
+    },
+    {
+      "name": "QA K offline sem servidor, fechar/reabrir e historico persistido",
+      "passed": true,
+      "detail": {
+        "offline": true,
+        "serverListening": false,
+        "animal": {
+          "id": "5fc4ddf2-9de2-4da7-8209-57acc96349ed",
+          "accountId": "35d98648-2df5-48d8-b1b1-f2595326fac9",
+          "propertyId": "82e42b25-0a70-4e4b-8188-c6cecaad1874",
+          "lotId": "611df4f8-3cf9-4630-8836-0df055176d1e",
+          "tag": "184",
+          "name": "Matriz 184",
+          "sex": "female",
+          "category": "Novilha",
+          "breed": "Nelore",
+          "birthDate": "2025-08-10",
+          "notes": "",
+          "status": "active",
+          "createdAt": "2026-09-21T19:23:51.031Z",
+          "updatedAt": "2026-09-21T19:24:12.251Z"
+        },
+        "lastWeight": 490,
+        "linkedCount": 3
+      }
+    }
+  ],
+  "viewports": [
+    {
+      "name": "360-lista",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-ficha",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-timeline",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-note",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-mudar-lote",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-calculadora",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-historico",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "768-lista",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-ficha",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-timeline",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-note",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-mudar-lote",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-calculadora",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-historico",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "1280-lista",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-ficha",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-timeline",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-note",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-mudar-lote",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-calculadora",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-historico",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "offline-ficha",
+      "width": 1280,
+      "scrollWidth": 1280
+    }
+  ],
+  "errors": [],
+  "limitations": [
+    "Android fisico nao executado; Edge/Chromium headless com viewports emulados."
+  ],
+  "browser": "153.0.4234.48",
+  "passed": true
+}

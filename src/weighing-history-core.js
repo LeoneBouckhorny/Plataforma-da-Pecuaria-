@@ -28,9 +28,12 @@ const WeighingHistoryCore = ((CalculatorCoreRef) => {
     if (snapshot.session.status !== COMPLETED_STATUS) errors.push("Status histórico inválido.");
     if (!snapshot.items.length) errors.push("Sessão sem itens.");
 
+    const linkedIds = new Set();
     snapshot.items.forEach((item) => {
       if (!item.id) errors.push("Item sem identificador.");
       if (item.sessionId !== snapshot.session.id) errors.push("Item vinculado a sessão incorreta.");
+      if (item.animalId && linkedIds.has(item.animalId)) errors.push("O mesmo animal cadastrado foi selecionado em mais de um item. Remova o vínculo duplicado.");
+      if (item.animalId) linkedIds.add(item.animalId);
     });
 
     return { valid: errors.length === 0, errors };
@@ -105,7 +108,9 @@ const WeighingHistoryCore = ((CalculatorCoreRef) => {
     const items = summary.reportAnimals.map((animal) => ({
       id: createSnapshotId("item", options.idFactory),
       sessionId,
-      animalId: null,
+      animalId: animals.find((sourceAnimal) => sourceAnimal.id === animal.id)?.animalId || null,
+      animalTagSnapshot: null,
+      animalNameSnapshot: null,
       tagSnapshot: asString(animal.tag),
       categorySnapshot: asString(animal.category),
       weightSnapshot: animal.weight,
@@ -158,6 +163,8 @@ const WeighingHistoryCore = ((CalculatorCoreRef) => {
       id: asString(item.id),
       sessionId: asString(item.sessionId),
       animalId: item.animalId ?? null,
+      animalTagSnapshot: item.animalTagSnapshot ?? null,
+      animalNameSnapshot: item.animalNameSnapshot ?? null,
       tagSnapshot: asString(item.tagSnapshot),
       categorySnapshot: asString(item.categorySnapshot),
       weightSnapshot: Number(item.weightSnapshot || 0),
