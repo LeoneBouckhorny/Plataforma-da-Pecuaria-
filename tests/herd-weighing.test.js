@@ -27,8 +27,8 @@ test("selecao por ID limpa lote de outra propriedade/conta ou arquivado", () => 
 test("historico captura lote/pasto atuais atomicamente e nao muda apos renomear/mover", async () => {
   const f = fixture();
   const p = (await f.paddock.create("a", "p", { name: "P1" })).paddock;
-  const l = (await f.lot.create("a", "p", { name: "Novilhas", paddockId: p.id })).lot;
-  await f.animal.create("a", "p", { tag: "101", lotId: l.id });
+  const l = (await f.lot.create("a", "p", { tagSuffix: "A", name: "Novilhas", paddockId: p.id })).lot;
+  await f.animal.create("a", "p", { name: "101", lotId: l.id });
   const repo = createWeighingRepository({ database: f.database });
   const snapshot = History.buildSnapshot(source({ lotId: l.id, lotName: "Nome stale", paddockName: "Stale" })).snapshot;
   const saved = await repo.saveCompletedSession(snapshot);
@@ -46,7 +46,7 @@ test("historico captura lote/pasto atuais atomicamente e nao muda apos renomear/
 });
 test("pesagem rejeita lote cross-property e arquivado sem gravar sessao/itens", async () => {
   const f = fixture(); const repo = createWeighingRepository({ database: f.database });
-  const l = (await f.lot.create("a", "q", { name: "L" })).lot;
+  const l = (await f.lot.create("a", "q", { tagSuffix: "A", name: "L" })).lot;
   assert.equal((await repo.saveCompletedSession(History.buildSnapshot(source({ lotId: l.id })).snapshot)).status, "failed");
   await f.lot.archive("a", "q", l.id);
   assert.equal((await repo.saveCompletedSession(History.buildSnapshot(source({ propertyId: "q", lotId: l.id })).snapshot)).status, "failed");
@@ -55,8 +55,8 @@ test("pesagem rejeita lote cross-property e arquivado sem gravar sessao/itens", 
 });
 test("historico filtra lotes homonimos por ID e combina filtro propriedade/sem vinculo", async () => {
   const f = fixture(); const repo = createWeighingRepository({ database: f.database });
-  const p = (await f.lot.create("a", "p", { name: "Lote A" })).lot;
-  const q = (await f.lot.create("a", "q", { name: "Lote A" })).lot;
+  const p = (await f.lot.create("a", "p", { tagSuffix: "A", name: "Lote A" })).lot;
+  const q = (await f.lot.create("a", "q", { tagSuffix: "A", name: "Lote A" })).lot;
   for (const lot of [p, q]) assert.equal((await repo.saveCompletedSession(History.buildSnapshot(source({ propertyId: lot.propertyId, lotId: lot.id })).snapshot)).status, "saved");
   await repo.saveCompletedSession(History.buildSnapshot(source({ propertyId: null })).snapshot);
   assert.equal((await repo.listSessions({ lotId: p.id })).sessions.length, 1);

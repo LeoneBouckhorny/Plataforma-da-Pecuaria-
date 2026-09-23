@@ -44,6 +44,11 @@ if (typeof document !== "undefined") {
     lotRepository: null,
     paddockRepository: null,
     herdController: null,
+    activeTab: "calculator",
+    managementPropertyId: null,
+    propertySection: "overview",
+    contextGeneration: 0,
+    historySelectionGeneration: 0,
     herdRefreshGeneration: 0,
     historyLotFilter: "all",
     historyPropertyFilter: "all",
@@ -887,6 +892,9 @@ if (typeof document !== "undefined") {
   }
 
   function getPropertyHistorySessions() {
+    if (state.activeTab === "property-detail") {
+      return state.historySessions.filter((session) => session.propertyId === state.managementPropertyId);
+    }
     if (state.historyPropertyFilter === "all") {
       return state.historySessions;
     }
@@ -1003,7 +1011,9 @@ if (typeof document !== "undefined") {
     });
 
     body.append(name, details);
-    actions.append(editButton, archiveButton);
+    const openButton = createElement("button", { className: "primary-button", type: "button", text: "Abrir propriedade" });
+    openButton.addEventListener("click", () => openPropertyContext(property.id));
+    actions.append(openButton, editButton, archiveButton);
     card.append(body, status, actions);
     return card;
   }
@@ -1133,9 +1143,69 @@ if (typeof document !== "undefined") {
     await loadHistory();
   }
 
+  async function openPropertyContext(propertyId) {
+    const property = findProperty(propertyId);
+    if (!property || property.accountId !== getActiveAccountId()) return;
+    state.managementPropertyId = propertyId;
+    document.querySelector("#property-detail-name").textContent = property.name;
+    document.querySelector("#property-detail-location").textContent = PropertyCore.formatLocation(property);
+    setActiveTab("property-detail");
+    await showPropertySection("overview");
+  }
+
+  async function refreshPropertyOverview() {
+    const generation = ++state.contextGeneration;
+    const propertyId = state.managementPropertyId;
+    const feedback = document.querySelector("#property-context-feedback");
+    feedback.textContent = "";
+    for (const kind of ["paddocks", "lots", "animals", "weighings"]) document.querySelector(`#property-count-${kind}`).textContent = "...";
+    for (const [kind, repo] of [["paddocks", state.paddockRepository], ["lots", state.lotRepository], ["animals", state.animalRepository], ["weighings", state.historyRepository]]) {
+      const result = kind === "weighings" ? await repo.listSessions({ accountId: getActiveAccountId(), propertyId })
+        : await repo.list(getActiveAccountId(), propertyId);
+      if (generation !== state.contextGeneration || propertyId !== state.managementPropertyId) return;
+      if (result.status !== "loaded") {
+        feedback.textContent = "Não foi possível carregar todos os dados desta propriedade. Abra a visão geral novamente.";
+        document.querySelector(`#property-count-${kind}`).textContent = "Indisponível";
+      } else document.querySelector(`#property-count-${kind}`).textContent = String((result[kind] || result.sessions).length);
+    }
+  }
+
+  async function showPropertySection(section) {
+    state.propertySection = section;
+    document.querySelectorAll("[data-property-section]").forEach((button) => {
+      button.setAttribute("aria-current", button.dataset.propertySection === section ? "page" : "false");
+    });
+    document.querySelector("#property-context-feedback").textContent = "";
+    document.querySelector("#property-overview").classList.toggle("hidden", section !== "overview");
+    document.querySelector("#herd").classList.toggle("hidden", section !== "herd");
+    document.querySelector("#history").classList.toggle("active", section === "weighings");
+    if (section === "overview") await refreshPropertyOverview();
+    if (section === "herd") await state.herdController.setProperty(state.managementPropertyId);
+    if (section === "weighings") {
+      state.historyLotFilter = "all";
+      ++state.historySelectionGeneration;
+      renderHistoryDetailEmpty();
+      renderHistoryFilterOptions();
+      renderHistoryList();
+      await loadHistory();
+    }
+  }
+
   function setActiveTab(tabId) {
+    state.activeTab = tabId;
+    ++state.historySelectionGeneration;
+    const history = document.querySelector("#history");
+    if (!state.historyHome) {
+      state.historyHome = document.createComment("history-home");
+      history.before(state.historyHome);
+      document.querySelector("#property-herd-slot").append(document.querySelector("#herd"));
+    }
+    if (tabId === "property-detail") document.querySelector("#property-weighings-slot").append(history);
+    else state.historyHome.after(history);
+    elements.historyPropertyFilter.closest("label").classList.toggle("hidden", tabId === "property-detail");
+    renderHistoryDetailEmpty();
     document.querySelectorAll(".tab-button").forEach((button) => {
-      const isActive = button.dataset.tab === tabId;
+      const isActive = button.dataset.tab === (tabId === "property-detail" ? "property" : tabId);
       button.classList.toggle("active", isActive);
       button.setAttribute("aria-selected", String(isActive));
     });
@@ -1563,7 +1633,12 @@ if (typeof document !== "undefined") {
   }
 
   async function loadHistory() {
+    document.querySelector("#history").setAttribute("aria-busy", "true");
+    // Apply the current scope before awaiting storage, so old rows never flash in another property.
+    renderHistoryFilterOptions();
+    renderHistoryList();
     const result = await state.historyRepository.listSessions({ accountId: getActiveAccountId() });
+    document.querySelector("#history").setAttribute("aria-busy", "false");
     if (result.status !== "loaded") {
       state.historySessions = [];
       renderHistoryList();
@@ -1585,7 +1660,10 @@ if (typeof document !== "undefined") {
   }
 
   async function selectHistorySession(sessionId) {
+    const generation = ++state.historySelectionGeneration;
+    if (!getFilteredHistorySessions().some((session) => session.id === sessionId)) return;
     const result = await state.historyRepository.getSessionWithItems(sessionId);
+    if (generation !== state.historySelectionGeneration || !getFilteredHistorySessions().some((session) => session.id === sessionId)) return;
 
     if (result.status !== "loaded") {
       renderHistoryDetailEmpty();
@@ -1604,6 +1682,10 @@ if (typeof document !== "undefined") {
     }
 
     setActiveTab("history");
+    state.historyPropertyFilter = "all";
+    state.historyLotFilter = "all";
+    renderHistoryFilterOptions();
+    renderHistoryList();
     await selectHistorySession(state.lastSavedSessionId);
   }
 
@@ -1639,13 +1721,16 @@ if (typeof document !== "undefined") {
   }
 
   function bindEvents() {
+    document.querySelector("#back-properties").addEventListener("click", () => setActiveTab("property"));
+    document.querySelectorAll("[data-property-section]").forEach((button) => {
+      button.addEventListener("click", () => showPropertySection(button.dataset.propertySection));
+    });
     document.querySelectorAll(".tab-button").forEach((button) => {
       button.addEventListener("click", async () => {
         setActiveTab(button.dataset.tab);
         if (button.dataset.tab === "history") {
           await loadHistory();
         }
-        if (button.dataset.tab === "herd") await state.herdController.refreshProperties();
         if (button.dataset.tab === "calculator") await refreshRegisteredHerd();
       });
     });

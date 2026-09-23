@@ -1,6 +1,7 @@
-const HerdRepository = ((ref, eventRef) => {
+const HerdRepository = ((ref, eventRef, tagRef) => {
   const DB = ref || require("./local-database.js");
   const Events = eventRef || require("./animal-event-core.js");
+  const Tags = tagRef || require("./tag-code-core.js");
   const stores = ["accounts", "properties", "paddocks", "lots", "animals"];
   const scoped = (entity, accountId, propertyId) => Boolean(entity)
     && entity.accountId === accountId && entity.propertyId === propertyId;
@@ -48,6 +49,62 @@ const HerdRepository = ((ref, eventRef) => {
           const target = store(this.storeName);
           const existing = id ? await request(target.get(id)) : null;
           if (action !== "create" && !scoped(existing, accountId, propertyId)) return { status: "missing" };
+          // Identity checks and writes share the same transaction, including archived records.
+          if (this.kind === "lot") {
+            const suffix = Tags.normalizeLotSuffix(data.tagSuffix === undefined ? existing?.tagSuffix : data.tagSuffix);
+            if ((action === "create" || suffix) && !Tags.validateLotSuffix(suffix)) {
+              return invalid("tagSuffix", "Informe uma única letra de A a Z para o código do lote.");
+            }
+            const lots = await request(store("lots").index("propertyId").getAll(propertyId));
+            const duplicate = lots.find((lot) => scoped(lot, accountId, propertyId) && lot.id !== id
+              && suffix && Tags.normalizeLotSuffix(lot.tagSuffix) === suffix);
+            if (duplicate) return invalid("tagSuffix", `O código ${suffix} já está sendo utilizado pelo lote '${duplicate.name}'. Escolha outro código.`);
+            if (existing && suffix !== Tags.normalizeLotSuffix(existing.tagSuffix)) {
+              const animals = await request(store("animals").index("propertyId").getAll(propertyId));
+              if (animals.some((animal) => scoped(animal, accountId, propertyId) && animal.tagOriginLotId === id)) {
+                return invalid("tagSuffix", "O código deste lote já foi utilizado na identificação de animais e não pode ser alterado.");
+              }
+            }
+            if (action === "create" || action === "update") data = { ...data, tagSuffix: suffix || null };
+          }
+          if (this.kind === "animal") {
+            const standardized = Boolean(existing?.tagOriginLotId);
+            for (const field of ["tagSuffix", "tagOriginLotId"]) {
+              if (data[field] !== undefined && data[field] !== existing?.[field]) {
+                return invalid(field, "A origem do brinco não pode ser informada ou alterada manualmente.");
+              }
+            }
+            if (action === "create" && data.tag) return invalid("tagNumber", "Informe o número do brinco e selecione um lote com código configurado.");
+            if (existing && !existing.tag && data.tag) return invalid("tagNumber", "Informe o número do brinco para gerar a identificação.");
+            if (standardized && data.tag !== undefined && data.tag !== existing.tag) {
+              return invalid("tagNumber", "Corrija o número do brinco; o código completo é gerado automaticamente.");
+            }
+            const number = data.tagNumber === undefined ? existing?.tagNumber : data.tagNumber;
+            const issuing = !standardized && Boolean(Tags.normalizeTagNumber(number));
+            if (issuing && existing?.tag) return invalid("tagNumber", "A conversão de identificações anteriores não está disponível.");
+            if (issuing || standardized) {
+              if (!Tags.validateTagNumber(number)) return invalid("tagNumber", "Informe um número inteiro de 1 a 9999.");
+              let suffix = existing?.tagSuffix;
+              let originId = existing?.tagOriginLotId;
+              if (issuing) {
+                originId = data.lotId === undefined ? existing?.lotId : data.lotId;
+                const origin = originId ? await request(store("lots").get(originId)) : null;
+                if (!scoped(origin, accountId, propertyId) || origin.status !== "active" || !Tags.validateLotSuffix(origin.tagSuffix)) {
+                  return invalid("lotId", "Selecione um lote com código de identificação configurado.");
+                }
+                suffix = Tags.normalizeLotSuffix(origin.tagSuffix);
+              }
+              data = { ...data, tagNumber: Tags.formatTagNumber(number), tagSuffix: suffix,
+                tagOriginLotId: originId, tag: Tags.buildTagCode(number, suffix) };
+            }
+            const tag = Tags.normalizeTagCodeForComparison(data.tag === undefined ? existing?.tag : data.tag);
+            const animals = await request(store("animals").index("propertyId").getAll(propertyId));
+            const tagChanged = action === "create" || tag !== Tags.normalizeTagCodeForComparison(existing?.tag);
+            if (tagChanged && tag && animals.some((animal) => scoped(animal, accountId, propertyId) && animal.id !== id
+              && Tags.normalizeTagCodeForComparison(animal.tag) === tag)) {
+              return invalid("tagNumber", `Já existe um animal identificado como ${tag} nesta propriedade.`);
+            }
+          }
           if (this.kind === "animal" && action === "update" && data.lotId !== undefined
             && (data.lotId || null) !== existing.lotId) return invalid("lotId", "Use a ação Alterar lote para registrar a mudança no histórico.");
           let result;
@@ -106,6 +163,7 @@ const HerdRepository = ((ref, eventRef) => {
     reactivate(accountId, propertyId, id) { return this.mutate(accountId, propertyId, id, {}, "reactivate"); }
   }
   return { Repository };
-})(typeof window !== "undefined" ? window.LocalDatabase : undefined, typeof window !== "undefined" ? window.AnimalEventCore : undefined);
+})(typeof window !== "undefined" ? window.LocalDatabase : undefined, typeof window !== "undefined" ? window.AnimalEventCore : undefined,
+  typeof window !== "undefined" ? window.TagCodeCore : undefined);
 if (typeof module !== "undefined") module.exports = HerdRepository;
 if (typeof window !== "undefined") window.HerdRepository = HerdRepository;

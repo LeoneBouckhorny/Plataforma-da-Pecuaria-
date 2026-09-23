@@ -4,9 +4,9 @@ const { fixture } = require("./herd-test-helpers.js");
 async function setup() {
   const f = fixture();
   f.p = (await f.paddock.create("a", "p", { name: "Pasto" })).paddock;
-  f.l1 = (await f.lot.create("a", "p", { name: "Novilhas", paddockId: f.p.id })).lot;
-  f.l2 = (await f.lot.create("a", "p", { name: "Recria" })).lot;
-  f.a = (await f.animal.create("a", "p", { tag: "101", lotId: f.l1.id })).animal;
+  f.l1 = (await f.lot.create("a", "p", { tagSuffix: "A", name: "Novilhas", paddockId: f.p.id })).lot;
+  f.l2 = (await f.lot.create("a", "p", { tagSuffix: "B", name: "Recria" })).lot;
+  f.a = (await f.animal.create("a", "p", { name: "101", lotId: f.l1.id })).animal;
   return f;
 }
 test("cadastro registered, mudancas A-B A-null null-B e mesmo lote sem evento", async () => {
@@ -38,7 +38,7 @@ for (const action of ["create", "change", "archive", "reactivate"]) for (const f
     if (action === "reactivate") await f.animal.archive("a", "p", f.a.id);
     const before = structuredClone(f.database.stores);
     f.database.failStore = failStore;
-    const result = action === "create" ? await f.animal.create("a", "p", { tag: "102" })
+    const result = action === "create" ? await f.animal.create("a", "p", { name: "102" })
       : action === "change" ? await f.animal.changeAnimalLot("a", "p", f.a.id, f.l2.id)
         : await f.animal[action]("a", "p", f.a.id);
     assert.equal(result.status, "failed"); assert.deepEqual(f.database.stores, before);

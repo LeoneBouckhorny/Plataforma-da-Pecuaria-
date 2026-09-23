@@ -60,6 +60,19 @@ representa somente estado atual. Permanecem futuros, sem implementacao:
 - Nuvem, sincronizacao e backup/recuperacao.
 - Medicao de escala para busca/paginacao/virtualizacao, sem antecipar complexidade.
 
+## Atualizacao Pos-Sprint 008
+
+Entregues para auditoria: gestao contextual por propriedade, contadores derivados,
+rebanho e pesagens contextuais, identificacao padronizada por lote de origem.
+Continuam apenas como propostas, sem implementacao:
+
+- Conversao manual de brinco legado para o padrao, com revisao explicita de conflitos.
+- Tratamento de conflitos de identificacao em futura transferencia entre propriedades.
+- Possivel expansao de suffix alem de A-Z, com requisitos proprios.
+- Impressao de etiquetas/brincos fisicos.
+- Importacao em massa.
+- RFID e integracao com balanca.
+
 ## Epica Futura: Gestao de Arrendamentos e Parcerias (Requisitos)
 
 Objetivo futuro: permitir que o produtor registre corretamente relacoes entre terra, posse fisica do animal e participacao economica.

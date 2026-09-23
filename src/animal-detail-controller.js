@@ -71,6 +71,11 @@ const AnimalDetailController = (() => {
       count.append(el("span", "Pesagens vinculadas"), el("strong", String(data.weighingCount)));
       metrics.append(weight, count);
       const details = el("dl", undefined, "animal-detail-data");
+      if (animal.tagOriginLotId) {
+        for (const [label, value] of [["Número", animal.tagNumber], ["Código de origem", animal.tagSuffix]]) {
+          const row = el("div"); row.append(el("dt", label), el("dd", value)); details.append(row);
+        }
+      }
       for (const [key, value] of [["Última pesagem", data.lastWeighingDate ? formatDate(data.lastWeighingDate) : "Sem pesagens vinculadas"],
         ["Brinco", animal.tag], ["Nome", animal.name], ["Lote atual", data.lot?.name || "Sem lote"],
         ["Local atual", data.paddock?.name || "Local não definido"], ["Status", statuses[animal.status]],

@@ -111,3 +111,11 @@
   .report-row { grid-template-columns: 1fr; min-width: 0; gap: var(--space-1); }
   .history-item-metrics { grid-template-columns: minmax(0, 1fr); }
 }
+.property-context-header { padding: var(--space-5) 0; }
+.property-context-header h2 { margin: var(--space-4) 0 var(--space-2); overflow-wrap: anywhere; }
+.property-context-nav { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+.property-context-nav [aria-current="page"] { background: var(--color-primary); color: var(--color-text-inverse); }
+.tag-code-preview { grid-column: 1 / -1; font-weight: var(--font-semibold); overflow-wrap: anywhere; }
+@media (max-width: 480px) {
+  .property-context-nav { display: grid; grid-template-columns: 1fr; }
+}

@@ -4,11 +4,12 @@ const HerdController = (() => {
       ["name", "Nome *"], ["areaHectares", "Área (ha)", "decimal"], ["notes", "Observações", "textarea"],
     ] },
     lot: { title: "Lotes", singular: "lote", fields: [
-      ["name", "Nome *"], ["category", "Categoria"], ["paddockId", "Pasto/piquete atual", "select"], ["notes", "Observações", "textarea"],
+      ["name", "Nome *"], ["tagSuffix", "Código do lote / Sufixo do brinco"], ["category", "Categoria"], ["paddockId", "Pasto/piquete atual", "select"], ["notes", "Observações", "textarea"],
     ] },
     animal: { title: "Animais", singular: "animal", fields: [
-      ["tag", "Brinco/identificação"], ["name", "Nome"], ["sex", "Sexo", "select"], ["category", "Categoria"],
-      ["breed", "Raça"], ["birthDate", "Nascimento", "date"], ["lotId", "Lote atual", "select"], ["notes", "Observações", "textarea"],
+      ["lotId", "Lote atual", "select"], ["tagNumber", "Número do brinco"], ["tag", "Brinco/identificação anterior"],
+      ["name", "Nome"], ["sex", "Sexo", "select"], ["category", "Categoria"],
+      ["breed", "Raça"], ["birthDate", "Nascimento", "date"], ["notes", "Observações", "textarea"],
     ] },
   };
   const sexNames = { male: "Macho", female: "Fêmea", unknown: "Não informado" };
@@ -43,18 +44,11 @@ const HerdController = (() => {
       this.busy = false;
       this.detail = new window.AnimalDetailController.Controller({ ...options,
         onChanged: async () => { await this.refresh(); await options.onChanged(); } });
-      this.selector = document.querySelector("#herd-property");
       this.feedback = document.querySelector("#herd-feedback");
       this.sections = document.querySelector("#herd-sections");
       this.dialog = document.querySelector("#herd-dialog");
       this.form = document.querySelector("#herd-form");
       this.search = document.querySelector("#herd-search");
-      this.selector.addEventListener("change", () => {
-        this.propertyId = this.selector.value || null;
-        this.closeForm();
-        this.search.value = "";
-        this.refresh();
-      });
       this.search.addEventListener("input", () => this.render());
       this.form.addEventListener("submit", (event) => { event.preventDefault(); this.save(); });
       this.dialog.addEventListener("cancel", (event) => { if (this.busy) event.preventDefault(); });
@@ -64,20 +58,19 @@ const HerdController = (() => {
       this.feedback.classList.toggle("hidden", !text);
     }
     async refreshProperties() {
-      const properties = this.options.getProperties().filter((p) => p.status === "active");
-      if (!properties.some((p) => p.id === this.propertyId)) {
-        this.propertyId = properties[0]?.id || null;
-        this.closeForm();
-        this.search.value = "";
-      }
-      this.selector.replaceChildren();
-      option(this.selector, "", "Selecione uma propriedade");
-      for (const property of properties) option(this.selector, property.id, property.name);
-      this.selector.value = this.propertyId || "";
+      if (!this.options.getProperties().some((p) => p.id === this.propertyId)) this.propertyId = null;
+      await this.refresh();
+    }
+    async setProperty(propertyId) {
+      this.closeForm();
+      if (this.detail.dialog.open) this.detail.dialog.close();
+      this.propertyId = propertyId;
+      this.search.value = "";
       await this.refresh();
     }
     async refresh() {
       const generation = ++this.generation;
+      document.querySelector("#herd").dataset.loaded = "false";
       this.data = { paddocks: [], lots: [], animals: [] };
       this.message("");
       this.render();
@@ -93,7 +86,10 @@ const HerdController = (() => {
         }
         this.data[`${kind}s`] = result[`${kind}s`];
       }
-      if (generation === this.generation) this.render();
+      if (generation === this.generation) {
+        this.render();
+        document.querySelector("#herd").dataset.loaded = "true";
+      }
     }
     render() {
       this.sections.replaceChildren();
@@ -127,6 +123,7 @@ const HerdController = (() => {
       const detail = (label, value) => { if (value) card.append(el("p", `${label}: ${value}`)); };
       if (kind === "paddock" && record.areaHectares !== null) detail("Área", `${new Intl.NumberFormat("pt-BR").format(record.areaHectares)} ha`);
       if (kind === "lot") {
+        detail("Código do lote", record.tagSuffix || "Código de brinco não configurado");
         detail("Categoria", record.category);
         detail("Local atual", this.data.paddocks.find((p) => p.id === record.paddockId)?.name || "Local não definido");
         detail("Animais ativos cadastrados", String(this.data.animals.filter((a) => a.status === "active" && a.lotId === record.id).length));
@@ -165,12 +162,15 @@ const HerdController = (() => {
       const grid = el("div", undefined, "form-grid");
       for (const [key, label, type = "text"] of definitions[kind].fields) {
         if (kind === "animal" && record && (changingLot ? key !== "lotId" : key === "lotId")) continue;
-        const wrapper = el("label", label);
+        const legacyTag = Boolean(record?.tag && !record.tagOriginLotId);
+        if (kind === "animal" && (key === "tag" && !legacyTag || key === "tagNumber" && legacyTag)) continue;
+        const wrapper = el("label", label + (key === "tagSuffix" && !record ? " *" : ""));
         const input = el(type === "select" ? "select" : type === "textarea" ? "textarea" : "input");
         input.id = `herd-field-${key}`;
         input.name = key;
         if (input.tagName === "INPUT") input.type = type === "decimal" ? "text" : type;
         if (type === "decimal") input.inputMode = "decimal";
+        if (key === "tagNumber") input.inputMode = "numeric";
         if (key === "sex") for (const [value, title] of Object.entries(sexNames)) option(input, value, title);
         if (key === "paddockId" || key === "lotId") {
           option(input, "", key === "paddockId" ? "Local não definido" : "Sem lote");
@@ -188,6 +188,21 @@ const HerdController = (() => {
         this.messages[key] = error;
         wrapper.append(input, error);
         grid.append(wrapper);
+      }
+      if (kind === "lot" || kind === "animal" && !changingLot && this.fields.tagNumber) {
+        const preview = el("p", "", "tag-code-preview");
+        preview.id = "herd-tag-preview";
+        preview.setAttribute("aria-live", "polite");
+        const updatePreview = () => {
+          const suffix = kind === "lot" ? this.fields.tagSuffix.value : record?.tagSuffix
+            || this.data.lots.find((lot) => lot.id === this.fields.lotId?.value)?.tagSuffix;
+          const code = window.TagCodeCore.buildTagCode(kind === "lot" ? "1" : this.fields.tagNumber.value, suffix);
+          preview.textContent = code ? `${kind === "lot" ? "Exemplo de brinco" : "Identificação gerada"}: ${code}`
+            : kind === "lot" ? "Código de brinco não configurado" : suffix ? `Código de origem: ${suffix}` : "Selecione um lote com código de identificação configurado.";
+        };
+        for (const input of Object.values(this.fields)) input.addEventListener("input", updatePreview);
+        updatePreview();
+        this.fields[kind === "lot" ? "tagSuffix" : "tagNumber"].parentElement.after(preview);
       }
       this.formError = el("p", "", "field-message error");
       this.formError.setAttribute("role", "alert");

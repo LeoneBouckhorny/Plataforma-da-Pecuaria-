@@ -1,7 +1,8 @@
 const LotCore = ((ref) => {
   const H = ref || require("./herd-core.js");
   const core = H.defineCore("lot", (data) => ({ name: H.text(data.name),
-    paddockId: H.nullableId(data.paddockId), category: H.text(data.category), notes: H.text(data.notes) }),
+    paddockId: H.nullableId(data.paddockId), tagSuffix: H.text(data.tagSuffix).toUpperCase() || null,
+    category: H.text(data.category), notes: H.text(data.notes) }),
   (data) => data.name ? {} : { name: "Informe o nome do lote." },
   (data) => H.text(data.name) || "Lote sem nome");
   return { ...core, normalizeLot: core.normalize, validateLot: core.validate,

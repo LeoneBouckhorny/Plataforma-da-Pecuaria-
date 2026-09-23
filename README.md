@@ -24,7 +24,9 @@ Base inicial da Plataforma da Pecuaria, com foco em uma porta de entrada simples
 - Historico local de pesagens finalizadas neste dispositivo.
 - Operacao local editavel neste dispositivo.
 - Multiplas propriedades locais, com arquivamento e reativacao.
-- Area Rebanho com pastos/piquetes, lotes e animais por propriedade.
+- Propriedades -> fazenda escolhida -> Visao geral / Rebanho / Pesagens.
+- Rebanho contextual com pastos/piquetes, lotes e animais por ID de propriedade.
+- Brincos padronizados (0023A), com numero 1..9999 e sufixo A-Z do lote de origem.
 - Ficha individual com linha do tempo, observacoes datadas e mudancas de lote.
 - Pesagens explicitamente vinculadas a animais; ultimo peso e contagem derivados.
 - Local atual do lote definido por pasto opcional; animal vinculado a lote opcional.
@@ -73,6 +75,17 @@ A vinculacao individual exige selecionar explicitamente o animal na linha da
 calculadora. Brinco igual nunca cria vinculo. Animais arquivados continuam com
 historico, mas nao ficam disponiveis para nova pesagem. Trocar propriedade/lote
 limpa somente vinculos incompativeis, preservando pesos e textos digitados.
+
+Na Sprint 008, a propriedade aberta organiza a gestao sem alterar o draft global
+da calculadora. Os contadores da visao geral sao derivados; Pesagens reutiliza o
+historico por propertyId. O Rebanho nao possui mais entrada global.
+
+Novos lotes exigem tagSuffix unico na propriedade, inclusive entre arquivados.
+Novos brincos usam tagNumber de quatro digitos + suffix do lote. O UUID continua
+sendo a identidade tecnica; tagOriginLotId e a origem do codigo, nao o lote atual.
+Mover 0023A para lote B conserva 0023A. Sufixo utilizado nao pode ser trocado.
+Legados permanecem legados, sem conversao automatica. DB_VERSION continua 5,
+sem migration, stores ou indices novos. Nao ha sincronizacao nem dependencias novas.
 
 ## PWA e uso offline
 
@@ -138,7 +151,7 @@ A Sprint 005 aplica o simbolo aprovado (bovino, dados e campo), com paleta
 centralizada e componentes reutilizaveis. `styles.css` agrega as camadas
 em `styles/`; a marca fica em `assets/branding/` e os icones em `assets/`.
 Montserrat permanece como referencia com fallback local system-ui/Segoe UI,
-sem fonte externa. O app shell atual v5 preserva os assets visuais e inclui os modulos de rebanho e historico individual.
+sem fonte externa. O app shell atual v6 preserva os assets visuais e inclui rebanho, historico individual e tag-code-core.
 
 Detalhes: `docs/DESIGN_SYSTEM_V1.md`, `docs/ADR_005_IDENTIDADE_VISUAL.md`
 e `docs/QA_SPRINT_005.md`. Para servir com Node.js, tambem e possivel usar
@@ -179,12 +192,15 @@ O runner cria dados em contexto isolado e usa um servidor temporario, sem
 alterar os registros da instalacao do produtor.
 
 Documentacao atual: `docs/MODELO_DE_DADOS_V5.md`,
-`docs/ADR_007_HISTORICO_ANIMAL.md`, `docs/QA_SPRINT_007.md`.
-Runner atual: `node scripts/qa-sprint-007.cjs`, com Playwright disponivel no
+`docs/MODELO_IDENTIFICACAO_BRINCOS_V1.md`,
+`docs/ADR_008_CONTEXTO_PROPRIEDADE_E_BRINCOS.md`, `docs/QA_SPRINT_008.md`.
+Runner atual: `node scripts/qa-sprint-008.cjs`, com Playwright disponivel no
 ambiente de QA e `QA_BROWSER_PATH` opcional. Nenhuma dependencia do aplicativo
-foi adicionada. O runner serve a base aprovada `1682473` para testar o upgrade
-real V4 -> V5 e encerra o servidor durante o teste offline.
+foi adicionada. O runner serve a base aprovada `19d825e` para testar o upgrade
+real do cache v5 -> v6 mantendo o banco V5, e encerra o servidor no teste offline.
+Exige o historico Git com esse commit para carregar o baseline. Usa contexto
+isolado de navegador, sem tocar os dados da instalacao do produtor.
 
 Ainda nao existem GMD, graficos de peso, movimentacao historica de lotes entre
 pastos, compra/venda/morte, transferencia entre propriedades, sanidade,
-reproducao, financeiro, nuvem ou sincronizacao. Sprint 008 nao iniciada.
+reproducao, financeiro, nuvem ou sincronizacao. Sprint 009 nao iniciada.

@@ -2,6 +2,8 @@ const AnimalCore = ((ref) => {
   const H = ref || require("./herd-core.js");
   const core = H.defineCore("animal", (data) => ({
     lotId: H.nullableId(data.lotId), tag: String(data.tag ?? "").trim(), name: H.text(data.name),
+    tagNumber: H.text(data.tagNumber) || null, tagSuffix: H.text(data.tagSuffix) || null,
+    tagOriginLotId: H.nullableId(data.tagOriginLotId),
     sex: H.text(data.sex) || "unknown", category: H.text(data.category), breed: H.text(data.breed),
     birthDate: H.text(data.birthDate) || null, notes: H.text(data.notes),
   }), (data) => {

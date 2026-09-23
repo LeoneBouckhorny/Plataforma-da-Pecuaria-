@@ -40,3 +40,12 @@ function fixture() {
     animal: require("../src/animal-repository.js").createAnimalRepository(options) };
 }
 module.exports = { MemoryDatabase, fixture };
+
+// Valid Sprint 008 identification for tests focused on events and weighing history.
+async function identified(f, accountId, propertyId, data = {}) {
+  let lot = (await f.lot.list(accountId, propertyId)).lots.find((item) => item.tagSuffix === "A");
+  if (!lot) lot = (await f.lot.create(accountId, propertyId, { name: "Origem", tagSuffix: "A" })).lot;
+  const { tag, ...rest } = data;
+  return f.animal.create(accountId, propertyId, { ...rest, lotId: lot?.id, tagNumber: tag });
+}
+module.exports.identified = identified;

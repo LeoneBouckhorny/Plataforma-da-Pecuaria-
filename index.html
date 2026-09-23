@@ -25,7 +25,6 @@
         <nav class="tabs" aria-label="Navegação principal">
           <button class="tab-button active" id="calculator-tab" type="button" data-tab="calculator">Calculadora</button>
           <button class="tab-button" id="history-tab" type="button" data-tab="history">Histórico</button>
-          <button class="tab-button" id="herd-tab" type="button" data-tab="herd">Rebanho</button>
           <button class="tab-button" id="property-tab" type="button" data-tab="property">Propriedades</button>
           <button class="tab-button" id="premium-tab" type="button" data-tab="premium">Premium</button>
         </nav>
@@ -326,11 +325,10 @@
           </div>
         </section>
 
-        <section class="tab-panel no-print" id="herd" aria-labelledby="herd-tab">
+        <section class="hidden no-print" id="herd" aria-label="Rebanho da propriedade">
           <div class="panel">
             <div class="panel-heading"><h2>Rebanho</h2></div>
             <div class="form-grid">
-              <label>Propriedade<select id="herd-property"><option value="">Selecione uma propriedade</option></select></label>
               <label>Buscar animal<input id="herd-search" type="search" placeholder="Brinco ou nome" autocomplete="off"></label>
             </div>
             <div class="metrics herd-metrics">
@@ -404,6 +402,30 @@
               <div id="property-list" class="property-list"></div>
             </section>
           </div>
+        </section>
+
+        <section class="tab-panel" id="property-detail" aria-labelledby="property-detail-name">
+          <header class="property-context-header no-print">
+            <button type="button" class="secondary-button" id="back-properties">Voltar às propriedades</button>
+            <h2 id="property-detail-name"></h2>
+            <p id="property-detail-location"></p>
+            <nav class="property-context-nav" aria-label="Seções da propriedade">
+              <button type="button" class="secondary-button" data-property-section="overview">Visão geral</button>
+              <button type="button" class="secondary-button" data-property-section="herd">Rebanho</button>
+              <button type="button" class="secondary-button" data-property-section="weighings">Pesagens</button>
+            </nav>
+          </header>
+          <p id="property-context-feedback" role="status"></p>
+          <section id="property-overview" class="panel" aria-label="Visão geral">
+            <div class="metrics">
+              <div class="metric"><span>Pastos ativos</span><strong id="property-count-paddocks">0</strong></div>
+              <div class="metric"><span>Lotes ativos</span><strong id="property-count-lots">0</strong></div>
+              <div class="metric"><span>Animais ativos cadastrados</span><strong id="property-count-animals">0</strong></div>
+              <div class="metric"><span>Pesagens registradas</span><strong id="property-count-weighings">0</strong></div>
+            </div>
+          </section>
+          <div id="property-herd-slot"></div>
+          <div id="property-weighings-slot"></div>
         </section>
 
         <section class="tab-panel" id="premium" aria-labelledby="premium-tab">
@@ -482,6 +504,7 @@
     <script src="src/property-repository.js"></script>
     <script src="src/draft-repository.js"></script>
     <script src="src/herd-core.js"></script>
+    <script src="src/tag-code-core.js"></script>
     <script src="src/paddock-core.js"></script>
     <script src="src/lot-core.js"></script>
     <script src="src/animal-core.js"></script>

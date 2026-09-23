@@ -1,0 +1,314 @@
+{
+  "startedAt": "2026-09-23T13:52:12.932Z",
+  "checks": [
+    {
+      "name": "Upgrade real v5 -> v6, DB V5 sem migration",
+      "passed": true,
+      "detail": {
+        "allStoresPreserved": true,
+        "legacyTag": "101",
+        "legacySuffix": null
+      }
+    },
+    {
+      "name": "QA A/B/I contexto por ID sem vazamento ou alteracao de draft",
+      "passed": true,
+      "detail": {
+        "boa": "4542b1c2-4a14-4abd-9594-ccb9fd18580f",
+        "sao": "a346c63d-4474-43e5-98ba-1653405b68a6",
+        "draftUnchanged": true
+      }
+    },
+    {
+      "name": "QA C sufixo unico normalizado",
+      "passed": true,
+      "detail": {
+        "suffix": "A",
+        "duplicateBlocked": true
+      }
+    },
+    {
+      "name": "QA D/E/F geracao preview validacao e duplicidade",
+      "passed": true,
+      "detail": {
+        "id": "65538e65-c91e-4bae-82c4-701ac1c3349b",
+        "accountId": "15cef375-e3dd-4d9c-9126-2bb7bf96c0d2",
+        "propertyId": "4542b1c2-4a14-4abd-9594-ccb9fd18580f",
+        "lotId": "c82d9d7a-bdf5-4a3e-8e8f-01a684c88995",
+        "tag": "0023A",
+        "name": "Estrela",
+        "tagNumber": "0023",
+        "tagSuffix": "A",
+        "tagOriginLotId": "c82d9d7a-bdf5-4a3e-8e8f-01a684c88995",
+        "sex": "unknown",
+        "category": "",
+        "breed": "",
+        "birthDate": null,
+        "notes": "",
+        "status": "active",
+        "createdAt": "2026-09-23T13:52:34.948Z",
+        "updatedAt": "2026-09-23T13:52:34.948Z"
+      }
+    },
+    {
+      "name": "QA G/H movimento nao altera origem; sufixo bloqueado",
+      "passed": true,
+      "detail": {
+        "id": "65538e65-c91e-4bae-82c4-701ac1c3349b",
+        "accountId": "15cef375-e3dd-4d9c-9126-2bb7bf96c0d2",
+        "propertyId": "4542b1c2-4a14-4abd-9594-ccb9fd18580f",
+        "lotId": "f2e1f74e-ed46-42a8-a3a6-04d48d0caaf4",
+        "tag": "0023A",
+        "name": "Estrela",
+        "tagNumber": "0023",
+        "tagSuffix": "A",
+        "tagOriginLotId": "c82d9d7a-bdf5-4a3e-8e8f-01a684c88995",
+        "sex": "unknown",
+        "category": "",
+        "breed": "",
+        "birthDate": null,
+        "notes": "",
+        "status": "active",
+        "createdAt": "2026-09-23T13:52:34.948Z",
+        "updatedAt": "2026-09-23T13:52:35.599Z"
+      }
+    },
+    {
+      "name": "QA J selecao explicita, sem auto-link e snapshot imutavel",
+      "passed": true,
+      "detail": {
+        "id": "item-d99cc145-7ec3-4ca8-b856-c6532ef6818f",
+        "sessionId": "session-072972d9-b1c7-4e6c-9161-fd567ca323c6",
+        "animalId": "65538e65-c91e-4bae-82c4-701ac1c3349b",
+        "animalTagSnapshot": "0023A",
+        "animalNameSnapshot": "Estrela",
+        "tagSnapshot": "0023A",
+        "categorySnapshot": "Boi",
+        "weightSnapshot": 450,
+        "noteSnapshot": "",
+        "weightBandSnapshot": "Pesado",
+        "arrobasSnapshot": 15
+      }
+    },
+    {
+      "name": "Pesagens contextuais e historico global",
+      "passed": true,
+      "detail": {
+        "boa": 2,
+        "sao": 1,
+        "global": 3
+      }
+    },
+    {
+      "name": "Regressao: filtro antes da leitura pendente",
+      "passed": true,
+      "detail": {
+        "rows": 2,
+        "text": "Somente texto23/09/2026 · Boa Vista · Garrotes1 animaisPeso: 450 kgMédia: 450 kgArrobas: 15 @Valor: R$ 4.500,00Vinculada23/09/2026 · Boa Vista · Garrotes1 animaisPeso: 450 kgMédia: 450 kgArrobas: 15 @Valor: R$ 4.500,00",
+        "busy": "true"
+      }
+    },
+    {
+      "name": "Concorrencia real e reserva apos arquivo",
+      "passed": true,
+      "detail": {
+        "connections": 2,
+        "lots": [
+          "invalid",
+          "saved"
+        ],
+        "animals": [
+          "invalid",
+          "saved"
+        ],
+        "reserved": "invalid",
+        "locked": "invalid"
+      }
+    },
+    {
+      "name": "Responsividade e impressao contextual",
+      "passed": true,
+      "detail": {
+        "viewports": 30,
+        "overflow": false
+      }
+    },
+    {
+      "name": "QA K sem rede/servidor, fechar/reabrir, criar, finalizar e historico",
+      "passed": true,
+      "detail": {
+        "tag": "0007Z",
+        "persistedAfterReopen": true
+      }
+    }
+  ],
+  "viewports": [
+    {
+      "name": "360-propriedades",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-visao-geral",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-rebanho",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-paddocks",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-lots",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-animals",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-form-lote",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-form-animal",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-ficha",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-pesagens",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "768-propriedades",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-visao-geral",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-rebanho",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-paddocks",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-lots",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-animals",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-form-lote",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-form-animal",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-ficha",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-pesagens",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "1280-propriedades",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-visao-geral",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-rebanho",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-paddocks",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-lots",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-animals",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-form-lote",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-form-animal",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-ficha",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-pesagens",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "offline-ficha",
+      "width": 1280,
+      "scrollWidth": 1280
+    }
+  ],
+  "errors": [],
+  "limitations": [
+    "Android fisico nao executado; Chromium com viewport emulado."
+  ],
+  "browser": "153.0.4234.48",
+  "upgradeShell": {
+    "keys": [
+      "plataforma-pecuaria-shell-v6"
+    ],
+    "contextualHtml": true,
+    "contextualController": true
+  }
+}
