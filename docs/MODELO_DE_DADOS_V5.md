@@ -21,7 +21,7 @@ Store `animal-events`, keyPath `id`. Indices nao unicos: `accountId`,
 | --- | --- |
 | id | ID local estavel, nao derivado de brinco/nome |
 | accountId, propertyId, animalId | Obrigatorios, animal existente e mesmo contexto |
-| type | Enum registered, lot_changed, status_changed, note |
+| type | Enum registered, lot_changed, status_changed, note, health |
 | occurredAt | Timestamp ISO com fuso, data e hora validas |
 | fromLotId, fromLotNameSnapshot | Origem da mudanca; null quando nao aplicavel/sem lote |
 | fromPaddockId, fromPaddockNameSnapshot | Local da origem naquele momento, ou null |
@@ -42,6 +42,35 @@ estado nao gera evento. Arquivado permanece conceito administrativo.
 
 `note`: observacao e data/hora editaveis. Identidade, contexto e type nao mudam.
 Nenhuma exclusao de evento e exposta. Eventos automaticos sao imutaveis na API.
+
+## Extensao Health - Sprint 010
+
+Campos adicionais somente quando type=health. Nao altera schema nem DB_VERSION.
+
+| Campo | Regra |
+| --- | --- |
+| healthType | Obrigatorio: vaccination, deworming, medication ou other |
+| operationId | UUID gerado pelo repository por operacao, compartilhado entre os eventos coletivos; tambem presente no individual |
+| productName | Obrigatorio em vaccination/deworming/medication; opcional em other |
+| doseValue | Numero positivo opcional; formulario aceita virgula/ponto, persiste numero |
+| doseUnit | Texto livre; obrigatorio se doseValue informado |
+| route, productBatch, responsible | Textos opcionais |
+| nextDueDate, withdrawalUntil | Datas YYYY-MM-DD opcionais, sem calculo/lembrete |
+| notes | Descricao obrigatoria em other; opcional nos demais |
+| lotId, lotNameSnapshot | Contexto atual capturado na transacao, ou null |
+| paddockId, paddockNameSnapshot | Pasto do lote atual capturado na transacao, ou null |
+
+Identidade, accountId, propertyId, animalId, occurredAt, createdAt e updatedAt
+continuam obrigatorios. occurredAt sanitário deve ser informado explicitamente.
+Snapshots nao mudam com renomeacao/movimentacao. Nao representam inferencia da
+localizacao na data passada: sao o contexto existente no momento do registro.
+
+Registro de N animais cria N eventos e nenhum registro de operacao separado.
+Todos os animais devem estar ativos na mesma propriedade/conta. Se a origem e
+um lote selecionado, a transacao confirma que os individuos continuam nele.
+Qualquer erro aborta todos os eventos. Arquivados mantem eventos anteriores.
+Health nao admite edicao/exclusao nesta V1; updateNoteEvent continua apenas note.
+Timeline e listagem sanitária sao derivadas, sem persistencia duplicada.
 
 ## Estado e Historico Atomicos
 

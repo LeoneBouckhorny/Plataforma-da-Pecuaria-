@@ -44,6 +44,7 @@ if (typeof document !== "undefined") {
     lotRepository: null,
     paddockRepository: null,
     herdController: null,
+    healthController: null,
     activeTab: "calculator",
     managementPropertyId: null,
     propertySection: "overview",
@@ -1178,9 +1179,11 @@ if (typeof document !== "undefined") {
     document.querySelector("#property-context-feedback").textContent = "";
     document.querySelector("#property-overview").classList.toggle("hidden", section !== "overview");
     document.querySelector("#herd").classList.toggle("hidden", section !== "herd");
+    document.querySelector("#health").classList.toggle("hidden", section !== "health");
     document.querySelector("#history").classList.toggle("active", section === "weighings");
     if (section === "overview") await refreshPropertyOverview();
     if (section === "herd") await state.herdController.setProperty(state.managementPropertyId);
+    if (section === "health") await state.healthController.setProperty(state.managementPropertyId);
     if (section === "weighings") {
       state.historyLotFilter = "all";
       ++state.historySelectionGeneration;
@@ -1835,7 +1838,16 @@ if (typeof document !== "undefined") {
     state.lotRepository = window.LotRepository.createLotRepository({ database });
     state.paddockRepository = window.PaddockRepository.createPaddockRepository({ database });
     state.animalRepository = window.AnimalRepository.createAnimalRepository({ database });
+    state.healthController = new window.HealthController.Controller({ database,
+      getAccountId: getActiveAccountId,
+      onAnimal: (accountId, propertyId, animalId) => state.herdController.detail.open(accountId, propertyId, animalId),
+      onSaved: async (context) => {
+        const detail = state.herdController.detail;
+        if (detail.dialog.open && detail.context.accountId === context.accountId && detail.context.propertyId === context.propertyId) await detail.refresh();
+      },
+    });
     state.herdController = new window.HerdController.Controller({ database,
+      onHealth: (context) => state.healthController.open(context),
       getAccountId: getActiveAccountId,
       getProperties: () => state.properties,
       onChanged: async () => { await refreshRegisteredHerd(); clearFinalizedStateIfDraftChanged(); },

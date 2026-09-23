@@ -88,11 +88,16 @@ const AnimalDetailController = (() => {
       const move = button("Alterar lote", () => this.openMove()); move.id = "animal-change-lot";
       const status = button(animal.status === "active" ? "Arquivar" : "Reativar", () => this.changeStatus()); status.id = "animal-change-status";
       actions.append(note, move, status);
+      if (animal.status === "active") {
+        const health = button("Registrar manejo sanitário", () => this.options.onHealth({ ...this.context }));
+        health.id = "animal-add-health"; actions.append(health);
+      }
       const timeline = el("ol", undefined, "animal-timeline"); timeline.id = "animal-timeline";
       for (const entry of data.timeline) {
         const row = el("li"); row.dataset.eventType = entry.type; row.dataset.eventId = entry.id;
         const date = ["weighing", "birth"].includes(entry.type) ? formatDate(entry.type === "weighing" ? entry.session.weighingDate || entry.session.createdAt : animal.birthDate) : formatDate(entry.occurredAt);
-        row.append(el("time", date), el("h4", titles[entry.type] || entry.type));
+        row.append(el("time", date), el("h4", entry.type === "health" ? window.AnimalEventCore.HEALTH_TYPES[entry.healthType] : titles[entry.type] || entry.type));
+        if (entry.type === "health") window.HealthController.appendDetails(row, entry);
         if (entry.type === "lot_changed") {
           row.append(el("p", `${entry.fromLotNameSnapshot || "Sem lote"} → ${entry.toLotNameSnapshot || "Sem lote"}`));
           row.append(el("p", `Local: ${entry.fromPaddockNameSnapshot || "Não definido"} → ${entry.toPaddockNameSnapshot || "Não definido"}`));

@@ -1,0 +1,25 @@
+ M README.md
+ M app.js
+ M docs/BACKLOG_PRODUTO.md
+ M docs/MODELO_DE_DADOS_V5.md
+ M index.html
+ M src/animal-detail-controller.js
+ M src/animal-event-core.js
+ M src/herd-controller.js
+ M styles/layout.css
+ M sw.js
+ M tests/animal-history-pwa.test.js
+ M tests/design-system.test.js
+ M tests/herd-pwa.test.js
+ M tests/pwa-config.test.js
+?? docs/ADR_010_SANIDADE_V1.md
+?? docs/QA_SPRINT_010.md
+?? docs/RELATORIO_SPRINT_010.md
+?? docs/qa-sprint-010/
+?? scripts/package-sprint-010.py
+?? scripts/qa-sprint-010.cjs
+?? src/health-controller.js
+?? src/health-repository.js
+?? tests/health-core.test.js
+?? tests/health-pwa.test.js
+?? tests/health-repository.test.js

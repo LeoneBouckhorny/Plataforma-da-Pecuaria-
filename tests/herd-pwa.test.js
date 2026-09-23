@@ -11,5 +11,5 @@ test("PWA atual inclui todos os modulos do rebanho tambem referenciados no HTML"
     assert.ok(html.includes(`src="src/${name}.js"`));
     assert.ok(fs.existsSync(path.join(root, "src", `${name}.js`)));
   }
-  assert.match(sw, /CACHE_VERSION = "v7"/);
+  assert.match(sw, /CACHE_VERSION = "v8"/);
 });

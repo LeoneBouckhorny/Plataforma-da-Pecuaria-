@@ -31,6 +31,8 @@ Base inicial da Plataforma da Pecuaria, com foco em uma porta de entrada simples
 - Categorias e racas multiplas do lote, com valores personalizados e contadores derivados.
 - Brincos padronizados (0023A), com numero 1..9999 e sufixo A-Z do lote de origem.
 - Ficha individual com linha do tempo, observacoes datadas e mudancas de lote.
+- Sanidade por propriedade: vacinacao, vermifugacao, medicamento e outro manejo.
+- Manejo individual/coletivo com selecao explicita, snapshots e operacao atomica offline.
 - Pesagens explicitamente vinculadas a animais; ultimo peso e contagem derivados.
 - Local atual do lote definido por pasto opcional; animal vinculado a lote opcional.
 - Cadastro individual com brinco ou nome, sem associacao automatica a itens de pesagem.
@@ -108,6 +110,15 @@ persistidos. DB_VERSION permanece 5, sem novas stores, indices ou migration.
 
 ## PWA e uso offline
 
+Na Sprint 010, Sanidade reutiliza `animal-events` com type=health, mantendo DB5.
+O formulario pode ser aberto na propriedade, no lote ou na ficha individual.
+Animais ativos selecionados recebem um evento cada, com operationId compartilhado;
+se houver falha, nenhum evento da operacao permanece. Arquivados mantem historico.
+Filtros por tipo, lote do registro e periodo nao criam listas persistidas duplicadas.
+Dose, proxima aplicacao e carencia sao informacoes do produtor: nao ha prescricao,
+recomendacao automatica, calculo de carencia, agenda ou notificacao. Health V1 nao
+oferece edicao/exclusao; ver ADR_010_SANIDADE_V1.md.
+
 Na Sprint 003, a aplicacao passou a registrar um Service Worker e um Web App Manifest. Em navegadores compativeis, ela pode ser instalada como aplicativo e pode abrir sem internet depois de ter sido carregada online pelo menos uma vez em contexto compativel com Service Worker.
 
 O funcionamento offline cobre:
@@ -124,6 +135,7 @@ O funcionamento offline cobre:
 - navegacao hierarquica e cadastro rapido opcional de novos lotes;
 - pesagem vinculada opcionalmente a lote e consulta dos snapshots historicos;
 - ficha individual, timeline, observacoes, mudanca de lote e status com eventos;
+- manejo sanitario individual/coletivo e consulta de registros/timeline;
 - pesagens vinculadas explicitamente e ultimo peso derivado;
 - geracao de CSV em memoria;
 - preparacao do romaneio para impressao.
@@ -171,7 +183,7 @@ A Sprint 005 aplica o simbolo aprovado (bovino, dados e campo), com paleta
 centralizada e componentes reutilizaveis. `styles.css` agrega as camadas
 em `styles/`; a marca fica em `assets/branding/` e os icones em `assets/`.
 Montserrat permanece como referencia com fallback local system-ui/Segoe UI,
-sem fonte externa. O app shell atual v7 preserva os assets visuais e inclui rebanho, historico individual, brincos e cadastro rapido.
+sem fonte externa. O app shell atual v8 preserva os assets visuais e inclui rebanho, historico individual, brincos, cadastro rapido e Sanidade.
 
 Detalhes: `docs/DESIGN_SYSTEM_V1.md`, `docs/ADR_005_IDENTIDADE_VISUAL.md`
 e `docs/QA_SPRINT_005.md`. Para servir com Node.js, tambem e possivel usar
@@ -214,14 +226,14 @@ alterar os registros da instalacao do produtor.
 Documentacao atual: `docs/MODELO_DE_DADOS_V5.md`,
 `docs/MODELO_IDENTIFICACAO_BRINCOS_V1.md`,
 `docs/MODELO_CADASTRO_RAPIDO_V1.md`,
-`docs/ADR_009_HIERARQUIA_E_CADASTRO_RAPIDO.md`, `docs/QA_SPRINT_009.md`.
-Runner atual: `node scripts/qa-sprint-009.cjs`, com Playwright disponivel no
+`docs/ADR_010_SANIDADE_V1.md`, `docs/QA_SPRINT_010.md`.
+Runner atual: `node scripts/qa-sprint-010.cjs`, com Playwright disponivel no
 ambiente de QA e `QA_BROWSER_PATH` opcional. Nenhuma dependencia do aplicativo
-foi adicionada. O runner serve a base aprovada `4e55c2d` para testar o upgrade
-real do cache v6 -> v7 mantendo o banco V5, e encerra o servidor no teste offline.
+foi adicionada. O runner serve a base aprovada `f268996` para testar o upgrade
+real do cache v7 -> v8 mantendo o banco V5, e encerra o servidor no teste offline.
 Exige o historico Git com esse commit para carregar o baseline. Usa contexto
 isolado de navegador, sem tocar os dados da instalacao do produtor.
 
 Ainda nao existem GMD, graficos de peso, movimentacao historica de lotes entre
-pastos, compra/venda/morte, transferencia entre propriedades, sanidade,
-reproducao, financeiro, nuvem ou sincronizacao. Sprint 010 nao iniciada.
+pastos, compra/venda/morte, transferencia entre propriedades, estoque de medicamentos,
+reproducao, financeiro, nuvem ou sincronizacao. Sprint 011 nao iniciada.

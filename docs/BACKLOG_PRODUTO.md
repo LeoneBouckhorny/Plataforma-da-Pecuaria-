@@ -89,6 +89,22 @@ nao implicam classificacoes individuais arbitrarias. Permanecem futuros:
 
 Nenhum desses itens foi implementado nesta Sprint. Sprint 010 nao iniciada.
 
+## Atualizacao Pos-Sprint 010
+
+Entregues para auditoria: Sanidade V1 individual/coletiva, eventos health na
+timeline e consulta por propriedade. Banco V5 preservado. Continuam futuros,
+sem implementacao nesta Sprint:
+
+- Correcao/cancelamento auditavel de manejo sanitario, mediante definicao do CTO.
+- Agenda, notificacoes e lembretes de proxima aplicacao.
+- Estoque/catalogo de produtos, compras e financeiro.
+- Diagnostico veterinario estruturado e reproducao.
+- Medicao de volume antes de novos indices/paginacao de eventos.
+- Sincronizacao, backup e recuperacao.
+
+O sistema registra a informacao do produtor, sem prescrever ou recomendar doses.
+Sprint 011 nao iniciada.
+
 ## Epica Futura: Gestao de Arrendamentos e Parcerias (Requisitos)
 
 Objetivo futuro: permitir que o produtor registre corretamente relacoes entre terra, posse fisica do animal e participacao economica.

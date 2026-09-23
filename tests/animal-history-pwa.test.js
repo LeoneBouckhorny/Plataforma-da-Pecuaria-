@@ -2,7 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-test("shell v7 inclui todos os modulos de historico individual sem CDN", () => {
+test("shell v8 inclui todos os modulos de historico individual sem CDN", () => {
   const root = path.join(__dirname, "..");
   const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
@@ -10,5 +10,5 @@ test("shell v7 inclui todos os modulos de historico individual sem CDN", () => {
     assert.ok(sw.includes(`"./src/${name}.js"`)); assert.ok(html.includes(`src="src/${name}.js"`));
     assert.ok(fs.existsSync(path.join(root, "src", `${name}.js`)));
   }
-  assert.match(sw, /CACHE_VERSION = "v7"/); assert.doesNotMatch(html, /https?:\/\//);
+  assert.match(sw, /CACHE_VERSION = "v8"/); assert.doesNotMatch(html, /https?:\/\//);
 });

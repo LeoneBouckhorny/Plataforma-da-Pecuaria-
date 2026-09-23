@@ -198,6 +198,7 @@ const HerdController = (() => {
       }
       detail("Observações", record.notes);
       const actions = el("div", undefined, "property-actions");
+      if (kind === "lot" && record.status === "active") actions.append(button("Registrar manejo sanitário", "secondary-button", () => this.options.onHealth({ accountId: this.options.getAccountId(), propertyId: this.propertyId, lotId: record.id })));
       if (kind !== "animal" && !opened) actions.append(button(kind === "lot" ? "Abrir lote" : "Abrir pasto", "primary-button", () => this.navigate(kind, record.id)));
       if (kind === "animal") actions.append(button("Ver ficha", "primary-button", () => this.detail.open(this.options.getAccountId(), this.propertyId, record.id)));
       actions.append(button("Editar", "secondary-button", () => this.openForm(kind, record)));
