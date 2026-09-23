@@ -5,7 +5,8 @@ test("lot aceita categoria regional e pasto opcional", () => {
   const result = core.createLot("a", "p", { name: " Novilhas 2026 ", category: " Regional livre " });
   assert.equal(result.valid, true);
   assert.equal(result.lot.paddockId, null);
-  assert.equal(result.lot.category, "Regional livre");
+  assert.deepEqual(result.lot.categories, ["Regional livre"]);
+  assert.equal("category" in result.lot, false);
   assert.equal(core.createLot("a", "p", { name: " " }).valid, false);
 });
 test("lot muda pasto sem mudar identidade e arquiva/reativa", () => {

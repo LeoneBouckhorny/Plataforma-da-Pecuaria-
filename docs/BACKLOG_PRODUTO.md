@@ -73,6 +73,22 @@ Continuam apenas como propostas, sem implementacao:
 - Importacao em massa.
 - RFID e integracao com balanca.
 
+## Atualizacao Pos-Sprint 009
+
+Entregues para auditoria: hierarquia Pasto -> Lote -> Animal e cadastro rapido
+opcional somente durante a criacao de um novo lote. Categorias e racas multiplas
+nao implicam classificacoes individuais arbitrarias. Permanecem futuros:
+
+- Adicionar varios animais a um lote existente, com confirmacao e atomicidade proprias.
+- Importacao CSV e planilhas, com validacao e previa de conflitos.
+- Edicao em massa de animais.
+- Transferencia formal entre propriedades, resolvendo identificacoes conflitantes.
+- Impressao de etiquetas/brincos, RFID e integracao com balancas.
+- Filtros avancados e medicao de escala antes de paginacao/virtualizacao.
+- Homologacao de grandes volumes no Android fisico antes de prometer capacidade.
+
+Nenhum desses itens foi implementado nesta Sprint. Sprint 010 nao iniciada.
+
 ## Epica Futura: Gestao de Arrendamentos e Parcerias (Requisitos)
 
 Objetivo futuro: permitir que o produtor registre corretamente relacoes entre terra, posse fisica do animal e participacao economica.

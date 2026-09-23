@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v6";
+const CACHE_VERSION = "v7";
 const CACHE_PREFIX = "plataforma-pecuaria-shell-";
 const CACHE_NAME = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
@@ -34,6 +34,9 @@ const APP_SHELL = [
   "./src/tag-code-core.js",
   "./src/paddock-core.js",
   "./src/lot-core.js",
+  "./src/fast-lot-registration-core.js",
+  "./src/fast-lot-registration-repository.js",
+  "./src/herd-hierarchy-core.js",
   "./src/animal-core.js",
   "./src/herd-repository.js",
   "./src/paddock-repository.js",

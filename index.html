@@ -507,6 +507,8 @@
     <script src="src/tag-code-core.js"></script>
     <script src="src/paddock-core.js"></script>
     <script src="src/lot-core.js"></script>
+    <script src="src/fast-lot-registration-core.js"></script>
+    <script src="src/herd-hierarchy-core.js"></script>
     <script src="src/animal-core.js"></script>
     <script src="src/animal-event-core.js"></script>
     <script src="src/animal-event-repository.js"></script>
@@ -522,8 +524,19 @@
     <script src="src/herd-repository.js"></script>
     <script src="src/paddock-repository.js"></script>
     <script src="src/lot-repository.js"></script>
+    <script src="src/fast-lot-registration-repository.js"></script>
     <script src="src/animal-repository.js"></script>
     <dialog id="herd-dialog" class="finalize-dialog" aria-labelledby="herd-dialog-title"><form id="herd-form" novalidate></form></dialog>
+    <dialog id="fast-lot-confirm" class="finalize-dialog" aria-labelledby="fast-lot-confirm-title">
+      <form method="dialog">
+        <h2 id="fast-lot-confirm-title">Confirmar cadastro rápido</h2>
+        <p id="fast-lot-summary"></p>
+        <div class="dialog-actions">
+          <button class="secondary-button" value="cancel">Cancelar</button>
+          <button class="primary-button action-icon confirm" value="confirm">Criar lote e animais</button>
+        </div>
+      </form>
+    </dialog>
     <script src="src/herd-controller.js"></script>
     <script src="src/weighing-history-core.js"></script>
     <script src="src/weighing-repository.js"></script>

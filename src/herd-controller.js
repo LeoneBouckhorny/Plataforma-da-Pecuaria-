@@ -4,7 +4,8 @@ const HerdController = (() => {
       ["name", "Nome *"], ["areaHectares", "Área (ha)", "decimal"], ["notes", "Observações", "textarea"],
     ] },
     lot: { title: "Lotes", singular: "lote", fields: [
-      ["name", "Nome *"], ["tagSuffix", "Código do lote / Sufixo do brinco"], ["category", "Categoria"], ["paddockId", "Pasto/piquete atual", "select"], ["notes", "Observações", "textarea"],
+      ["name", "Nome *"], ["tagSuffix", "Código do lote / Sufixo do brinco"], ["categories", "Categorias", "list"],
+      ["paddockId", "Pasto/piquete atual", "select"], ["breeds", "Raças", "list"], ["notes", "Observações", "textarea"],
     ] },
     animal: { title: "Animais", singular: "animal", fields: [
       ["lotId", "Lote atual", "select"], ["tagNumber", "Número do brinco"], ["tag", "Brinco/identificação anterior"],
@@ -39,6 +40,8 @@ const HerdController = (() => {
         animal: window.AnimalRepository.createAnimalRepository(options),
       };
       this.data = { paddocks: [], lots: [], animals: [] };
+      this.view = { type: "root", id: null };
+      this.fastRepository = window.FastLotRegistrationRepository.createFastLotRegistrationRepository(options);
       this.propertyId = null;
       this.generation = 0;
       this.busy = false;
@@ -53,8 +56,9 @@ const HerdController = (() => {
       this.form.addEventListener("submit", (event) => { event.preventDefault(); this.save(); });
       this.dialog.addEventListener("cancel", (event) => { if (this.busy) event.preventDefault(); });
     }
-    message(text) {
+    message(text, success = false) {
       this.feedback.textContent = text;
+      this.feedback.classList.toggle("success-inline", success);
       this.feedback.classList.toggle("hidden", !text);
     }
     async refreshProperties() {
@@ -65,6 +69,7 @@ const HerdController = (() => {
       this.closeForm();
       if (this.detail.dialog.open) this.detail.dialog.close();
       this.propertyId = propertyId;
+      this.view = { type: "root", id: null };
       this.search.value = "";
       await this.refresh();
     }
@@ -95,38 +100,91 @@ const HerdController = (() => {
       this.sections.replaceChildren();
       document.querySelector("#herd-empty").classList.toggle("hidden", Boolean(this.propertyId));
       this.search.disabled = !this.propertyId;
-      for (const kind of Object.keys(definitions)) {
-        const all = this.data[`${kind}s`];
-        document.querySelector(`#herd-count-${kind}`).textContent = String(all.filter((item) => item.status === "active").length);
-        if (!this.propertyId) continue;
+      for (const kind of Object.keys(definitions)) document.querySelector(`#herd-count-${kind}`).textContent = String(this.data[`${kind}s`].filter((item) => item.status === "active").length);
+      if (!this.propertyId) return;
+      const tree = window.HerdHierarchyCore.build(this.data, this.options.getAccountId(), this.propertyId);
+      this.tree = tree;
+      const lotNode = tree.lots.find((node) => node.lot.id === this.view.id);
+      const paddockNode = tree.paddocks.find((node) => node.paddock.id === (this.view.type === "lot" ? lotNode?.lot.paddockId : this.view.id));
+      const nav = el("nav", undefined, "herd-context-nav"); nav.setAttribute("aria-label", "Caminho do rebanho");
+      nav.append(button("Rebanho", "secondary-button", () => this.navigate("root")));
+      if (paddockNode) nav.append(button(paddockNode.paddock.name, "secondary-button", () => this.navigate("paddock", paddockNode.paddock.id)));
+      this.sections.append(nav);
+      const renderList = (kind, records, title = definitions[kind].title) => {
         const definition = definitions[kind];
         const section = el("section", undefined, "herd-section");
         section.id = `herd-${kind}s`;
         const heading = el("div", undefined, "properties-header");
         const add = button(`Novo ${definition.singular}`, "primary-button action-icon add", () => this.openForm(kind));
         add.id = `new-${kind}-record`;
-        heading.append(el("h3", definition.title), add);
+        heading.append(el("h3", title), add);
         const list = el("div", undefined, "herd-list");
         const query = this.search.value.trim().toLocaleLowerCase("pt-BR");
-        const filtered = kind === "animal" ? all.filter((a) => `${a.tag} ${a.name}`.toLocaleLowerCase("pt-BR").includes(query)) : all;
+        const filtered = kind === "animal" ? records.filter((a) => `${a.tag} ${a.name}`.toLocaleLowerCase("pt-BR").includes(query)) : records;
         if (!filtered.length) list.append(el("p", "Nenhum registro encontrado.", "empty-state"));
         for (const record of filtered) list.append(this.card(kind, record));
         section.append(heading, list);
         this.sections.append(section);
+      };
+      if (this.view.type === "lot" && lotNode) {
+        this.sections.append(this.card("lot", lotNode.lot, true));
+        renderList("animal", lotNode.animals, "Animais deste lote");
+      } else if (this.view.type === "paddock" && paddockNode) {
+        this.sections.append(this.card("paddock", paddockNode.paddock, true));
+        renderList("lot", paddockNode.lots.map((node) => node.lot), "Lotes neste pasto");
+      } else if (this.view.type === "unassigned-lots") {
+        renderList("lot", tree.unassignedLots.map((node) => node.lot), "Lotes sem pasto");
+      } else if (this.view.type === "unassigned-animals") {
+        renderList("animal", tree.unassignedAnimals, "Animais sem lote");
+      } else {
+        const actions = el("div", undefined, "action-row");
+        for (const kind of ["lot", "animal"]) {
+          const add = button(`Novo ${definitions[kind].singular}`, "secondary-button action-icon add", () => this.openForm(kind));
+          add.id = `new-${kind}-record`; actions.append(add);
+        }
+        actions.append(button(`Lotes sem pasto (${tree.unassignedLots.length})`, "secondary-button", () => this.navigate("unassigned-lots")),
+          button(`Animais sem lote (${tree.unassignedAnimals.length})`, "secondary-button", () => this.navigate("unassigned-animals")));
+        this.sections.append(actions);
+        renderList("paddock", tree.paddocks.map((node) => node.paddock));
+      }
+      if (this.search.value.trim() && !["lot", "unassigned-animals"].includes(this.view.type)) {
+        const nodes = this.view.type === "paddock" && paddockNode ? paddockNode.lots
+          : this.view.type === "unassigned-lots" ? tree.unassignedLots : null;
+        const animals = nodes ? nodes.flatMap((node) => node.animals) : this.data.animals;
+        const query = this.search.value.trim().toLocaleLowerCase("pt-BR");
+        const matches = animals.filter((a) => `${a.tag} ${a.name}`.toLocaleLowerCase("pt-BR").includes(query));
+        const results = el("section", undefined, "herd-section"); results.id = "herd-search-results";
+        results.append(el("h3", "Animais encontrados"));
+        if (!matches.length) results.append(el("p", "Nenhum registro encontrado.", "empty-state"));
+        for (const animal of matches) results.append(this.card("animal", animal));
+        this.sections.append(results);
       }
     }
-    card(kind, record) {
+    navigate(type, id = null) {
+      this.view = { type, id }; this.search.value = ""; this.render();
+    }
+    card(kind, record, opened = false) {
       const card = el("article", undefined, "herd-card");
       card.dataset.recordId = record.id;
       const title = kind === "animal" ? window.AnimalCore.formatIdentification(record) : record.name;
       card.append(el("h4", title), el("span", record.status === "active" ? "Ativo" : "Arquivado", "status-pill"));
       const detail = (label, value) => { if (value) card.append(el("p", `${label}: ${value}`)); };
-      if (kind === "paddock" && record.areaHectares !== null) detail("Área", `${new Intl.NumberFormat("pt-BR").format(record.areaHectares)} ha`);
+      if (kind === "paddock") {
+        if (record.areaHectares !== null) detail("Área", `${new Intl.NumberFormat("pt-BR").format(record.areaHectares)} ha`);
+        const node = this.tree?.paddocks.find((item) => item.paddock.id === record.id);
+        detail("Lotes ativos", String(node?.activeLots || 0));
+        detail("Animais ativos cadastrados", String(node?.activeAnimals || 0));
+      }
       if (kind === "lot") {
         detail("Código do lote", record.tagSuffix || "Código de brinco não configurado");
-        detail("Categoria", record.category);
+        detail("Categorias", record.categories.join(" · "));
+        detail("Raças", record.breeds.join(" · "));
         detail("Local atual", this.data.paddocks.find((p) => p.id === record.paddockId)?.name || "Local não definido");
-        detail("Animais ativos cadastrados", String(this.data.animals.filter((a) => a.status === "active" && a.lotId === record.id).length));
+        const counts = window.HerdHierarchyCore.counts(this.data.animals.filter((a) => a.lotId === record.id));
+        detail("Machos ativos cadastrados", String(counts.male));
+        detail("Fêmeas ativas cadastradas", String(counts.female));
+        if (counts.unknown) detail("Sexo não informado (ativos)", String(counts.unknown));
+        detail("Total ativo cadastrado", String(counts.total));
       }
       if (kind === "animal") {
         if (record.tag) detail("Nome", record.name);
@@ -140,6 +198,7 @@ const HerdController = (() => {
       }
       detail("Observações", record.notes);
       const actions = el("div", undefined, "property-actions");
+      if (kind !== "animal" && !opened) actions.append(button(kind === "lot" ? "Abrir lote" : "Abrir pasto", "primary-button", () => this.navigate(kind, record.id)));
       if (kind === "animal") actions.append(button("Ver ficha", "primary-button", () => this.detail.open(this.options.getAccountId(), this.propertyId, record.id)));
       actions.append(button("Editar", "secondary-button", () => this.openForm(kind, record)));
       if (kind !== "paddock") actions.append(button(kind === "lot" ? "Alterar pasto" : "Alterar lote", "secondary-button",
@@ -154,6 +213,8 @@ const HerdController = (() => {
       const changingLot = kind === "animal" && record && focusField === "lotId";
       this.editing = { kind, record, changingLot, propertyId: this.propertyId, accountId: this.options.getAccountId() };
       this.fields = {};
+      this.listValues = {};
+      this.fastToggle = null;
       this.messages = {};
       this.form.replaceChildren();
       const heading = el("h2", `${record ? "Editar" : "Novo"} ${definitions[kind].singular}`);
@@ -161,6 +222,7 @@ const HerdController = (() => {
       this.form.append(heading);
       const grid = el("div", undefined, "form-grid");
       for (const [key, label, type = "text"] of definitions[kind].fields) {
+        if (type === "list") { grid.append(this.listField(key, label, record?.[key] || [])); continue; }
         if (kind === "animal" && record && (changingLot ? key !== "lotId" : key === "lotId")) continue;
         const legacyTag = Boolean(record?.tag && !record.tagOriginLotId);
         if (kind === "animal" && (key === "tag" && !legacyTag || key === "tagNumber" && legacyTag)) continue;
@@ -179,7 +241,9 @@ const HerdController = (() => {
             option(input, value.id, `${value.name}${value.status === "archived" ? " (arquivado)" : ""}`);
           }
         }
-        input.value = record?.[key] ?? (key === "sex" ? "unknown" : "");
+        const contextual = !record && key === "paddockId" && this.view.type === "paddock" ? this.view.id
+          : !record && key === "lotId" && this.view.type === "lot" ? this.view.id : "";
+        input.value = record?.[key] ?? (key === "sex" ? "unknown" : contextual);
         const error = el("span", "", "field-message error");
         error.id = `${input.id}-error`;
         input.setAttribute("aria-describedby", error.id);
@@ -189,6 +253,7 @@ const HerdController = (() => {
         wrapper.append(input, error);
         grid.append(wrapper);
       }
+      if (kind === "lot" && !record) this.addFastFields(grid);
       if (kind === "lot" || kind === "animal" && !changingLot && this.fields.tagNumber) {
         const preview = el("p", "", "tag-code-preview");
         preview.id = "herd-tag-preview";
@@ -215,17 +280,84 @@ const HerdController = (() => {
       this.dialog.showModal();
       (this.fields[focusField] || Object.values(this.fields)[0]).focus();
     }
+    listField(key, title, values) {
+      this.listValues[key] = [...values];
+      const group = el("fieldset", undefined, "herd-list-field"); group.append(el("legend", title));
+      const choices = el("details"); const summary = el("summary"); choices.append(summary);
+      const options = el("div", undefined, "herd-options");
+      const update = () => { summary.textContent = this.listValues[key].join(" · ") || `Selecionar ${title.toLocaleLowerCase("pt-BR")}`; };
+      const addChoice = (value) => {
+        const label = el("label"); const input = el("input"); input.type = "checkbox"; input.value = value;
+        input.checked = this.listValues[key].includes(value);
+        input.addEventListener("change", () => {
+          this.listValues[key] = input.checked ? window.LotCore.normalizeList([...this.listValues[key], value]) : this.listValues[key].filter((v) => v !== value);
+          update(); group.dispatchEvent(new Event("input", { bubbles: true }));
+        });
+        label.append(input, document.createTextNode(value)); options.append(label);
+      };
+      for (const value of window.LotCore.normalizeList([...values, ...(key === "categories" ? window.LotCore.CATEGORY_SUGGESTIONS : window.LotCore.BREED_SUGGESTIONS)])) addChoice(value);
+      const custom = el("input"); custom.type = "text"; custom.id = `herd-custom-${key}`;
+      const label = el("label", `${title === "Raças" ? "Raça" : "Categoria"} personalizada`); label.append(custom);
+      const add = button("Adicionar", "secondary-button action-icon add", () => {
+        const value = window.LotCore.normalizeList([custom.value])[0];
+        if (!value) return;
+        const existing = [...options.querySelectorAll("input")].find((input) => input.value.toLocaleLowerCase("pt-BR") === value.toLocaleLowerCase("pt-BR"));
+        if (existing) { existing.checked = true; existing.dispatchEvent(new Event("change")); }
+        else { this.listValues[key].push(value); addChoice(value); }
+        custom.value = ""; update(); group.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      choices.append(options, label, add); group.append(choices); update(); return group;
+    }
+    formData() {
+      return { ...Object.fromEntries(Object.entries(this.fields).map(([key, input]) => [key, input.value])), ...this.listValues };
+    }
+    addFastFields(grid) {
+      const toggleLabel = el("label", undefined, "fast-toggle");
+      this.fastToggle = el("input"); this.fastToggle.type = "checkbox"; this.fastToggle.id = "herd-fast-enabled";
+      toggleLabel.append(this.fastToggle, document.createTextNode("Criar animais automaticamente neste lote"));
+      const fields = el("div", undefined, "form-grid fast-fields hidden"); fields.id = "herd-fast-fields";
+      for (const [key, title] of [["maleCount", "Machos"], ["femaleCount", "Fêmeas"], ["startNumber", "Número inicial do brinco *"]]) {
+        const label = el("label", title); const input = el("input"); input.type = "text"; input.inputMode = "numeric";
+        input.id = `herd-field-${key}`; input.value = key === "startNumber" ? "" : "0";
+        const error = el("span", "", "field-message error"); error.id = `${input.id}-error`;
+        input.setAttribute("aria-describedby", error.id); this.fields[key] = input; this.messages[key] = error;
+        label.append(input, error); fields.append(label);
+      }
+      const preview = el("p", "", "tag-code-preview"); preview.id = "herd-fast-preview"; preview.setAttribute("aria-live", "polite"); fields.append(preview);
+      const update = () => {
+        fields.classList.toggle("hidden", !this.fastToggle.checked);
+        for (const key of ["maleCount", "femaleCount", "startNumber"]) this.fields[key].disabled = !this.fastToggle.checked;
+        const plan = window.FastLotRegistrationCore.createPlan(this.formData());
+        preview.textContent = plan.valid ? `Serão criados ${plan.total} animais. ${plan.maleCount} machos e ${plan.femaleCount} fêmeas. Códigos: ${plan.animals[0].tag} até ${plan.animals.at(-1).tag}.`
+          : `Total calculado: ${plan.total ?? "—"}. ${Object.values(plan.errors).join(" ")}`;
+      };
+      grid.addEventListener("input", update); this.fastToggle.addEventListener("change", update);
+      grid.append(toggleLabel, fields); update();
+    }
+    async confirmFast(data) {
+      const plan = window.FastLotRegistrationCore.createPlan(data);
+      if (!plan.valid) return true; // The repository returns field errors without any writes.
+      const dialog = document.querySelector("#fast-lot-confirm"); const content = document.querySelector("#fast-lot-summary");
+      content.textContent = `Serão criados ${plan.total} animais individuais no lote ${data.name}: ${plan.maleCount} machos e ${plan.femaleCount} fêmeas. Códigos de ${plan.animals[0].tag} até ${plan.animals.at(-1).tag}.`;
+      dialog.returnValue = "cancel";
+      return new Promise((resolve) => { dialog.addEventListener("close", () => resolve(dialog.returnValue === "confirm"), { once: true }); dialog.showModal(); });
+    }
     closeForm() {
       if (!this.busy && this.dialog.open) this.dialog.close();
     }
     async save() {
       if (this.busy || !this.editing) return;
       const { kind, record, changingLot, accountId, propertyId } = this.editing;
-      const data = Object.fromEntries(Object.entries(this.fields).map(([key, input]) => [key, input.value]));
+      const data = this.formData();
       this.busy = true;
       this.submit.disabled = true;
       this.cancel.disabled = true;
-      const result = changingLot ? await this.repos.animal.changeAnimalLot(accountId, propertyId, record.id, data.lotId || null)
+      const fast = kind === "lot" && !record && this.fastToggle?.checked;
+      if (fast && !(await this.confirmFast(data))) {
+        this.busy = false; this.submit.disabled = false; this.cancel.disabled = false; return;
+      }
+      const result = fast ? await this.fastRepository.createLotWithAnimals(accountId, propertyId, data)
+        : changingLot ? await this.repos.animal.changeAnimalLot(accountId, propertyId, record.id, data.lotId || null)
         : record ? await this.repos[kind].update(accountId, propertyId, record.id, data)
         : await this.repos[kind].create(accountId, propertyId, data);
       this.busy = false;
@@ -241,9 +373,10 @@ const HerdController = (() => {
         return;
       }
       this.closeForm();
+      if (!record && kind === "lot") this.view = { type: "lot", id: result.lot.id };
       await this.refresh();
       await this.options.onChanged();
-      this.message("Registro salvo neste dispositivo.");
+      this.message("Registro salvo neste dispositivo.", true);
     }
     async changeStatus(kind, record) {
       if (this.busy) return;
@@ -260,7 +393,7 @@ const HerdController = (() => {
       }
       await this.refresh();
       await this.options.onChanged();
-      this.message("Registro atualizado neste dispositivo.");
+      this.message("Registro atualizado neste dispositivo.", true);
     }
   }
   return { Controller };

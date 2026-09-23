@@ -1,0 +1,275 @@
+{
+  "startedAt": "2026-09-23T16:22:27.645Z",
+  "checks": [
+    {
+      "name": "Upgrade v6 -> v7 sem migration, todas as stores identicas",
+      "passed": true,
+      "detail": {
+        "version": 5
+      }
+    },
+    {
+      "name": "QA A hierarquia, legado, sem lote, isolamento e draft",
+      "passed": true,
+      "detail": {
+        "category": "Novilhas",
+        "breeds": [],
+        "draftUnchanged": true
+      }
+    },
+    {
+      "name": "QA B normal e edicao sem geracao",
+      "passed": true,
+      "detail": {
+        "animalsBefore": 2,
+        "animalsAfter": 2
+      }
+    },
+    {
+      "name": "QA C rapido opcional, cancelar e criar 25",
+      "passed": true,
+      "detail": {
+        "tags": [
+          "0023D",
+          "0001D",
+          "0017D",
+          "0010D",
+          "0013D",
+          "0006D",
+          "0004D",
+          "0016D",
+          "0015D",
+          "0019D",
+          "0002D",
+          "0009D",
+          "0022D",
+          "0025D",
+          "0018D",
+          "0008D",
+          "0011D",
+          "0014D",
+          "0012D",
+          "0003D",
+          "0005D",
+          "0007D",
+          "0021D",
+          "0024D",
+          "0020D"
+        ],
+        "males": 10
+      }
+    },
+    {
+      "name": "QA D/E multiplas categorias e racas sem inferencia; sem pasto",
+      "passed": true,
+      "detail": {
+        "id": "58a1b69c-fa63-43e0-9559-e4a4bcb8b7c0",
+        "accountId": "3c79b108-21f9-4d51-9307-e298201b7eaf",
+        "propertyId": "be958961-99a4-4eae-b140-cabd705814c1",
+        "name": "Misto",
+        "paddockId": null,
+        "tagSuffix": "E",
+        "categories": [
+          "Engorda",
+          "Reprodutoras"
+        ],
+        "breeds": [
+          "Nelore",
+          "Brahman"
+        ],
+        "notes": "",
+        "status": "active",
+        "createdAt": "2026-09-23T16:22:51.553Z",
+        "updatedAt": "2026-09-23T16:22:51.553Z"
+      }
+    },
+    {
+      "name": "QA F rollback real no decimo animal/evento, conflito legado e concorrencia",
+      "passed": true,
+      "detail": {
+        "conflict": "invalid",
+        "message": "O código 0017F já está em uso nesta propriedade.",
+        "unchanged": true,
+        "failures": [
+          {
+            "storeName": "animals",
+            "status": "failed",
+            "identical": true
+          },
+          {
+            "storeName": "animal-events",
+            "status": "failed",
+            "identical": true
+          }
+        ],
+        "concurrent": [
+          "invalid",
+          "saved"
+        ],
+        "animals": 25,
+        "events": 25
+      }
+    },
+    {
+      "name": "QA G movimentos e origem preservados",
+      "passed": true,
+      "detail": {
+        "tag": "0023D",
+        "lotMovedTo": "29ce5e84-6183-49e7-a5f9-4ffc4f04ff2f"
+      }
+    },
+    {
+      "name": "Pesagem e ficha dos gerados, sem auto-link textual",
+      "passed": true,
+      "detail": {
+        "tag": "0023D",
+        "weight": 450
+      }
+    },
+    {
+      "name": "QA performance 100 animais",
+      "passed": true,
+      "detail": {
+        "elapsedMs": 226,
+        "measurement": "confirmar ate persistencia e render concluido; uma amostra local, nao benchmark",
+        "animals": 100,
+        "events": 100
+      }
+    },
+    {
+      "name": "Responsividade",
+      "passed": true,
+      "detail": {
+        "captures": 21,
+        "overflow": false
+      }
+    },
+    {
+      "name": "QA H offline sem servidor: criar, mover, fechar/reabrir e fichas",
+      "passed": true,
+      "detail": {
+        "generated": 10,
+        "currentLot": 9,
+        "movedAnimal": 1,
+        "dbVersion": 5
+      }
+    }
+  ],
+  "viewports": [
+    {
+      "name": "360-rebanho",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-pasto",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-lote-animais",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-ficha",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-normal-fechado",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-rapido-preview",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-confirmacao",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "768-rebanho",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-pasto",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-lote-animais",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-ficha",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-normal-fechado",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-rapido-preview",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-confirmacao",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "1280-rebanho",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-pasto",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-lote-animais",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-ficha",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-normal-fechado",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-rapido-preview",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-confirmacao",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "offline-ficha",
+      "width": 1280,
+      "scrollWidth": 1280
+    }
+  ],
+  "errors": [],
+  "limitations": [
+    "Android fisico nao executado; Chromium headless com viewports emulados."
+  ],
+  "browser": "153.0.4234.48"
+}

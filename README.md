@@ -26,6 +26,9 @@ Base inicial da Plataforma da Pecuaria, com foco em uma porta de entrada simples
 - Multiplas propriedades locais, com arquivamento e reativacao.
 - Propriedades -> fazenda escolhida -> Visao geral / Rebanho / Pesagens.
 - Rebanho contextual com pastos/piquetes, lotes e animais por ID de propriedade.
+- Navegacao hierarquica Pasto -> Lote -> Animal, com acessos a lotes sem pasto e animais sem lote.
+- Cadastro rapido opcional de novo lote, com geracao atomica de animais e eventos individuais.
+- Categorias e racas multiplas do lote, com valores personalizados e contadores derivados.
 - Brincos padronizados (0023A), com numero 1..9999 e sufixo A-Z do lote de origem.
 - Ficha individual com linha do tempo, observacoes datadas e mudancas de lote.
 - Pesagens explicitamente vinculadas a animais; ultimo peso e contagem derivados.
@@ -87,6 +90,22 @@ Mover 0023A para lote B conserva 0023A. Sufixo utilizado nao pode ser trocado.
 Legados permanecem legados, sem conversao automatica. DB_VERSION continua 5,
 sem migration, stores ou indices novos. Nao ha sincronizacao nem dependencias novas.
 
+Na Sprint 009, o Rebanho prioriza os pastos. Abrir um pasto mostra seus lotes;
+abrir um lote mostra os animais e permite acessar suas fichas. A busca respeita
+o contexto aberto; na raiz abrange todos os animais da propriedade.
+
+Novo lote continua criando somente o lote. A opcao desmarcada por padrao
+`Criar animais automaticamente neste lote` habilita machos, femeas e numero
+inicial. O total e o intervalo sao calculados; uma confirmacao precede a criacao.
+Lote, animais e eventos `registered` sao salvos em uma unica transacao: falhas
+ou conflitos nao deixam cadastros parciais. Editar lote nao gera animais.
+
+`categories` e `breeds` sao arrays normalizados. `category` legado e lido como
+uma categoria quando o array ainda nao existe, sem gravacao automatica. Animais
+gerados recebem categoria/raca apenas quando ha exatamente um valor no lote;
+multiplos valores nao sao distribuidos arbitrariamente. Contadores nao sao
+persistidos. DB_VERSION permanece 5, sem novas stores, indices ou migration.
+
 ## PWA e uso offline
 
 Na Sprint 003, a aplicacao passou a registrar um Service Worker e um Web App Manifest. Em navegadores compativeis, ela pode ser instalada como aplicativo e pode abrir sem internet depois de ter sido carregada online pelo menos uma vez em contexto compativel com Service Worker.
@@ -102,6 +121,7 @@ O funcionamento offline cobre:
 - selecao de propriedade e filtro de historico;
 - cadastro, edicao e arquivamento/reativacao do rebanho conforme seus vinculos;
 - mudanca do pasto atual do lote e do lote atual do animal;
+- navegacao hierarquica e cadastro rapido opcional de novos lotes;
 - pesagem vinculada opcionalmente a lote e consulta dos snapshots historicos;
 - ficha individual, timeline, observacoes, mudanca de lote e status com eventos;
 - pesagens vinculadas explicitamente e ultimo peso derivado;
@@ -151,7 +171,7 @@ A Sprint 005 aplica o simbolo aprovado (bovino, dados e campo), com paleta
 centralizada e componentes reutilizaveis. `styles.css` agrega as camadas
 em `styles/`; a marca fica em `assets/branding/` e os icones em `assets/`.
 Montserrat permanece como referencia com fallback local system-ui/Segoe UI,
-sem fonte externa. O app shell atual v6 preserva os assets visuais e inclui rebanho, historico individual e tag-code-core.
+sem fonte externa. O app shell atual v7 preserva os assets visuais e inclui rebanho, historico individual, brincos e cadastro rapido.
 
 Detalhes: `docs/DESIGN_SYSTEM_V1.md`, `docs/ADR_005_IDENTIDADE_VISUAL.md`
 e `docs/QA_SPRINT_005.md`. Para servir com Node.js, tambem e possivel usar
@@ -193,14 +213,15 @@ alterar os registros da instalacao do produtor.
 
 Documentacao atual: `docs/MODELO_DE_DADOS_V5.md`,
 `docs/MODELO_IDENTIFICACAO_BRINCOS_V1.md`,
-`docs/ADR_008_CONTEXTO_PROPRIEDADE_E_BRINCOS.md`, `docs/QA_SPRINT_008.md`.
-Runner atual: `node scripts/qa-sprint-008.cjs`, com Playwright disponivel no
+`docs/MODELO_CADASTRO_RAPIDO_V1.md`,
+`docs/ADR_009_HIERARQUIA_E_CADASTRO_RAPIDO.md`, `docs/QA_SPRINT_009.md`.
+Runner atual: `node scripts/qa-sprint-009.cjs`, com Playwright disponivel no
 ambiente de QA e `QA_BROWSER_PATH` opcional. Nenhuma dependencia do aplicativo
-foi adicionada. O runner serve a base aprovada `19d825e` para testar o upgrade
-real do cache v5 -> v6 mantendo o banco V5, e encerra o servidor no teste offline.
+foi adicionada. O runner serve a base aprovada `4e55c2d` para testar o upgrade
+real do cache v6 -> v7 mantendo o banco V5, e encerra o servidor no teste offline.
 Exige o historico Git com esse commit para carregar o baseline. Usa contexto
 isolado de navegador, sem tocar os dados da instalacao do produtor.
 
 Ainda nao existem GMD, graficos de peso, movimentacao historica de lotes entre
 pastos, compra/venda/morte, transferencia entre propriedades, sanidade,
-reproducao, financeiro, nuvem ou sincronizacao. Sprint 009 nao iniciada.
+reproducao, financeiro, nuvem ou sincronizacao. Sprint 010 nao iniciada.
