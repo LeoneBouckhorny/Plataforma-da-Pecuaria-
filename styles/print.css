@@ -1,0 +1,14 @@
+@media print {
+  @page { margin: 12mm; }
+  body { background: var(--color-surface); color: var(--color-print-text); }
+  .topbar, .input-panel, .history-list-panel, .premium-note, button, .no-print, dialog { display: none !important; }
+  .app-shell, .results-panel, .history-detail { padding: 0; max-width: none; }
+  .workspace { display: block; }
+  .panel { border: 0; box-shadow: none; }
+  .tab-panel.active, .print-area { display: block; }
+  .metrics, .report-meta, .metric { break-inside: avoid; }
+  .report-row { grid-template-columns: 34px 1fr 0.8fr 0.8fr 0.8fr 0.8fr 1.2fr; min-width: 0; break-inside: avoid; page-break-inside: avoid; }
+  .report-list { gap: 0; overflow: visible; }
+  .estimate-note { border: var(--border-width) solid var(--color-print-border); background: var(--color-surface); color: var(--color-print-text); }
+  .metric strong, .metric.accent strong { color: var(--color-print-text); }
+}

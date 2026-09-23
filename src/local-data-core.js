@@ -7,7 +7,8 @@ const LocalDataCore = ((CalculatorCoreRef) => {
     throw new Error("CalculatorCore não está disponível.");
   }
 
-  const SCHEMA_VERSION = 1;
+  const SCHEMA_VERSION = 2;
+  const LEGACY_SCHEMA_VERSION = 1;
   const DRAFT_KEY = "calculator-current";
 
   function isPlainObject(value) {
@@ -35,6 +36,7 @@ const LocalDataCore = ((CalculatorCoreRef) => {
   function normalizeAnimal(animal = {}) {
     return {
       id: stableId(animal.id, "animal"),
+      animalId: animal.animalId == null ? null : asString(animal.animalId),
       tag: asString(animal.tag),
       weight: asString(animal.weight),
       category: CalculatorCore.normalizeCategory(animal.category),
@@ -53,6 +55,10 @@ const LocalDataCore = ((CalculatorCoreRef) => {
 
   function createEmptyDraftData(date = new Date()) {
     return {
+      accountId: null,
+      propertyId: null,
+      lotId: null,
+      lotName: "",
       weighingName: "",
       weighingDate: CalculatorCore.localDateInputValue(date),
       propertyName: "",
@@ -71,6 +77,10 @@ const LocalDataCore = ((CalculatorCoreRef) => {
     const paddocks = Array.isArray(source.paddocks) ? source.paddocks.map(normalizePaddock) : [];
 
     return {
+      accountId: source.accountId == null ? null : asString(source.accountId),
+      propertyId: source.propertyId == null ? null : asString(source.propertyId),
+      lotId: source.lotId == null ? null : asString(source.lotId),
+      lotName: asString(source.lotName),
       weighingName: asString(source.weighingName ?? base.weighingName),
       weighingDate: asString(source.weighingDate ?? base.weighingDate),
       propertyName: asString(source.propertyName ?? base.propertyName),
@@ -99,7 +109,7 @@ const LocalDataCore = ((CalculatorCoreRef) => {
       return { valid: false, reason: "invalid_record", draft: null };
     }
 
-    if (record.schemaVersion !== SCHEMA_VERSION) {
+    if (![LEGACY_SCHEMA_VERSION, SCHEMA_VERSION].includes(record.schemaVersion)) {
       return { valid: false, reason: "incompatible_schema", draft: null };
     }
 
@@ -146,6 +156,7 @@ const LocalDataCore = ((CalculatorCoreRef) => {
 
   return {
     SCHEMA_VERSION,
+    LEGACY_SCHEMA_VERSION,
     DRAFT_KEY,
     createEmptyDraftData,
     normalizeDraftData,
