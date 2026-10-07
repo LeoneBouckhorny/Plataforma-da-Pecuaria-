@@ -33,6 +33,36 @@ test("cria draft válido com chave e versão do schema", () => {
   assert.equal(draft.data.weighingName, "Pesagem Teste");
 });
 
+test("draft novo preserva accountId, propertyId e snapshot textual da propriedade", () => {
+  const draft = dataCore.createDraft({
+    ...baseDraft(),
+    accountId: "account-1",
+    propertyId: "property-1",
+    propertyName: "Boa Vista",
+  });
+
+  assert.equal(draft.data.accountId, "account-1");
+  assert.equal(draft.data.propertyId, "property-1");
+  assert.equal(draft.data.propertyName, "Boa Vista");
+});
+
+test("draft antigo sem propriedade cadastrada continua compatível", () => {
+  const record = {
+    key: dataCore.DRAFT_KEY,
+    schemaVersion: dataCore.LEGACY_SCHEMA_VERSION,
+    updatedAt: "2026-08-10T12:00:00.000Z",
+    data: baseDraft(),
+  };
+  const result = dataCore.validateDraftRecord(record);
+
+  assert.equal(result.valid, true);
+  assert.equal(result.draft.schemaVersion, dataCore.SCHEMA_VERSION);
+  assert.equal(result.draft.data.accountId, null);
+  assert.equal(result.draft.data.propertyId, null);
+  assert.equal(result.draft.data.propertyName, "Fazenda Teste");
+  assert.equal(result.draft.data.animals[0].id, "animal-a");
+});
+
 test("preserva IDs de animais e pastos durante normalização", () => {
   const draft = dataCore.createDraft(baseDraft());
 
@@ -44,6 +74,8 @@ test("preserva IDs de animais e pastos durante normalização", () => {
 test("normaliza estruturas ausentes para arrays e valores padrão", () => {
   const data = dataCore.normalizeDraftData({});
 
+  assert.equal(data.accountId, null);
+  assert.equal(data.propertyId, null);
   assert.deepEqual(data.animals, []);
   assert.deepEqual(data.paddocks, []);
   assert.equal(data.settings.arrobaPrice, "300,00");

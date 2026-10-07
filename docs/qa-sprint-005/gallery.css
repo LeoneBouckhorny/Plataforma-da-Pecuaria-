@@ -1,0 +1,13 @@
+@import url("../../styles/tokens.css");
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--color-background); color: var(--color-text); font: var(--font-sm)/var(--line-body) var(--font-family); }
+header, main, footer { width: min(1200px, calc(100% - 32px)); margin-inline: auto; }
+header, footer { padding-block: var(--space-5); }
+h1 { font-size: var(--font-xl); } h2 { font-size: var(--font-lg); }
+a { color: var(--color-info); }
+section { padding-block: var(--space-4); border-top: 1px solid var(--color-border); }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+figure { margin: 0; min-width: 0; } figcaption { margin-bottom: var(--space-2); font-weight: var(--font-semibold); }
+img { width: 100%; height: auto; display: block; border: 1px solid var(--color-border); }
+table { border-collapse: collapse; width: 100%; } th, td { text-align: left; padding: var(--space-2); border-bottom: 1px solid var(--color-border); }
+@media (max-width: 700px) { .pair { grid-template-columns: minmax(0, 1fr); } th, td { padding: var(--space-1); } }

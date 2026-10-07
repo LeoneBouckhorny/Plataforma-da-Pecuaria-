@@ -1,0 +1,485 @@
+{
+  "checks": [
+    {
+      "name": "Migration V3 -> V4 e cache v3 -> v4",
+      "passed": true,
+      "detail": {
+        "preserved": [
+          "accounts",
+          "app-settings",
+          "drafts",
+          "properties",
+          "weighing-items",
+          "weighing-sessions"
+        ],
+        "version": 4
+      }
+    },
+    {
+      "name": "QA A - pastos persistem",
+      "passed": true,
+      "detail": {
+        "p1": {
+          "id": "cf5ed859-cd8e-4125-bc8b-4b2a4ffbbaf2",
+          "accountId": "26825968-51e5-4b51-90e2-1034d58f8c71",
+          "propertyId": "2e5b96c5-4c43-4efe-bec5-02f33652183d",
+          "name": "Piquete 01",
+          "areaHectares": 12.5,
+          "notes": "",
+          "status": "active",
+          "createdAt": "2026-09-21T17:56:12.401Z",
+          "updatedAt": "2026-09-21T17:56:12.401Z"
+        },
+        "p2": {
+          "id": "d6ec0f01-c6b6-405a-be82-b7329ed0be65",
+          "accountId": "26825968-51e5-4b51-90e2-1034d58f8c71",
+          "propertyId": "2e5b96c5-4c43-4efe-bec5-02f33652183d",
+          "name": "Piquete 02",
+          "areaHectares": 8,
+          "notes": "",
+          "status": "active",
+          "createdAt": "2026-09-21T17:56:12.649Z",
+          "updatedAt": "2026-09-21T17:56:12.649Z"
+        }
+      }
+    },
+    {
+      "name": "QA B - lote persiste",
+      "passed": true,
+      "detail": {
+        "id": "576efd6a-2f74-4b3a-8335-2db9faa216d1",
+        "accountId": "26825968-51e5-4b51-90e2-1034d58f8c71",
+        "propertyId": "2e5b96c5-4c43-4efe-bec5-02f33652183d",
+        "name": "Novilhas 2026",
+        "paddockId": "cf5ed859-cd8e-4125-bc8b-4b2a4ffbbaf2",
+        "category": "Novilhas",
+        "notes": "",
+        "status": "active",
+        "createdAt": "2026-09-21T17:56:13.654Z",
+        "updatedAt": "2026-09-21T17:56:13.654Z"
+      }
+    },
+    {
+      "name": "QA C - animais e contador",
+      "passed": true,
+      "detail": [
+        {
+          "id": "1ffcddac-2bb4-480a-bc01-41d5a913ef8e",
+          "accountId": "26825968-51e5-4b51-90e2-1034d58f8c71",
+          "propertyId": "2e5b96c5-4c43-4efe-bec5-02f33652183d",
+          "lotId": "576efd6a-2f74-4b3a-8335-2db9faa216d1",
+          "tag": "101",
+          "name": "",
+          "sex": "female",
+          "category": "Novilha",
+          "breed": "",
+          "birthDate": null,
+          "notes": "",
+          "status": "active",
+          "createdAt": "2026-09-21T17:56:14.741Z",
+          "updatedAt": "2026-09-21T17:56:14.741Z"
+        },
+        {
+          "id": "9cd47883-d15e-40d4-80ed-ac986795cb5f",
+          "accountId": "26825968-51e5-4b51-90e2-1034d58f8c71",
+          "propertyId": "2e5b96c5-4c43-4efe-bec5-02f33652183d",
+          "lotId": "576efd6a-2f74-4b3a-8335-2db9faa216d1",
+          "tag": "102",
+          "name": "",
+          "sex": "female",
+          "category": "Novilha",
+          "breed": "",
+          "birthDate": null,
+          "notes": "",
+          "status": "active",
+          "createdAt": "2026-09-21T17:56:15.036Z",
+          "updatedAt": "2026-09-21T17:56:15.036Z"
+        }
+      ]
+    },
+    {
+      "name": "QA D - local derivado sem gravar animal",
+      "passed": true,
+      "detail": {
+        "lotId": "576efd6a-2f74-4b3a-8335-2db9faa216d1",
+        "paddockId": "d6ec0f01-c6b6-405a-be82-b7329ed0be65"
+      }
+    },
+    {
+      "name": "QA E - segunda propriedade isolada",
+      "passed": true,
+      "detail": {
+        "boa": "2e5b96c5-4c43-4efe-bec5-02f33652183d",
+        "sao": "8712da3b-571a-4cc9-8f97-f5d3e06ff8af"
+      }
+    },
+    {
+      "name": "QA F - vinculos forjados bloqueados no IndexedDB real",
+      "passed": true,
+      "detail": [
+        {
+          "status": "invalid",
+          "errors": {
+            "lotId": "O vínculo deve pertencer à mesma operação e propriedade."
+          }
+        },
+        {
+          "status": "invalid",
+          "errors": {
+            "paddockId": "O vínculo deve pertencer à mesma operação e propriedade."
+          }
+        }
+      ]
+    },
+    {
+      "name": "QA G - arquivamento condicionado aos vinculos",
+      "passed": true,
+      "detail": "Pasto ocupado e lote ocupado bloqueados; pasto livre arquivado."
+    },
+    {
+      "name": "QA H - pesagem vinculada, reload do draft e autosave pendente",
+      "passed": true,
+      "detail": {
+        "id": "session-7c2e2050-8c4e-4ef9-be19-9a5546011ee8",
+        "schemaVersion": 2,
+        "createdAt": "2026-09-21T17:56:18.510Z",
+        "weighingDate": "2026-09-21",
+        "accountId": "26825968-51e5-4b51-90e2-1034d58f8c71",
+        "propertyId": "2e5b96c5-4c43-4efe-bec5-02f33652183d",
+        "weighingName": "Pesagem vinculada",
+        "propertyNameSnapshot": "Boa Vista",
+        "lotId": "576efd6a-2f74-4b3a-8335-2db9faa216d1",
+        "lotNameSnapshot": "Novilhas 2026",
+        "paddockId": "cf5ed859-cd8e-4125-bc8b-4b2a4ffbbaf2",
+        "paddockNameSnapshot": "Piquete 01",
+        "arrobaPriceSnapshot": 300,
+        "yieldRateSnapshot": 50,
+        "lightLimitSnapshot": 300,
+        "mediumLimitSnapshot": 420,
+        "totalAnimals": 2,
+        "totalWeight": 960,
+        "averageWeight": 480,
+        "totalArrobas": 32,
+        "estimatedValue": 9600,
+        "observations": "",
+        "status": "completed"
+      }
+    },
+    {
+      "name": "QA I - snapshots imutaveis",
+      "passed": true,
+      "detail": "session-7c2e2050-8c4e-4ef9-be19-9a5546011ee8"
+    },
+    {
+      "name": "Filtro de lotes por ID e legado sem vinculo",
+      "passed": true,
+      "detail": "3 sessoes; filtros isolados."
+    },
+    {
+      "name": "Validacao UI, busca e injecao HTML",
+      "passed": true,
+      "detail": "Erros junto aos campos; payload somente texto."
+    },
+    {
+      "name": "Integridade real: concorrencia, duas contas e rollback",
+      "passed": true,
+      "detail": {
+        "race": [
+          "invalid",
+          "saved"
+        ],
+        "crossAccount": "invalid",
+        "isolated": 0,
+        "rollback": true
+      }
+    },
+    {
+      "name": "QA responsivo",
+      "passed": true,
+      "detail": [
+        {
+          "name": "360-rebanho",
+          "width": 360,
+          "scrollWidth": 360
+        },
+        {
+          "name": "360-novo-paddock",
+          "width": 360,
+          "scrollWidth": 360
+        },
+        {
+          "name": "360-novo-lot",
+          "width": 360,
+          "scrollWidth": 360
+        },
+        {
+          "name": "360-novo-animal",
+          "width": 360,
+          "scrollWidth": 360
+        },
+        {
+          "name": "360-animal-acoes",
+          "width": 360,
+          "scrollWidth": 360
+        },
+        {
+          "name": "360-calculadora",
+          "width": 360,
+          "scrollWidth": 360
+        },
+        {
+          "name": "360-historico",
+          "width": 360,
+          "scrollWidth": 360
+        },
+        {
+          "name": "768-rebanho",
+          "width": 768,
+          "scrollWidth": 768
+        },
+        {
+          "name": "768-novo-paddock",
+          "width": 768,
+          "scrollWidth": 768
+        },
+        {
+          "name": "768-novo-lot",
+          "width": 768,
+          "scrollWidth": 768
+        },
+        {
+          "name": "768-novo-animal",
+          "width": 768,
+          "scrollWidth": 768
+        },
+        {
+          "name": "768-animal-acoes",
+          "width": 768,
+          "scrollWidth": 768
+        },
+        {
+          "name": "768-calculadora",
+          "width": 768,
+          "scrollWidth": 768
+        },
+        {
+          "name": "768-historico",
+          "width": 768,
+          "scrollWidth": 768
+        },
+        {
+          "name": "1280-rebanho",
+          "width": 1280,
+          "scrollWidth": 1280
+        },
+        {
+          "name": "1280-novo-paddock",
+          "width": 1280,
+          "scrollWidth": 1280
+        },
+        {
+          "name": "1280-novo-lot",
+          "width": 1280,
+          "scrollWidth": 1280
+        },
+        {
+          "name": "1280-novo-animal",
+          "width": 1280,
+          "scrollWidth": 1280
+        },
+        {
+          "name": "1280-animal-acoes",
+          "width": 1280,
+          "scrollWidth": 1280
+        },
+        {
+          "name": "1280-calculadora",
+          "width": 1280,
+          "scrollWidth": 1280
+        },
+        {
+          "name": "1280-historico",
+          "width": 1280,
+          "scrollWidth": 1280
+        },
+        {
+          "name": "offline-historico",
+          "width": 1280,
+          "scrollWidth": 1280
+        }
+      ]
+    },
+    {
+      "name": "Impressao",
+      "passed": true,
+      "detail": "Botoes ocultos; PDF historico com lote e pasto."
+    },
+    {
+      "name": "QA J - offline sem servidor, CRUD, fechar/reabrir, pesar/finalizar/historico",
+      "passed": true,
+      "detail": {
+        "offline": true,
+        "serverListening": false,
+        "animal": {
+          "id": "4af6bc2d-7f60-43a3-9beb-38eb0bad5b78",
+          "accountId": "26825968-51e5-4b51-90e2-1034d58f8c71",
+          "propertyId": "2e5b96c5-4c43-4efe-bec5-02f33652183d",
+          "lotId": "0c0d2217-d8e1-4f38-b432-9a6358e35fd4",
+          "tag": "OFF-01",
+          "name": "",
+          "sex": "unknown",
+          "category": "",
+          "breed": "",
+          "birthDate": null,
+          "notes": "",
+          "status": "active",
+          "createdAt": "2026-09-21T17:56:29.815Z",
+          "updatedAt": "2026-09-21T17:56:30.500Z"
+        },
+        "session": {
+          "id": "session-d22867b8-cd02-49e6-8bd1-46f895c6a433",
+          "schemaVersion": 2,
+          "createdAt": "2026-09-21T17:56:32.105Z",
+          "weighingDate": "2026-09-21",
+          "accountId": "26825968-51e5-4b51-90e2-1034d58f8c71",
+          "propertyId": "2e5b96c5-4c43-4efe-bec5-02f33652183d",
+          "weighingName": "Finalizada offline",
+          "propertyNameSnapshot": "Boa Vista",
+          "lotId": "0c0d2217-d8e1-4f38-b432-9a6358e35fd4",
+          "lotNameSnapshot": "Lote Offline",
+          "paddockId": "649c7583-99a0-4e63-b25c-952448223682",
+          "paddockNameSnapshot": "Piquete Offline",
+          "arrobaPriceSnapshot": 300,
+          "yieldRateSnapshot": 50,
+          "lightLimitSnapshot": 300,
+          "mediumLimitSnapshot": 420,
+          "totalAnimals": 2,
+          "totalWeight": 960,
+          "averageWeight": 480,
+          "totalArrobas": 32,
+          "estimatedValue": 9600,
+          "observations": "",
+          "status": "completed"
+        }
+      }
+    }
+  ],
+  "viewports": [
+    {
+      "name": "360-rebanho",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-novo-paddock",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-novo-lot",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-novo-animal",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-animal-acoes",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-calculadora",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-historico",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "768-rebanho",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-novo-paddock",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-novo-lot",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-novo-animal",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-animal-acoes",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-calculadora",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-historico",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "1280-rebanho",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-novo-paddock",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-novo-lot",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-novo-animal",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-animal-acoes",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-calculadora",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-historico",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "offline-historico",
+      "width": 1280,
+      "scrollWidth": 1280
+    }
+  ],
+  "errors": [],
+  "limitations": [
+    "Android fisico nao executado; QA em Chromium/Edge desktop com viewports emulados."
+  ],
+  "browser": "153.0.4234.48",
+  "passed": true
+}

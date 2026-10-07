@@ -18,8 +18,29 @@ Base inicial da Plataforma da Pecuaria, com foco em uma porta de entrada simples
 - Rendimento de carcaca configuravel.
 - Valor estimado do lote.
 - Separacao visual por faixas de peso.
-- Romaneio simples para impressao.
+- Romaneio V1 para impressao.
+- Exportacao CSV com UTF-8 BOM e separador ponto e virgula.
 - Rascunho da pesagem atual preservado neste dispositivo com IndexedDB.
+- Historico local de pesagens finalizadas neste dispositivo.
+- Operacao local editavel neste dispositivo.
+- Multiplas propriedades locais, com arquivamento e reativacao.
+- Propriedades -> fazenda escolhida -> Visao geral / Rebanho / Pesagens.
+- Rebanho contextual com pastos/piquetes, lotes e animais por ID de propriedade.
+- Navegacao hierarquica Pasto -> Lote -> Animal, com acessos a lotes sem pasto e animais sem lote.
+- Cadastro rapido opcional de novo lote, com geracao atomica de animais e eventos individuais.
+- Categorias e racas multiplas do lote, com valores personalizados e contadores derivados.
+- Brincos padronizados (0023A), com numero 1..9999 e sufixo A-Z do lote de origem.
+- Ficha individual com linha do tempo, observacoes datadas e mudancas de lote.
+- Sanidade por propriedade: vacinacao, vermifugacao, medicamento e outro manejo.
+- Manejo individual/coletivo com selecao explicita, snapshots e operacao atomica offline.
+- Pesagens explicitamente vinculadas a animais; ultimo peso e contagem derivados.
+- Local atual do lote definido por pasto opcional; animal vinculado a lote opcional.
+- Cadastro individual com brinco ou nome, sem associacao automatica a itens de pesagem.
+- Pesagem opcionalmente vinculada a lote e filtro historico por ID do lote.
+- Selecao de propriedade por pesagem, sem tornar o cadastro obrigatorio.
+- Filtro de historico por propriedade ou por sessoes sem vinculo.
+- PWA instalavel em navegadores compativeis.
+- App shell disponivel offline apos primeiro carregamento adequado.
 
 ## Persistencia local
 
@@ -27,24 +48,117 @@ A aplicacao preserva uma pesagem em andamento no mesmo dispositivo. Ao fechar ou
 
 Essa persistencia local nao significa:
 
-- PWA;
 - cache offline completo da aplicacao;
 - sincronizacao em nuvem;
 - login;
-- historico completo de pesagens;
 - backup remoto.
 
 Dados de demonstracao nao sao persistidos. O botao `Limpar pesagem` remove o rascunho local `calculator-current` e restaura a tela vazia com os parametros padrao.
 
+Na Sprint 002, a aplicacao tambem salva sessoes finalizadas em historico local. Esse historico usa snapshots e nao muda quando o rascunho atual e editado depois. O historico ainda fica somente no dispositivo e nao substitui backup, conta ou sincronizacao.
+
+Na Sprint 004, a aplicacao cria uma operacao local e permite cadastrar varias propriedades neste dispositivo. A operacao local nao e login: nao possui e-mail, senha, nuvem, assinatura ou sincronizacao. Ela serve apenas para organizar dados locais e preparar a arquitetura para uma conta real no futuro.
+
+Propriedades cadastradas recebem IDs estaveis e podem ser arquivadas ou reativadas. O arquivamento nao apaga historico. Pesagens finalizadas gravam `propertyId` quando ha propriedade selecionada e tambem gravam `propertyNameSnapshot`, preservando o nome usado no momento da finalizacao mesmo que o cadastro seja renomeado depois.
+
+Na Sprint 006, IndexedDB V4 adiciona `paddocks`, `lots` e `animals`, sem regravar
+os registros anteriores. Cada entidade pertence a uma operacao e propriedade.
+O animal possui `lotId`; sua localizacao e derivada do `paddockId` do lote.
+Um pasto com lote ativo e um lote com animal ativo nao podem ser arquivados.
+Nao ha exclusao definitiva desses cadastros nem transferencia entre propriedades.
+Historicos vinculados preservam os nomes do lote e pasto no momento da gravacao.
+Os contadores mostram animais ativos cadastrados, nao uma estimativa de todo o gado fisico.
+
+Na Sprint 007, IndexedDB V5 adiciona `animal-events` e o indice `animalId` nos
+itens de pesagem existentes. A ficha combina eventos administrativos/observacoes
+com pesagens vinculadas, sem duplicar peso em eventos. Cadastro, mudanca de lote,
+arquivamento e reativacao geram eventos atomicamente. Observacoes podem ser
+editadas; eventos automaticos nao. Nascimento e cadastro legado sao marcos
+derivados, sem inventar eventos retroativos.
+
+A vinculacao individual exige selecionar explicitamente o animal na linha da
+calculadora. Brinco igual nunca cria vinculo. Animais arquivados continuam com
+historico, mas nao ficam disponiveis para nova pesagem. Trocar propriedade/lote
+limpa somente vinculos incompativeis, preservando pesos e textos digitados.
+
+Na Sprint 008, a propriedade aberta organiza a gestao sem alterar o draft global
+da calculadora. Os contadores da visao geral sao derivados; Pesagens reutiliza o
+historico por propertyId. O Rebanho nao possui mais entrada global.
+
+Novos lotes exigem tagSuffix unico na propriedade, inclusive entre arquivados.
+Novos brincos usam tagNumber de quatro digitos + suffix do lote. O UUID continua
+sendo a identidade tecnica; tagOriginLotId e a origem do codigo, nao o lote atual.
+Mover 0023A para lote B conserva 0023A. Sufixo utilizado nao pode ser trocado.
+Legados permanecem legados, sem conversao automatica. DB_VERSION continua 5,
+sem migration, stores ou indices novos. Nao ha sincronizacao nem dependencias novas.
+
+Na Sprint 009, o Rebanho prioriza os pastos. Abrir um pasto mostra seus lotes;
+abrir um lote mostra os animais e permite acessar suas fichas. A busca respeita
+o contexto aberto; na raiz abrange todos os animais da propriedade.
+
+Novo lote continua criando somente o lote. A opcao desmarcada por padrao
+`Criar animais automaticamente neste lote` habilita machos, femeas e numero
+inicial. O total e o intervalo sao calculados; uma confirmacao precede a criacao.
+Lote, animais e eventos `registered` sao salvos em uma unica transacao: falhas
+ou conflitos nao deixam cadastros parciais. Editar lote nao gera animais.
+
+`categories` e `breeds` sao arrays normalizados. `category` legado e lido como
+uma categoria quando o array ainda nao existe, sem gravacao automatica. Animais
+gerados recebem categoria/raca apenas quando ha exatamente um valor no lote;
+multiplos valores nao sao distribuidos arbitrariamente. Contadores nao sao
+persistidos. DB_VERSION permanece 5, sem novas stores, indices ou migration.
+
+## PWA e uso offline
+
+Na Sprint 010, Sanidade reutiliza `animal-events` com type=health, mantendo DB5.
+O formulario pode ser aberto na propriedade, no lote ou na ficha individual.
+Animais ativos selecionados recebem um evento cada, com operationId compartilhado;
+se houver falha, nenhum evento da operacao permanece. Arquivados mantem historico.
+Filtros por tipo, lote do registro e periodo nao criam listas persistidas duplicadas.
+Dose, proxima aplicacao e carencia sao informacoes do produtor: nao ha prescricao,
+recomendacao automatica, calculo de carencia, agenda ou notificacao. Health V1 nao
+oferece edicao/exclusao; ver ADR_010_SANIDADE_V1.md. Via de aplicacao usa seletor
+com codigos internos e complemento opcional em Outra. Textos antigos continuam
+legiveis, sem migration nem inferencia pelo produto.
+
+Na Sprint 003, a aplicacao passou a registrar um Service Worker e um Web App Manifest. Em navegadores compativeis, ela pode ser instalada como aplicativo e pode abrir sem internet depois de ter sido carregada online pelo menos uma vez em contexto compativel com Service Worker.
+
+O funcionamento offline cobre:
+
+- abertura da aplicacao apos o app shell estar cacheado;
+- calculadora de pesagem;
+- rascunho local no IndexedDB;
+- finalizacao de pesagens;
+- consulta e exclusao de historico local;
+- criacao, edicao, arquivamento e reativacao de propriedades locais;
+- selecao de propriedade e filtro de historico;
+- cadastro, edicao e arquivamento/reativacao do rebanho conforme seus vinculos;
+- mudanca do pasto atual do lote e do lote atual do animal;
+- navegacao hierarquica e cadastro rapido opcional de novos lotes;
+- pesagem vinculada opcionalmente a lote e consulta dos snapshots historicos;
+- ficha individual, timeline, observacoes, mudanca de lote e status com eventos;
+- manejo sanitario individual/coletivo e consulta de registros/timeline;
+- pesagens vinculadas explicitamente e ultimo peso derivado;
+- geracao de CSV em memoria;
+- preparacao do romaneio para impressao.
+
+Ainda nao existe:
+
+- login;
+- nuvem;
+- backup remoto;
+- sincronizacao entre dispositivos;
+- compartilhamento;
+- recuperacao de dados em outro aparelho.
+
+O navegador pode remover dados locais conforme suas proprias politicas de armazenamento. IndexedDB e Cache Storage melhoram o uso offline, mas nao substituem uma estrategia futura de backup.
+
 ## Gestao premium futura
 
-- Propriedades.
-- Pastos/piquetes opcionais por propriedade.
 - Lotacao maxima opcional por pasto.
-- Lotes e animais individuais.
-- Historico de peso.
+- GMD e graficos de evolucao, apos consolidacao do historico individual.
 - Vacinas, reproducao, nascimento, castracao, compra, venda e mortalidade.
-- Movimentacao entre propriedades e pastos.
+- Historico de movimentacoes e transferencia entre propriedades.
 - Despesas e permissoes para funcionarios.
 
 ## Como abrir para desenvolvimento
@@ -63,20 +177,68 @@ http://127.0.0.1:8026/index.html
 
 Abrir o HTML diretamente pode funcionar para leitura visual, mas o teste de IndexedDB deve ser feito em um contexto de navegador servido localmente.
 
-## Testes
+Para QA de PWA e Service Worker, use `http://127.0.0.1:8026/index.html` ou outro localhost. Em producao, Service Worker exige HTTPS.
+
+## Identidade visual
+
+A Sprint 005 aplica o simbolo aprovado (bovino, dados e campo), com paleta
+centralizada e componentes reutilizaveis. `styles.css` agrega as camadas
+em `styles/`; a marca fica em `assets/branding/` e os icones em `assets/`.
+Montserrat permanece como referencia com fallback local system-ui/Segoe UI,
+sem fonte externa. O app shell atual v8.1 preserva os assets visuais e inclui rebanho, historico individual, brincos, cadastro rapido e Sanidade.
+
+Detalhes: `docs/DESIGN_SYSTEM_V1.md`, `docs/ADR_005_IDENTIDADE_VISUAL.md`
+e `docs/QA_SPRINT_005.md`. Para servir com Node.js, tambem e possivel usar
+`node scripts/serve.cjs` e acessar `http://127.0.0.1:8026/index.html`.
+
+## Testes automatizados
 
 Execute a checagem de sintaxe:
 
 ```powershell
 node --check app.js
 node --check src/calculator-core.js
+node --check src/property-core.js
 node --check src/local-data-core.js
 node --check src/local-database.js
+node --check src/account-repository.js
+node --check src/property-repository.js
 node --check src/draft-repository.js
+node --check src/weighing-history-core.js
+node --check src/weighing-repository.js
+node --check src/csv-export-core.js
+node --check src/pwa-controller.js
+node --check sw.js
 ```
 
 Execute os testes automatizados:
 
 ```powershell
-node --test tests/calculator-core.test.js tests/local-data-core.test.js
+node --test tests/*.test.js
 ```
+
+O QA da Sprint 006 esta em `scripts/qa-sprint-006.cjs`. Ele exige Playwright
+disponivel no ambiente de desenvolvimento (nao e dependencia do aplicativo).
+Use `QA_BROWSER_PATH` para indicar um Chromium/Edge local; sem essa variavel,
+o runner procura Edge/Chrome nos caminhos comuns de Windows e depois usa o
+Chromium do Playwright. Execute `node scripts/qa-sprint-006.cjs`.
+O runner cria dados em contexto isolado e usa um servidor temporario, sem
+alterar os registros da instalacao do produtor.
+
+Documentacao atual: `docs/MODELO_DE_DADOS_V5.md`,
+`docs/MODELO_IDENTIFICACAO_BRINCOS_V1.md`,
+`docs/MODELO_CADASTRO_RAPIDO_V1.md`,
+`docs/ADR_010_SANIDADE_V1.md`, `docs/QA_SPRINT_010.md`.
+Runner atual: `node scripts/qa-sprint-010.cjs`, com Playwright disponivel no
+ambiente de QA e `QA_BROWSER_PATH` opcional. Nenhuma dependencia do aplicativo
+foi adicionada. O runner serve a base aprovada `f268996` para testar o upgrade
+real do cache v7 -> v8.1 mantendo o banco V5, e encerra o servidor no teste offline.
+Exige o historico Git com esse commit para carregar o baseline. Usa contexto
+isolado de navegador, sem tocar os dados da instalacao do produtor.
+
+QA especifico do seletor de vias: `node scripts/qa-sprint-010-routes.cjs`, usando
+o baseline `78e937d` para verificar v8 -> v8.1, historico legado e uso offline.
+
+Ainda nao existem GMD, graficos de peso, movimentacao historica de lotes entre
+pastos, compra/venda/morte, transferencia entre propriedades, estoque de medicamentos,
+reproducao, financeiro, nuvem ou sincronizacao. Sprint 011 nao iniciada.

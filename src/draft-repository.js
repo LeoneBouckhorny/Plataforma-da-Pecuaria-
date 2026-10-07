@@ -15,7 +15,7 @@ const DraftRepository = ((LocalDataCoreRef, LocalDatabaseRef) => {
       this.database = options.database || LocalDatabase.createLocalDatabase(options);
     }
 
-    async loadDraft() {
+    async loadDraft(options = {}) {
       try {
         const record = await this.database.get(LocalDatabase.DRAFT_STORE, LocalDataCore.DRAFT_KEY);
         if (!record) {
@@ -27,7 +27,12 @@ const DraftRepository = ((LocalDataCoreRef, LocalDatabaseRef) => {
           return { status: "incompatible", draft: null, error: validation.reason };
         }
 
-        return { status: "loaded", draft: validation.draft, error: null };
+        const draft = validation.draft;
+        if (draft.data.accountId == null && options.accountId) {
+          draft.data.accountId = String(options.accountId);
+        }
+
+        return { status: "loaded", draft, error: null };
       } catch (error) {
         return { status: "failed", draft: null, error };
       }

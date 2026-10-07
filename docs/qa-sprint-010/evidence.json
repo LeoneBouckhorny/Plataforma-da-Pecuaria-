@@ -1,0 +1,100 @@
+{
+  "startedAt": "2026-09-23T19:02:44.716Z",
+  "checks": [
+    {
+      "name": "Upgrade v7 -> v8 preserva todas as stores e DB5",
+      "passed": true,
+      "detail": {
+        "version": 5
+      }
+    },
+    {
+      "name": "Coletivo 1,2,3,5 exclui4, valida produto e compartilha operationId",
+      "passed": true,
+      "detail": {
+        "events": 4,
+        "operationId": "6752f8cd-35f5-44bb-9a3c-9e79a3b65346"
+      }
+    },
+    {
+      "name": "Individual4, timeline, filtros, DOM seguro e isolamento",
+      "passed": true,
+      "detail": {
+        "propertyHealthEvents": 5
+      }
+    },
+    {
+      "name": "Snapshots imutaveis e rollback real no evento18/30",
+      "passed": true,
+      "detail": {
+        "status": "failed",
+        "identical": true
+      }
+    },
+    {
+      "name": "Offline sem servidor: coletivo, individual, reabrir, consultar e arquivado",
+      "passed": true,
+      "detail": {
+        "healthEvents": 10,
+        "archivedHistory": 2
+      }
+    }
+  ],
+  "viewports": [
+    {
+      "name": "360-form",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "360-form-actions",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "768-form",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "768-form-actions",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "1280-form",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "1280-form-actions",
+      "width": 1280,
+      "scrollWidth": 1280
+    },
+    {
+      "name": "768-timeline",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "360-sanidade",
+      "width": 360,
+      "scrollWidth": 360
+    },
+    {
+      "name": "768-sanidade",
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "name": "1280-sanidade",
+      "width": 1280,
+      "scrollWidth": 1280
+    }
+  ],
+  "errors": [],
+  "limitations": [
+    "Android fisico pendente; reabertura de pagina no mesmo contexto Chromium, sem reinicio do aparelho."
+  ],
+  "browser": "153.0.4234.48"
+}

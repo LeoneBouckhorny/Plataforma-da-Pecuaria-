@@ -1,0 +1,103 @@
+{
+  "scope": "Isolated visual checkpoint, not full Sprint 005 QA",
+  "viewports": [
+    {
+      "width": 1280,
+      "scrollWidth": 1280,
+      "imagesLoaded": true,
+      "font": "Montserrat, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 768,
+      "scrollWidth": 768,
+      "imagesLoaded": true,
+      "font": "Montserrat, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 360,
+      "scrollWidth": 360,
+      "imagesLoaded": true,
+      "font": "Montserrat, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+    }
+  ],
+  "contrasts": [
+    {
+      "label": "primary",
+      "ratio": 12.2,
+      "pass": true
+    },
+    {
+      "label": "primary hover",
+      "ratio": 9.01,
+      "pass": true
+    },
+    {
+      "label": "body",
+      "ratio": 13.63,
+      "pass": true
+    },
+    {
+      "label": "muted",
+      "ratio": 5.73,
+      "pass": true
+    },
+    {
+      "label": "green wordmark",
+      "ratio": 7.13,
+      "pass": true
+    },
+    {
+      "label": "inverse accent",
+      "ratio": 5.35,
+      "pass": true
+    },
+    {
+      "label": "active badge",
+      "ratio": 6.29,
+      "pass": true
+    },
+    {
+      "label": "focus",
+      "ratio": 6.99,
+      "pass": true
+    }
+  ],
+  "assets": [
+    {
+      "name": "icon-180.png",
+      "width": 180,
+      "height": 180
+    },
+    {
+      "name": "icon-192.png",
+      "width": 192,
+      "height": 192
+    },
+    {
+      "name": "icon-512.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "icon-maskable-512.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "favicon-32.png",
+      "width": 32,
+      "height": 32
+    }
+  ],
+  "errors": [],
+  "interactions": {
+    "focusVisible": true,
+    "primaryFeedback": true,
+    "navigationSelection": true
+  },
+  "maskable": {
+    "symbolPixels": 47406,
+    "pixelsOutsideSafeCircle": 0,
+    "opaque": true
+  }
+}
