@@ -91,12 +91,15 @@ const AnimalDetailController = (() => {
       if (animal.status === "active") {
         const health = button("Registrar manejo sanitário", () => this.options.onHealth({ ...this.context }));
         health.id = "animal-add-health"; actions.append(health);
+        const reproduction = button("Registrar evento reprodutivo", () => this.options.onReproduction({ ...this.context }));
+        reproduction.id = "animal-add-reproduction"; actions.append(reproduction);
       }
       const timeline = el("ol", undefined, "animal-timeline"); timeline.id = "animal-timeline";
       for (const entry of data.timeline) {
         const row = el("li"); row.dataset.eventType = entry.type; row.dataset.eventId = entry.id;
         const date = ["weighing", "birth"].includes(entry.type) ? formatDate(entry.type === "weighing" ? entry.session.weighingDate || entry.session.createdAt : animal.birthDate) : formatDate(entry.occurredAt);
-        row.append(el("time", date), el("h4", entry.type === "health" ? window.AnimalEventCore.HEALTH_TYPES[entry.healthType] : titles[entry.type] || entry.type));
+        row.append(el("time", date), el("h4", entry.type === "reproduction" ? window.AnimalEventCore.REPRODUCTION_TYPES[entry.reproductionType] : entry.type === "health" ? window.AnimalEventCore.HEALTH_TYPES[entry.healthType] : titles[entry.type] || entry.type));
+        if (entry.type === "reproduction") window.ReproductionController.appendDetails(row, entry);
         if (entry.type === "health") window.HealthController.appendDetails(row, entry);
         if (entry.type === "lot_changed") {
           row.append(el("p", `${entry.fromLotNameSnapshot || "Sem lote"} → ${entry.toLotNameSnapshot || "Sem lote"}`));
@@ -117,7 +120,13 @@ const AnimalDetailController = (() => {
         }
         timeline.append(row);
       }
-      this.content.append(metrics, details, actions, el("h3", "Linha do tempo"), timeline);
+      const reproduction = el("dl", undefined, "animal-detail-data"); reproduction.id = "animal-reproduction-summary";
+      const summary = data.reproductionSummary;
+      for (const [label, event] of [["Último diagnóstico", summary.lastDiagnosis], ["Última cobertura/inseminação", summary.lastService], ["Último parto", summary.lastCalving]]) {
+        const value = event ? `${event.result ? `${window.AnimalEventCore.PREGNANCY_RESULTS[event.result]} · ` : ""}${formatDate(event.occurredAt)}` : "Sem registro";
+        const row = el("div"); row.append(el("dt", label), el("dd", value)); reproduction.append(row);
+      }
+      this.content.append(metrics, details, actions, el("h3", "Resumo reprodutivo"), reproduction, el("h3", "Linha do tempo"), timeline);
     }
     prepareForm(title) {
       if (this.busy) return false;

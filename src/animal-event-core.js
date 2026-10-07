@@ -1,7 +1,9 @@
 const AnimalEventCore = ((propertyRef, herdRef) => {
   const P = propertyRef || require("./property-core.js");
   const H = herdRef || require("./herd-core.js");
-  const TYPES = ["registered", "lot_changed", "status_changed", "note", "health"];
+  const TYPES = ["registered", "lot_changed", "status_changed", "note", "health", "reproduction"];
+  const REPRODUCTION_TYPES = { estrus: "Cio", natural_service: "Cobertura natural", artificial_insemination: "Inseminação artificial", pregnancy_diagnosis: "Diagnóstico de gestação", calving: "Parto" };
+  const PREGNANCY_RESULTS = { pregnant: "Prenhe", not_pregnant: "Não prenhe", inconclusive: "Inconclusivo" };
   const HEALTH_TYPES = { vaccination: "Vacinação", deworming: "Vermifugação", medication: "Medicamento", other: "Outro manejo sanitário" };
   const HEALTH_ROUTES = { subcutaneous: "Subcutânea (SC)", intramuscular: "Intramuscular (IM)", intravenous: "Intravenosa (IV)",
     intradermal: "Intradérmica (ID)", oral: "Oral", intranasal: "Intranasal", topical: "Tópica", pour_on: "Pour-on",
@@ -27,6 +29,13 @@ const AnimalEventCore = ((propertyRef, herdRef) => {
       const raw = String(data.doseValue ?? "").trim();
       result.doseValue = !raw ? null : /^\d+(?:[.,]\d+)?$/.test(raw) ? Number(raw.replace(",", ".")) : NaN;
     }
+    if (result.type === "reproduction") {
+      for (const key of ["reproductionType", "result", "sireAnimalId", "sireNameSnapshot", "sireTagSnapshot", "externalSire", "semenBatch", "technician", "lotId", "lotNameSnapshot", "paddockId", "paddockNameSnapshot"]) result[key] = nullable(data[key]);
+      for (const key of ["calfCount", "maleCalves", "femaleCalves"]) {
+        const raw = String(data[key] ?? "").trim();
+        result[key] = !raw ? null : /^\d+$/.test(raw) ? Number(raw) : NaN;
+      }
+    }
     return result;
   }
   function validateEvent(data) {
@@ -44,6 +53,16 @@ const AnimalEventCore = ((propertyRef, herdRef) => {
       if (event.doseValue !== null && !event.doseUnit) errors.doseUnit = "Informe a unidade da dose.";
       for (const key of ["nextDueDate", "withdrawalUntil"]) if (event[key] && !H.isValidDate(event[key])) errors[key] = "Informe uma data válida.";
     }
+    if (event.type === "reproduction") {
+      if (!Object.hasOwn(REPRODUCTION_TYPES, event.reproductionType)) errors.reproductionType = "Selecione o tipo de evento reprodutivo.";
+      if (event.reproductionType === "pregnancy_diagnosis" && !Object.hasOwn(PREGNANCY_RESULTS, event.result)) errors.result = "Selecione Prenhe, Não prenhe ou Inconclusivo.";
+      if (event.reproductionType === "natural_service" && event.sireAnimalId && event.externalSire) errors.externalSire = "Escolha o reprodutor cadastrado ou informe um externo, não ambos.";
+      if (event.reproductionType === "calving") {
+        if (!Number.isSafeInteger(event.calfCount) || event.calfCount < 1) errors.calfCount = "Informe um total inteiro de pelo menos 1 bezerro.";
+        for (const key of ["maleCalves", "femaleCalves"]) if (event[key] !== null && (!Number.isSafeInteger(event[key]) || event[key] < 0)) errors[key] = "Informe um inteiro maior ou igual a zero.";
+        if (!errors.calfCount && !errors.maleCalves && !errors.femaleCalves && (event.maleCalves ?? 0) + (event.femaleCalves ?? 0) > event.calfCount) errors.calfCount = "A soma de machos e fêmeas não pode exceder o total.";
+      }
+    }
     if (event.type === "lot_changed" && event.fromLotId === event.toLotId) errors.toLotId = "A mudança exige um lote diferente.";
     if (event.type === "status_changed" && (!['active', 'archived'].includes(event.fromStatus)
       || !['active', 'archived'].includes(event.toStatus) || event.fromStatus === event.toStatus)) errors.toStatus = "Mudança de status inválida.";
@@ -58,7 +77,7 @@ const AnimalEventCore = ((propertyRef, herdRef) => {
       data = { ...data, route, routeOther: route === "other" ? nullable(data.routeOther) : null };
     }
     return validateEvent({ ...data, id: P.createStableId("event", options),
-      occurredAt: data.occurredAt ?? (data.type === "health" ? "" : timestamp), createdAt: timestamp, updatedAt: timestamp });
+      occurredAt: data.occurredAt ?? (["health", "reproduction"].includes(data.type) ? "" : timestamp), createdAt: timestamp, updatedAt: timestamp });
   }
   function updateNoteEvent(existing, data, options = {}) {
     if (existing.type !== "note" || (data.type !== undefined && data.type !== "note")) {
@@ -84,7 +103,23 @@ const AnimalEventCore = ((propertyRef, herdRef) => {
         && (!filters.from || day >= filters.from) && (!filters.to || day <= filters.to);
     }));
   }
-  return { TYPES, HEALTH_TYPES, HEALTH_ROUTES, formatHealthRoute, validTimestamp, normalizeEvent, validateEvent, createEvent, updateNoteEvent, locationSnapshot, sortTimeline, filterHealthEvents };
+  function filterReproductionEvents(events, filters = {}) {
+    return sortTimeline(events.filter((event) => {
+      const date = new Date(event.occurredAt);
+      const day = Number.isFinite(date.getTime()) ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}` : "";
+      return event.type === "reproduction" && (!filters.reproductionType || event.reproductionType === filters.reproductionType)
+        && (!filters.result || (event.reproductionType === "pregnancy_diagnosis" && event.result === filters.result))
+        && (!filters.lotId || (filters.lotId === "none" ? !event.lotId : event.lotId === filters.lotId))
+        && (!filters.from || day >= filters.from) && (!filters.to || day <= filters.to);
+    }));
+  }
+  function reproductionSummary(events) {
+    const ordered = filterReproductionEvents(events);
+    return { lastDiagnosis: ordered.find((event) => event.reproductionType === "pregnancy_diagnosis") || null,
+      lastService: ordered.find((event) => ["natural_service", "artificial_insemination"].includes(event.reproductionType)) || null,
+      lastCalving: ordered.find((event) => event.reproductionType === "calving") || null };
+  }
+  return { TYPES, REPRODUCTION_TYPES, PREGNANCY_RESULTS, filterReproductionEvents, reproductionSummary, HEALTH_TYPES, HEALTH_ROUTES, formatHealthRoute, validTimestamp, normalizeEvent, validateEvent, createEvent, updateNoteEvent, locationSnapshot, sortTimeline, filterHealthEvents };
 })(typeof window !== "undefined" ? window.PropertyCore : undefined, typeof window !== "undefined" ? window.HerdCore : undefined);
 if (typeof module !== "undefined") module.exports = AnimalEventCore;
 if (typeof window !== "undefined") window.AnimalEventCore = AnimalEventCore;

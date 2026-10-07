@@ -103,7 +103,25 @@ sem implementacao nesta Sprint:
 - Sincronizacao, backup e recuperacao.
 
 O sistema registra a informacao do produtor, sem prescrever ou recomendar doses.
-Sprint 011 nao iniciada.
+Reproducao V1 tratada na Sprint 011 abaixo.
+
+## Atualizacao Pos-Sprint 011
+
+Entregues para auditoria: cinco eventos reprodutivos individuais, snapshots de
+reprodutor e contexto, timeline, resumo derivado e consulta por propriedade.
+DB5 preservado. Permanecem futuros, nao implementados:
+
+- Aborto/perda gestacional estruturada.
+- Nascimento formal, criacao automatica de bezerro e relacao mae/filho.
+- Genealogia, transferencia de embriao e FIV.
+- Protocolo hormonal.
+- Calendario reprodutivo e previsao de parto.
+- Manejo reprodutivo coletivo e indicadores reprodutivos.
+- Correcao/cancelamento auditavel de evento reprodutivo.
+- Estoque de semen, recomendacoes, alertas e push.
+- Medicao de escala antes de novos indices/paginacao.
+
+Nenhuma dessas sugestoes foi implementada. Sprint 012 nao iniciada.
 
 ## Epica Futura: Gestao de Arrendamentos e Parcerias (Requisitos)
 

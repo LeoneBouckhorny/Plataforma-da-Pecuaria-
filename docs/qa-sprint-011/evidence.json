@@ -1,0 +1,365 @@
+{
+  "startedAt": "2026-10-07T20:04:41.632Z",
+  "checks": [
+    {
+      "name": "Upgrade real v8.1 -> v9 preserva todas as stores e DB5",
+      "passed": true,
+      "detail": {
+        "stores": [
+          "accounts",
+          "animal-events",
+          "animals",
+          "app-settings",
+          "drafts",
+          "lots",
+          "paddocks",
+          "properties",
+          "weighing-items",
+          "weighing-sessions"
+        ]
+      }
+    },
+    {
+      "name": "Ficha: cio, inseminacao, diagnostico estruturado, parto e timeline imediata",
+      "passed": true,
+      "detail": {
+        "order": [
+          "calving",
+          "pregnancy_diagnosis",
+          "artificial_insemination",
+          "estrus"
+        ],
+        "validation": [
+          "diagnostico vazio",
+          "contagens incoerentes"
+        ],
+        "safeDOM": true
+      }
+    },
+    {
+      "name": "Reprodutor explicito, snapshots apos renomear, arquivados fora das opcoes, filtros e isolamento",
+      "passed": true,
+      "detail": {
+        "sire": "6c9f8a0c-5c77-42a1-94e2-2582033a8810",
+        "snapshot": "Touro original"
+      }
+    },
+    {
+      "name": "Macho bloqueado na UI e repository; unknown permitido com aviso sem alterar sexo",
+      "passed": true
+    },
+    {
+      "name": "UI 360x800 / 768x1024 / 1280x900 sem overflow global ou em dialogos",
+      "passed": true
+    },
+    {
+      "name": "Falha de escrita real IndexedDB sem alteracao parcial",
+      "passed": true,
+      "detail": {
+        "status": "failed",
+        "unchanged": true
+      }
+    },
+    {
+      "name": "Offline sem servidor: reabrir, registrar cinco tipos, reabrir e consultar; arquivamento preserva historico",
+      "passed": true,
+      "detail": {
+        "events": 11,
+        "matrixTimeline": 9,
+        "animalsUnchangedByReproduction": true,
+        "legacyPreserved": true
+      }
+    }
+  ],
+  "viewports": [
+    {
+      "name": "360-property",
+      "width": 360,
+      "scrollWidth": 360,
+      "dialogs": []
+    },
+    {
+      "name": "360-pregnancy_diagnosis",
+      "width": 360,
+      "scrollWidth": 360,
+      "dialogs": [
+        {
+          "width": 324,
+          "scrollWidth": 324
+        }
+      ]
+    },
+    {
+      "name": "360-pregnancy_diagnosis-actions",
+      "width": 360,
+      "scrollWidth": 360,
+      "dialogs": [
+        {
+          "width": 324,
+          "scrollWidth": 324
+        }
+      ]
+    },
+    {
+      "name": "360-calving",
+      "width": 360,
+      "scrollWidth": 360,
+      "dialogs": [
+        {
+          "width": 324,
+          "scrollWidth": 324
+        }
+      ]
+    },
+    {
+      "name": "360-calving-actions",
+      "width": 360,
+      "scrollWidth": 360,
+      "dialogs": [
+        {
+          "width": 324,
+          "scrollWidth": 324
+        }
+      ]
+    },
+    {
+      "name": "360-natural_service",
+      "width": 360,
+      "scrollWidth": 360,
+      "dialogs": [
+        {
+          "width": 324,
+          "scrollWidth": 324
+        }
+      ]
+    },
+    {
+      "name": "360-natural_service-actions",
+      "width": 360,
+      "scrollWidth": 360,
+      "dialogs": [
+        {
+          "width": 324,
+          "scrollWidth": 324
+        }
+      ]
+    },
+    {
+      "name": "360-detail",
+      "width": 360,
+      "scrollWidth": 360,
+      "dialogs": [
+        {
+          "width": 324,
+          "scrollWidth": 324
+        }
+      ]
+    },
+    {
+      "name": "360-timeline",
+      "width": 360,
+      "scrollWidth": 360,
+      "dialogs": [
+        {
+          "width": 324,
+          "scrollWidth": 324
+        }
+      ]
+    },
+    {
+      "name": "768-property",
+      "width": 768,
+      "scrollWidth": 768,
+      "dialogs": []
+    },
+    {
+      "name": "768-pregnancy_diagnosis",
+      "width": 768,
+      "scrollWidth": 768,
+      "dialogs": [
+        {
+          "width": 558,
+          "scrollWidth": 558
+        }
+      ]
+    },
+    {
+      "name": "768-pregnancy_diagnosis-actions",
+      "width": 768,
+      "scrollWidth": 768,
+      "dialogs": [
+        {
+          "width": 558,
+          "scrollWidth": 558
+        }
+      ]
+    },
+    {
+      "name": "768-calving",
+      "width": 768,
+      "scrollWidth": 768,
+      "dialogs": [
+        {
+          "width": 558,
+          "scrollWidth": 558
+        }
+      ]
+    },
+    {
+      "name": "768-calving-actions",
+      "width": 768,
+      "scrollWidth": 768,
+      "dialogs": [
+        {
+          "width": 558,
+          "scrollWidth": 558
+        }
+      ]
+    },
+    {
+      "name": "768-natural_service",
+      "width": 768,
+      "scrollWidth": 768,
+      "dialogs": [
+        {
+          "width": 558,
+          "scrollWidth": 558
+        }
+      ]
+    },
+    {
+      "name": "768-natural_service-actions",
+      "width": 768,
+      "scrollWidth": 768,
+      "dialogs": [
+        {
+          "width": 558,
+          "scrollWidth": 558
+        }
+      ]
+    },
+    {
+      "name": "768-detail",
+      "width": 768,
+      "scrollWidth": 768,
+      "dialogs": [
+        {
+          "width": 732,
+          "scrollWidth": 732
+        }
+      ]
+    },
+    {
+      "name": "768-timeline",
+      "width": 768,
+      "scrollWidth": 768,
+      "dialogs": [
+        {
+          "width": 732,
+          "scrollWidth": 732
+        }
+      ]
+    },
+    {
+      "name": "1280-property",
+      "width": 1280,
+      "scrollWidth": 1280,
+      "dialogs": []
+    },
+    {
+      "name": "1280-pregnancy_diagnosis",
+      "width": 1280,
+      "scrollWidth": 1280,
+      "dialogs": [
+        {
+          "width": 558,
+          "scrollWidth": 558
+        }
+      ]
+    },
+    {
+      "name": "1280-pregnancy_diagnosis-actions",
+      "width": 1280,
+      "scrollWidth": 1280,
+      "dialogs": [
+        {
+          "width": 558,
+          "scrollWidth": 558
+        }
+      ]
+    },
+    {
+      "name": "1280-calving",
+      "width": 1280,
+      "scrollWidth": 1280,
+      "dialogs": [
+        {
+          "width": 558,
+          "scrollWidth": 558
+        }
+      ]
+    },
+    {
+      "name": "1280-calving-actions",
+      "width": 1280,
+      "scrollWidth": 1280,
+      "dialogs": [
+        {
+          "width": 558,
+          "scrollWidth": 558
+        }
+      ]
+    },
+    {
+      "name": "1280-natural_service",
+      "width": 1280,
+      "scrollWidth": 1280,
+      "dialogs": [
+        {
+          "width": 558,
+          "scrollWidth": 558
+        }
+      ]
+    },
+    {
+      "name": "1280-natural_service-actions",
+      "width": 1280,
+      "scrollWidth": 1280,
+      "dialogs": [
+        {
+          "width": 558,
+          "scrollWidth": 558
+        }
+      ]
+    },
+    {
+      "name": "1280-detail",
+      "width": 1280,
+      "scrollWidth": 1280,
+      "dialogs": [
+        {
+          "width": 758,
+          "scrollWidth": 758
+        }
+      ]
+    },
+    {
+      "name": "1280-timeline",
+      "width": 1280,
+      "scrollWidth": 1280,
+      "dialogs": [
+        {
+          "width": 758,
+          "scrollWidth": 758
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "limitations": [
+    "Android fisico pendente; reabertura de pagina no mesmo contexto Chromium, sem reinicio do aparelho."
+  ],
+  "browser": "154.0.4258.62",
+  "completedAt": "2026-10-07T20:05:25.964Z",
+  "passed": true
+}

@@ -1,0 +1,29 @@
+ M README.md
+ M app.js
+ M docs/BACKLOG_PRODUTO.md
+ M docs/MODELO_DE_DADOS_V5.md
+ M index.html
+ M src/animal-detail-controller.js
+ M src/animal-event-core.js
+ M src/animal-history-core.js
+ M styles/layout.css
+ M sw.js
+ M tests/animal-history-pwa.test.js
+ M tests/design-system.test.js
+ M tests/health-pwa.test.js
+ M tests/herd-pwa.test.js
+ M tests/pwa-config.test.js
+?? docs/ADR_011_REPRODUCAO_V1.md
+?? docs/QA_SPRINT_011.md
+?? docs/RELATORIO_SPRINT_011.md
+?? docs/SPRINT_011_ARQUIVOS.txt
+?? docs/SPRINT_011_ENTREGA.diff
+?? docs/qa-sprint-011/
+?? scripts/package-sprint-011.py
+?? scripts/qa-sprint-011.cjs
+?? sprint_011_entrega.zip
+?? src/reproduction-controller.js
+?? src/reproduction-repository.js
+?? tests/reproduction-core.test.js
+?? tests/reproduction-pwa.test.js
+?? tests/reproduction-repository.test.js

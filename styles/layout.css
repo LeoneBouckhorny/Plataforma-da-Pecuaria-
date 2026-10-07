@@ -115,6 +115,8 @@
 .property-context-header h2 { margin: var(--space-4) 0 var(--space-2); overflow-wrap: anywhere; }
 .property-context-nav { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
 .property-context-nav [aria-current="page"] { background: var(--color-primary); color: var(--color-text-inverse); }
+.property-context-nav [aria-current="page"]:hover:not(:disabled) { background: var(--color-primary-hover); }
+.property-context-nav [aria-current="page"]:active:not(:disabled) { background: var(--color-primary-active); }
 .tag-code-preview { grid-column: 1 / -1; font-weight: var(--font-semibold); overflow-wrap: anywhere; }
 @media (max-width: 480px) {
   .property-context-nav { display: grid; grid-template-columns: 1fr; }
@@ -134,6 +136,6 @@
 .health-animal-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 240px; overflow-y: auto; gap: var(--space-2); margin-block: var(--space-3); }
 .health-animal-options label { display: flex; align-items: center; gap: var(--space-2); min-height: 44px; overflow-wrap: anywhere; }
 .health-animal-options input { width: 22px; height: 22px; min-height: 22px; flex-shrink: 0; }
-#health-form .form-grid { margin-block: var(--space-4); }
-#health-filters { margin-block: var(--space-4); }
+#health-form .form-grid, #reproduction-form .form-grid { margin-block: var(--space-4); }
+#health-filters, #reproduction-filters { margin-block: var(--space-4); }
 @media (max-width: 480px) { .health-animal-options { grid-template-columns: minmax(0, 1fr); } }

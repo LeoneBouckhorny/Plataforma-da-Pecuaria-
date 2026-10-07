@@ -45,6 +45,7 @@ if (typeof document !== "undefined") {
     paddockRepository: null,
     herdController: null,
     healthController: null,
+    reproductionController: null,
     activeTab: "calculator",
     managementPropertyId: null,
     propertySection: "overview",
@@ -1180,10 +1181,12 @@ if (typeof document !== "undefined") {
     document.querySelector("#property-overview").classList.toggle("hidden", section !== "overview");
     document.querySelector("#herd").classList.toggle("hidden", section !== "herd");
     document.querySelector("#health").classList.toggle("hidden", section !== "health");
+    document.querySelector("#reproduction").classList.toggle("hidden", section !== "reproduction");
     document.querySelector("#history").classList.toggle("active", section === "weighings");
     if (section === "overview") await refreshPropertyOverview();
     if (section === "herd") await state.herdController.setProperty(state.managementPropertyId);
     if (section === "health") await state.healthController.setProperty(state.managementPropertyId);
+    if (section === "reproduction") await state.reproductionController.setProperty(state.managementPropertyId);
     if (section === "weighings") {
       state.historyLotFilter = "all";
       ++state.historySelectionGeneration;
@@ -1846,7 +1849,16 @@ if (typeof document !== "undefined") {
         if (detail.dialog.open && detail.context.accountId === context.accountId && detail.context.propertyId === context.propertyId) await detail.refresh();
       },
     });
+    state.reproductionController = new window.ReproductionController.Controller({ database,
+      getAccountId: getActiveAccountId,
+      onAnimal: (accountId, propertyId, animalId) => state.herdController.detail.open(accountId, propertyId, animalId),
+      onSaved: async (context) => {
+        const detail = state.herdController.detail;
+        if (detail.dialog.open && detail.context.accountId === context.accountId && detail.context.propertyId === context.propertyId && detail.context.animalId === context.animalId) await detail.refresh();
+      },
+    });
     state.herdController = new window.HerdController.Controller({ database,
+      onReproduction: (context) => state.reproductionController.open(context),
       onHealth: (context) => state.healthController.open(context),
       getAccountId: getActiveAccountId,
       getProperties: () => state.properties,
