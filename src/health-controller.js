@@ -16,7 +16,7 @@ const HealthController = (() => {
   }
   function appendDetails(target, event) {
     for (const [label, value] of [["Produto", event.productName], ["Dose", event.doseValue == null ? null : `${new Intl.NumberFormat("pt-BR").format(event.doseValue)} ${event.doseUnit || ""}`],
-      ["Via de aplicação", event.route], ["Lote do produto", event.productBatch], ["Responsável", event.responsible],
+      ["Via de aplicação", Core.formatHealthRoute(event)], ["Lote do produto", event.productBatch], ["Responsável", event.responsible],
       ["Lote", event.lotNameSnapshot || "Sem lote"], ["Pasto", event.paddockNameSnapshot || "Não definido"],
       ["Próxima aplicação", event.nextDueDate ? date(event.nextDueDate) : null], ["Carência até", event.withdrawalUntil ? date(event.withdrawalUntil) : null], ["Observações", event.notes]]) {
       if (value) target.append(el("p", `${label}: ${value}`));
@@ -111,12 +111,13 @@ const HealthController = (() => {
       this.errors.animalIds = selectionError; picker.append(selectionError); this.form.append(picker); this.renderSelection();
       const grid = el("div", undefined, "form-grid");
       for (const [key, label, type] of [["healthType", "Tipo *", "select"], ["occurredAt", "Data/hora *", "datetime-local"],
-        ["productName", "Produto", "text"], ["doseValue", "Dose", "text"], ["doseUnit", "Unidade", "text"], ["route", "Via de aplicação", "text"],
+        ["productName", "Produto", "text"], ["doseValue", "Dose", "text"], ["doseUnit", "Unidade", "text"], ["route", "Via de aplicação", "select"], ["routeOther", "Outra via", "text"],
         ["productBatch", "Lote do produto", "text"], ["responsible", "Responsável", "text"], ["nextDueDate", "Próxima aplicação", "date"],
         ["withdrawalUntil", "Carência até", "date"], ["notes", "Observações", "textarea"]]) {
         const wrapper = el("label", label); const input = el(["select", "textarea"].includes(type) ? type : "input");
         if (input.tagName === "INPUT") input.type = type;
         if (key === "healthType") { option(input, "", "Selecione"); for (const [key, name] of Object.entries(Core.HEALTH_TYPES)) option(input, key, name); }
+        if (key === "route") { option(input, "", "Não informada"); for (const [value, name] of Object.entries(Core.HEALTH_ROUTES)) option(input, value, name); }
         if (key === "occurredAt") { const now = new Date(); input.value = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16); }
         if (key === "doseValue") input.inputMode = "decimal";
         if (key === "doseUnit") input.setAttribute("list", "health-dose-units");
@@ -125,6 +126,13 @@ const HealthController = (() => {
         input.addEventListener("input", () => { error.textContent = ""; input.removeAttribute("aria-invalid"); });
         this.fields[key] = input; this.errors[key] = error; wrapper.append(input, error); grid.append(wrapper);
       }
+      const updateRoute = () => {
+        const other = this.fields.routeOther;
+        other.parentElement.classList.toggle("hidden", this.fields.route.value !== "other");
+        other.disabled = this.fields.route.value !== "other";
+        if (other.disabled) other.value = "";
+      };
+      this.fields.route.addEventListener("change", updateRoute); updateRoute();
       this.form.append(grid);
       this.formMessage = el("p", "", "field-message error"); this.formMessage.setAttribute("role", "alert"); this.form.append(this.formMessage);
       const actions = el("div", undefined, "dialog-actions");

@@ -33,10 +33,14 @@ modified = git("diff", "--name-only", "-z", "HEAD").decode().strip("\0").split("
 created = git("ls-files", "--others", "--exclude-standard", "-z").decode().strip("\0").split("\0")
 modified = sorted(p for p in modified if p and p not in excluded)
 created = sorted(p for p in created if p and p not in excluded)
-inventory = "SPRINT 010 - Inventario\n\nMODIFICADOS\n" + "\n".join(modified) + "\n\nCRIADOS\n" + "\n".join(created + [INVENTORY]) + "\n\nREMOVIDOS\nNenhum\n\nARTEFATOS DE AUDITORIA (nao incluir em commit)\n" + DIFF + "\n" + ZIP + "\n"
+if git("ls-files", "--", INVENTORY).strip():
+    modified = sorted(modified + [INVENTORY])
+else:
+    created = sorted(created + [INVENTORY])
+inventory = "SPRINT 010 - Inventario\n\nMODIFICADOS\n" + "\n".join(modified) + "\n\nCRIADOS\n" + "\n".join(created) + "\n\nREMOVIDOS\nNenhum\n\nARTEFATOS DE AUDITORIA (nao incluir em commit)\n" + DIFF + "\n" + ZIP + "\n"
 (ROOT / INVENTORY).write_text(inventory, encoding="utf-8")
 diff = git("diff", "--binary", "--no-textconv", "--no-ext-diff", "--no-color", "HEAD")
-for name in sorted(created + [INVENTORY]):
+for name in created:
     diff += git("diff", "--no-index", "--binary", "--no-textconv", "--no-ext-diff", "--no-color", "--", "/dev/null", name, allowed=(0, 1))
 (ROOT / DIFF).write_bytes(diff)
 git("apply", "--reverse", "--check", DIFF)
@@ -49,7 +53,6 @@ with zipfile.ZipFile(ROOT / ZIP) as archive:
     assert archive.testzip() is None
     assert all("\\" not in name and not name.startswith("/") for name in archive.namelist())
     print(f"ZIP: {len(archive.namelist())} entries; portable paths; CRC OK")
-print(f"Modified: {len(modified)}; created: {len(created) + 1}; diff bytes: {len(diff)}")
+print(f"Modified: {len(modified)}; created: {len(created)}; diff bytes: {len(diff)}")
 print(f"ZIP SHA256: {hashlib.sha256((ROOT / ZIP).read_bytes()).hexdigest()}")
-
 

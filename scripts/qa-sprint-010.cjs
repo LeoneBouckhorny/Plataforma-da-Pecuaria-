@@ -33,7 +33,7 @@ async function openLot(page, seed) {
 async function fillHealth(page, healthType, product = "Produto informado", notes = "") {
   await page.selectOption("#health-healthType", healthType); await page.fill("#health-occurredAt", "2026-09-23T12:00");
   await page.fill("#health-productName", product); await page.fill("#health-doseValue", "2,5"); await page.fill("#health-doseUnit", "mL");
-  await page.fill("#health-route", "Via informada"); await page.fill("#health-productBatch", "L-2026"); await page.fill("#health-responsible", "Responsável QA");
+  await page.selectOption("#health-route", "intramuscular"); await page.fill("#health-productBatch", "L-2026"); await page.fill("#health-responsible", "Responsável QA");
   await page.fill("#health-nextDueDate", "2026-10-23"); await page.fill("#health-withdrawalUntil", "2026-10-01"); await page.fill("#health-notes", notes);
 }
 async function saveHealth(page) {
@@ -67,12 +67,12 @@ async function main() {
       d.close(); return { accountId: account.id, propertyId: property.id, otherPropertyId: other.id, paddockId: paddock.id, lotId: result.lot.id, animals: result.animals };
     });
     const before = await dump(page); baseline = false; await page.evaluate(async () => (await navigator.serviceWorker.ready).update());
-    await until(() => page.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration()).waiting)), "waiting v8");
+    await until(() => page.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration()).waiting)), "waiting v8.1");
     const observer = await context.newPage(); await observer.goto(new URL("/qa-observer", url).href); await page.close();
     await until(() => observer.evaluate(async () => { const keys = await caches.keys(); const r = (await navigator.serviceWorker.getRegistrations())[0];
-      return r && !r.waiting && !r.installing && r.active?.state === "activated" && keys.includes("plataforma-pecuaria-shell-v8") && !keys.includes("plataforma-pecuaria-shell-v7"); }), "v8 active");
+      return r && !r.waiting && !r.installing && r.active?.state === "activated" && keys.includes("plataforma-pecuaria-shell-v8.1") && !keys.includes("plataforma-pecuaria-shell-v7"); }), "v8.1 active");
     page = await context.newPage(); await page.goto(url); await ready(page); await observer.close();
-    assert.deepEqual(await dump(page), before); record("Upgrade v7 -> v8 preserva todas as stores e DB5", { version: before.version });
+    assert.deepEqual(await dump(page), before); record("Upgrade v7 -> v8.1 preserva todas as stores e DB5", { version: before.version });
     await openLot(page, seed); await page.getByRole("button", { name: "Registrar manejo sanitário", exact: true }).click();
     await page.waitForSelector("#health-healthType"); assert.equal(await page.locator(".health-animal-options input").count(), 5);
     await page.locator(`.health-animal-options input[value="${seed.animals[3].id}"]`).uncheck();

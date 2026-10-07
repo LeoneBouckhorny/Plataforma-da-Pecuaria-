@@ -3,6 +3,13 @@ const AnimalEventCore = ((propertyRef, herdRef) => {
   const H = herdRef || require("./herd-core.js");
   const TYPES = ["registered", "lot_changed", "status_changed", "note", "health"];
   const HEALTH_TYPES = { vaccination: "Vacinação", deworming: "Vermifugação", medication: "Medicamento", other: "Outro manejo sanitário" };
+  const HEALTH_ROUTES = { subcutaneous: "Subcutânea (SC)", intramuscular: "Intramuscular (IM)", intravenous: "Intravenosa (IV)",
+    intradermal: "Intradérmica (ID)", oral: "Oral", intranasal: "Intranasal", topical: "Tópica", pour_on: "Pour-on",
+    intramammary: "Intramamária", intrauterine: "Intrauterina", ocular: "Ocular", other: "Outra" };
+  function formatHealthRoute(event) {
+    const label = Object.hasOwn(HEALTH_ROUTES, event.route) ? HEALTH_ROUTES[event.route] : event.route;
+    return event.route === "other" && event.routeOther ? `${label}: ${event.routeOther}` : label;
+  }
   const nullable = (value) => value == null || value === "" ? null : String(value).trim();
   function validTimestamp(value) {
     return typeof value === "string" && H.isValidDate(value.slice(0, 10))
@@ -16,6 +23,7 @@ const AnimalEventCore = ((propertyRef, herdRef) => {
     for (const key of ["fromLotId", "fromLotNameSnapshot", "fromPaddockId", "fromPaddockNameSnapshot", "toLotId", "toLotNameSnapshot", "toPaddockId", "toPaddockNameSnapshot", "fromStatus", "toStatus", "notes"]) result[key] = nullable(data[key]);
     if (result.type === "health") {
       for (const key of ["healthType", "operationId", "productName", "doseUnit", "route", "productBatch", "responsible", "nextDueDate", "withdrawalUntil", "lotId", "lotNameSnapshot", "paddockId", "paddockNameSnapshot"]) result[key] = nullable(data[key]);
+      if (Object.hasOwn(data, "routeOther")) result.routeOther = nullable(data.routeOther);
       const raw = String(data.doseValue ?? "").trim();
       result.doseValue = !raw ? null : /^\d+(?:[.,]\d+)?$/.test(raw) ? Number(raw.replace(",", ".")) : NaN;
     }
@@ -43,6 +51,12 @@ const AnimalEventCore = ((propertyRef, herdRef) => {
   }
   function createEvent(data, options = {}) {
     const timestamp = String(options.now || new Date().toISOString());
+    if (data.type === "health") {
+      // New writes use codes; historical normalization never converts free-text routes.
+      const route = String(data.route ?? "").trim().toLowerCase() || null;
+      if (route && !Object.hasOwn(HEALTH_ROUTES, route)) return { valid: false, errors: { route: "Selecione uma via da lista ou Outra." } };
+      data = { ...data, route, routeOther: route === "other" ? nullable(data.routeOther) : null };
+    }
     return validateEvent({ ...data, id: P.createStableId("event", options),
       occurredAt: data.occurredAt ?? (data.type === "health" ? "" : timestamp), createdAt: timestamp, updatedAt: timestamp });
   }
@@ -70,7 +84,7 @@ const AnimalEventCore = ((propertyRef, herdRef) => {
         && (!filters.from || day >= filters.from) && (!filters.to || day <= filters.to);
     }));
   }
-  return { TYPES, HEALTH_TYPES, validTimestamp, normalizeEvent, validateEvent, createEvent, updateNoteEvent, locationSnapshot, sortTimeline, filterHealthEvents };
+  return { TYPES, HEALTH_TYPES, HEALTH_ROUTES, formatHealthRoute, validTimestamp, normalizeEvent, validateEvent, createEvent, updateNoteEvent, locationSnapshot, sortTimeline, filterHealthEvents };
 })(typeof window !== "undefined" ? window.PropertyCore : undefined, typeof window !== "undefined" ? window.HerdCore : undefined);
 if (typeof module !== "undefined") module.exports = AnimalEventCore;
 if (typeof window !== "undefined") window.AnimalEventCore = AnimalEventCore;

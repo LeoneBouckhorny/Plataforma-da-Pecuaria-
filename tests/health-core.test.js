@@ -3,6 +3,36 @@ const assert = require("node:assert/strict");
 const C = require("../src/animal-event-core.js");
 const History = require("../src/animal-history-core.js");
 const base = { accountId: "a", propertyId: "p", animalId: "x", type: "health", occurredAt: "2026-09-23T12:00:00Z", productName: "Produto informado", notes: "Manejo informado" };
+test("vias padronizadas persistem codigos e exibem rotulos", () => {
+  const routes = { subcutaneous: "Subcutânea (SC)", intramuscular: "Intramuscular (IM)", intravenous: "Intravenosa (IV)",
+    intradermal: "Intradérmica (ID)", oral: "Oral", intranasal: "Intranasal", topical: "Tópica", pour_on: "Pour-on",
+    intramammary: "Intramamária", intrauterine: "Intrauterina", ocular: "Ocular", other: "Outra" };
+  assert.deepEqual(C.HEALTH_ROUTES, routes);
+  for (const [route, label] of Object.entries(routes)) {
+    const result = C.createEvent({ ...base, healthType: "vaccination", route });
+    assert.equal(result.valid, true); assert.equal(result.event.route, route);
+    assert.equal(C.formatHealthRoute(result.event), label);
+  }
+  assert.equal(C.createEvent({ ...base, healthType: "vaccination", route: " INTRAMUSCULAR " }).event.route, "intramuscular");
+});
+test("outra permite complemento e outras vias descartam complemento residual", () => {
+  const result = C.createEvent({ ...base, healthType: "other", route: "other", routeOther: " Via personalizada " });
+  assert.equal(result.event.routeOther, "Via personalizada"); assert.equal(C.formatHealthRoute(result.event), "Outra: Via personalizada");
+  assert.equal(C.createEvent({ ...base, healthType: "other", route: "oral", routeOther: "Texto antigo" }).event.routeOther, null);
+});
+test("novas vias livres sao recusadas; ausencia nao infere via pelo produto", () => {
+  for (const route of ["Intramuscular (IM)", "SC", "toString", "inventada"]) assert.equal(C.createEvent({ ...base, healthType: "vaccination", route }).valid, false);
+  const result = C.createEvent({ ...base, healthType: "vaccination", productName: "Produto oral" });
+  assert.equal(result.valid, true); assert.equal(result.event.route, null);
+});
+test("leitura e validacao de evento legado preservam texto livre sem conversao", () => {
+  const old = { ...C.createEvent({ ...base, healthType: "vaccination" }).event, route: "Via antiga SC informada" };
+  delete old.routeOther;
+  const before = structuredClone(old); const result = C.validateEvent(old);
+  assert.equal(result.valid, true); assert.equal(result.event.route, old.route);
+  assert.equal(C.formatHealthRoute(result.event), old.route); assert.deepEqual(old, before);
+  assert.equal(Object.hasOwn(result.event, "routeOther"), false);
+});
 for (const healthType of Object.keys(C.HEALTH_TYPES)) test(`health valido: ${healthType}`, () => {
   const result = C.createEvent({ ...base, healthType }); assert.equal(result.valid, true);
   assert.deepEqual(C.normalizeEvent(result.event), result.event);

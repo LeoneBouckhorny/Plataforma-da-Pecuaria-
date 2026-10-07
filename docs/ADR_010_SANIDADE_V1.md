@@ -57,6 +57,16 @@ Conteudo do produtor usa APIs seguras do DOM e componentes/tokens existentes.
 App shell v8 inclui health-repository e health-controller; estrategias existentes
 e ativacao natural preservadas, sem skipWaiting. Nenhuma dependencia/API externa.
 
+### Ajuste de via - 2026-10-07
+
+Via passa a seletor com 12 codigos estaveis em AnimalEventCore. Novas gravacoes
+validam o codigo no core/repository; a leitura e validacao historica continuam
+tolerando texto legado sem conversao ou escrita. A UI usa um formatador comum
+para Sanidade e timeline, com fallback para o texto antigo. routeOther e
+complemento opcional exclusivo de other. Nenhuma via e inferida pelo produto.
+DB_VERSION5 preservado; cache v8.1 publica o ajuste nos assets ja existentes,
+sem novas stores/modulos de producao nem skipWaiting.
+
 ## Limites
 
 Consultas usam o indice propertyId existente e filtragem em memoria. Nao foram

@@ -1,5 +1,21 @@
 # Relatorio Sprint 010 - Sanidade e Manejo V1
 
+## Ajuste final - Via de aplicacao (2026-10-07)
+
+- Branch preservada: feature/sprint-010-sanidade-v1; base atual78e937d.
+- Seletor com12 vias, codigos estaveis e complemento opcional routeOther em Outra.
+- Novas gravacoes validam codigos; historico livre permanece legivel, sem conversao,
+  migration ou regravacao. Nenhuma inferencia pelo produto. DB5; cachev8.1.
+- Modificados core de eventos, repository/controller de Sanidade, SW, testes,
+  runner e documentos pertinentes. Novo QA especifico e duas capturas; nenhum
+  arquivo removido. Inventario regenerado lista somente este ajuste contra HEAD.
+- Testes relacionados40/40; suite completa280/280; sintaxe41 JS sem erros.
+- QA360/1280, upgrade de cache, timeline, legado e reabertura offline passaram.
+  Android fisico pendente; sem pausa arquitetural.
+- Diff e ZIP atualizados. Nenhum add/commit/push/merge/rebase ou alteracao de branch.
+
+## Registro da entrega inicial
+
 Entrega para auditoria do CTO; Android fisico pendente. Data: 2026-09-23.
 
 1. Resumo/branch: Sanidade por propriedade, lote e ficha individual em `feature/sprint-010-sanidade-v1`, base f268996.

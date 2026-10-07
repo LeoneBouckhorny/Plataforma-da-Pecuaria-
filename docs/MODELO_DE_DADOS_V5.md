@@ -54,7 +54,9 @@ Campos adicionais somente quando type=health. Nao altera schema nem DB_VERSION.
 | productName | Obrigatorio em vaccination/deworming/medication; opcional em other |
 | doseValue | Numero positivo opcional; formulario aceita virgula/ponto, persiste numero |
 | doseUnit | Texto livre; obrigatorio se doseValue informado |
-| route, productBatch, responsible | Textos opcionais |
+| route | Codigo opcional para novos eventos; texto livre legado preservado na leitura |
+| routeOther | Complemento opcional quando route=other; null nas demais vias novas |
+| productBatch, responsible | Textos opcionais |
 | nextDueDate, withdrawalUntil | Datas YYYY-MM-DD opcionais, sem calculo/lembrete |
 | notes | Descricao obrigatoria em other; opcional nos demais |
 | lotId, lotNameSnapshot | Contexto atual capturado na transacao, ou null |
@@ -71,6 +73,19 @@ um lote selecionado, a transacao confirma que os individuos continuam nele.
 Qualquer erro aborta todos os eventos. Arquivados mantem eventos anteriores.
 Health nao admite edicao/exclusao nesta V1; updateNoteEvent continua apenas note.
 Timeline e listagem sanitária sao derivadas, sem persistencia duplicada.
+
+### Vias padronizadas (ajuste Sprint 010)
+
+Codigos novos: subcutaneous (SC), intramuscular (IM), intravenous (IV),
+intradermal (ID), oral, intranasal, topical, pour_on, intramammary,
+intrauterine, ocular e other. Rotulos traduzidos vivem em HEALTH_ROUTES;
+nao sao valores de persistencia. Via continua opcional, sem inferencia por produto.
+
+createEvent valida codigos somente em novas gravacoes; normalizeEvent e a leitura
+nao convertem textos livres antigos. Rotulos conhecidos sao apresentados pela UI,
+e textos legados desconhecidos aparecem como informados. routeOther aparece apenas
+com other; ao trocar de via na UI, o complemento e limpo, e o core descarta qualquer
+complemento residual em nova via diferente de other. Sem migration/regravacao.
 
 ## Estado e Historico Atomicos
 

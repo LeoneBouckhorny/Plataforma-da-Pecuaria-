@@ -1,5 +1,22 @@
 # QA Sprint 010 - Sanidade V1
 
+## Ajuste de vias - 2026-10-07
+
+Base do ajuste:78e937d. Testes relacionados primeiro:40/40.
+Entrega atual:280/280 (274 anteriores +6 novos); sintaxe:41 JS sem erros.
+Logs tests.txt/syntax.txt atualizados substituem os da entrega inicial abaixo.
+QA especifico: `node scripts/qa-sprint-010-routes.cjs`, Edge154.0.4258.62.
+Passou: upgradev8->v8.1 sem regravar eventos; 12 vias mais opcao nao informada;
+codigo intramuscular persistido e rotulo exibido na lista/timeline; Outra com
+complemento; limpeza ao trocar via; ausencia sem inferencia pelo produto;
+texto legado intacto; salvar e reabrir sem rede/servidor; texto HTML exibido
+literalmente. 360x800 e1280x900 sem overflow, capturas inspecionadas.
+Evidencias em `qa-sprint-010/routes/`. Android fisico continua pendente.
+Uma assertion inicial do runner selecionou o evento registered em vez de health;
+filtro corrigido e QA repetido com sucesso. Nenhuma falha pendente de produto.
+
+## Entrega inicial
+
 Data: 2026-09-23. Branch: feature/sprint-010-sanidade-v1. Base: f268996.
 Resultado local: aprovado nos cenarios executados; auditoria CTO e Android pendentes.
 

@@ -117,7 +117,9 @@ se houver falha, nenhum evento da operacao permanece. Arquivados mantem historic
 Filtros por tipo, lote do registro e periodo nao criam listas persistidas duplicadas.
 Dose, proxima aplicacao e carencia sao informacoes do produtor: nao ha prescricao,
 recomendacao automatica, calculo de carencia, agenda ou notificacao. Health V1 nao
-oferece edicao/exclusao; ver ADR_010_SANIDADE_V1.md.
+oferece edicao/exclusao; ver ADR_010_SANIDADE_V1.md. Via de aplicacao usa seletor
+com codigos internos e complemento opcional em Outra. Textos antigos continuam
+legiveis, sem migration nem inferencia pelo produto.
 
 Na Sprint 003, a aplicacao passou a registrar um Service Worker e um Web App Manifest. Em navegadores compativeis, ela pode ser instalada como aplicativo e pode abrir sem internet depois de ter sido carregada online pelo menos uma vez em contexto compativel com Service Worker.
 
@@ -183,7 +185,7 @@ A Sprint 005 aplica o simbolo aprovado (bovino, dados e campo), com paleta
 centralizada e componentes reutilizaveis. `styles.css` agrega as camadas
 em `styles/`; a marca fica em `assets/branding/` e os icones em `assets/`.
 Montserrat permanece como referencia com fallback local system-ui/Segoe UI,
-sem fonte externa. O app shell atual v8 preserva os assets visuais e inclui rebanho, historico individual, brincos, cadastro rapido e Sanidade.
+sem fonte externa. O app shell atual v8.1 preserva os assets visuais e inclui rebanho, historico individual, brincos, cadastro rapido e Sanidade.
 
 Detalhes: `docs/DESIGN_SYSTEM_V1.md`, `docs/ADR_005_IDENTIDADE_VISUAL.md`
 e `docs/QA_SPRINT_005.md`. Para servir com Node.js, tambem e possivel usar
@@ -230,9 +232,12 @@ Documentacao atual: `docs/MODELO_DE_DADOS_V5.md`,
 Runner atual: `node scripts/qa-sprint-010.cjs`, com Playwright disponivel no
 ambiente de QA e `QA_BROWSER_PATH` opcional. Nenhuma dependencia do aplicativo
 foi adicionada. O runner serve a base aprovada `f268996` para testar o upgrade
-real do cache v7 -> v8 mantendo o banco V5, e encerra o servidor no teste offline.
+real do cache v7 -> v8.1 mantendo o banco V5, e encerra o servidor no teste offline.
 Exige o historico Git com esse commit para carregar o baseline. Usa contexto
 isolado de navegador, sem tocar os dados da instalacao do produtor.
+
+QA especifico do seletor de vias: `node scripts/qa-sprint-010-routes.cjs`, usando
+o baseline `78e937d` para verificar v8 -> v8.1, historico legado e uso offline.
 
 Ainda nao existem GMD, graficos de peso, movimentacao historica de lotes entre
 pastos, compra/venda/morte, transferencia entre propriedades, estoque de medicamentos,

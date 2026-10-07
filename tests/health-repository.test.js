@@ -10,6 +10,21 @@ async function setup(count = 5) {
   for (let i = 1; i <= count; i++) animals.push((await f.animal.create("a", "p", { tagNumber: i, lotId: lot.id })).animal);
   return { ...f, lotRepo: f.lot, paddockRepo: f.paddock, paddock, lot, animals, health: createHealthRepository({ database: f.database }) };
 }
+test("registro coletivo persiste via/complemento e rejeita via livre sem gravacao parcial", async () => {
+  const f = await setup(); const ids = f.animals.map((a) => a.id);
+  const result = await f.health.register("a", "p", ids, { ...data, route: "other", routeOther: "Via personalizada" });
+  assert.equal(result.status, "saved"); assert.ok(result.events.every((e) => e.route === "other" && e.routeOther === "Via personalizada"));
+  const before = structuredClone(f.database.stores);
+  const rejected = await f.health.register("a", "p", ids, { ...data, route: "texto livre" });
+  assert.equal(rejected.status, "invalid"); assert.ok(rejected.errors.route); assert.deepEqual(f.database.stores, before);
+});
+test("consultar vias legadas nao regrava registro historico", async () => {
+  const f = await setup(); const e = { id: "old-health", accountId: "a", propertyId: "p", animalId: f.animals[0].id,
+    type: "health", healthType: "vaccination", occurredAt: data.occurredAt, route: "Via antiga informada", productName: "Produto antigo" };
+  f.database.stores["animal-events"].set(e.id, e); const before = structuredClone(f.database.stores);
+  const result = await f.health.list("a", "p"); assert.equal(result.events[0].route, e.route);
+  assert.deepEqual(f.database.stores, before);
+});
 test("individual captura contexto real, nao aceita snapshots ou identidade forjados", async () => {
   const f = await setup(); const animal = f.animals[0];
   const result = await f.health.register("a", "p", [animal.id], { ...data, type: "note", accountId: "b", animalId: "fake", lotNameSnapshot: "fake", operationId: "fake" });

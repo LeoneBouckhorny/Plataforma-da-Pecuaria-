@@ -33,7 +33,7 @@ const HealthRepository = ((dbRef, coreRef, propertyRef) => {
             const paddock = lot?.paddockId ? await request(store("paddocks").get(lot.paddockId)) : null;
             if (lot?.paddockId && !scoped(paddock, accountId, propertyId)) return invalid("animalIds", "O pasto do animal não pertence a esta propriedade.");
             const input = {};
-            for (const key of ["healthType", "occurredAt", "productName", "doseValue", "doseUnit", "route", "productBatch", "responsible", "nextDueDate", "withdrawalUntil", "notes"]) input[key] = data[key];
+            for (const key of ["healthType", "occurredAt", "productName", "doseValue", "doseUnit", "route", "routeOther", "productBatch", "responsible", "nextDueDate", "withdrawalUntil", "notes"]) input[key] = data[key];
             const result = Core.createEvent({ ...input, type: "health", accountId, propertyId, animalId, operationId,
               lotId: lot?.id, lotNameSnapshot: lot?.name, paddockId: paddock?.id, paddockNameSnapshot: paddock?.name }, this.options);
             if (!result.valid) return { status: "invalid", errors: result.errors };

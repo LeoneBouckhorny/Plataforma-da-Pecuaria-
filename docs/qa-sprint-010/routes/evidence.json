@@ -1,0 +1,21 @@
+{
+  "checks": [
+    "Upgrade v8 -> v8.1 e leitura nao alteram eventos antigos; enum, limpeza de complemento, codigo e rotulo na lista/timeline corretos",
+    "Offline sem servidor: Outra + complemento salva e persiste ao reabrir; DOM seguro; legado intacto e DB5"
+  ],
+  "viewports": [
+    {
+      "width": 360,
+      "height": 800,
+      "scrollWidth": 360
+    },
+    {
+      "width": 1280,
+      "height": 900,
+      "scrollWidth": 1280
+    }
+  ],
+  "errors": [],
+  "android": "pendente",
+  "browser": "154.0.4258.62"
+}
