@@ -33,6 +33,8 @@ Base inicial da Plataforma da Pecuaria, com foco em uma porta de entrada simples
 - Ficha individual com linha do tempo, observacoes datadas e mudancas de lote.
 - Sanidade por propriedade: vacinacao, vermifugacao, medicamento e outro manejo.
 - Manejo individual/coletivo com selecao explicita, snapshots e operacao atomica offline.
+- Reproducao individual: cio, cobertura natural, inseminacao, diagnostico e parto.
+- Resumo reprodutivo derivado na ficha e consulta filtrada por propriedade.
 - Pesagens explicitamente vinculadas a animais; ultimo peso e contagem derivados.
 - Local atual do lote definido por pasto opcional; animal vinculado a lote opcional.
 - Cadastro individual com brinco ou nome, sem associacao automatica a itens de pesagem.
@@ -138,6 +140,7 @@ O funcionamento offline cobre:
 - pesagem vinculada opcionalmente a lote e consulta dos snapshots historicos;
 - ficha individual, timeline, observacoes, mudanca de lote e status com eventos;
 - manejo sanitario individual/coletivo e consulta de registros/timeline;
+- cinco tipos reprodutivos individuais, resumo e consulta de eventos por propriedade;
 - pesagens vinculadas explicitamente e ultimo peso derivado;
 - geracao de CSV em memoria;
 - preparacao do romaneio para impressao.
@@ -185,7 +188,7 @@ A Sprint 005 aplica o simbolo aprovado (bovino, dados e campo), com paleta
 centralizada e componentes reutilizaveis. `styles.css` agrega as camadas
 em `styles/`; a marca fica em `assets/branding/` e os icones em `assets/`.
 Montserrat permanece como referencia com fallback local system-ui/Segoe UI,
-sem fonte externa. O app shell atual v8.1 preserva os assets visuais e inclui rebanho, historico individual, brincos, cadastro rapido e Sanidade.
+sem fonte externa. O app shell atual v9 preserva os assets visuais e inclui rebanho, historico individual, brincos, cadastro rapido, Sanidade e Reproducao.
 
 Detalhes: `docs/DESIGN_SYSTEM_V1.md`, `docs/ADR_005_IDENTIDADE_VISUAL.md`
 e `docs/QA_SPRINT_005.md`. Para servir com Node.js, tambem e possivel usar
@@ -228,11 +231,11 @@ alterar os registros da instalacao do produtor.
 Documentacao atual: `docs/MODELO_DE_DADOS_V5.md`,
 `docs/MODELO_IDENTIFICACAO_BRINCOS_V1.md`,
 `docs/MODELO_CADASTRO_RAPIDO_V1.md`,
-`docs/ADR_010_SANIDADE_V1.md`, `docs/QA_SPRINT_010.md`.
-Runner atual: `node scripts/qa-sprint-010.cjs`, com Playwright disponivel no
+`docs/ADR_011_REPRODUCAO_V1.md`, `docs/QA_SPRINT_011.md`.
+Runner atual: `node scripts/qa-sprint-011.cjs`, com Playwright disponivel no
 ambiente de QA e `QA_BROWSER_PATH` opcional. Nenhuma dependencia do aplicativo
-foi adicionada. O runner serve a base aprovada `f268996` para testar o upgrade
-real do cache v7 -> v8.1 mantendo o banco V5, e encerra o servidor no teste offline.
+foi adicionada. O runner serve a base aprovada `1bd9bfe` para testar o upgrade
+real do cache v8.1 -> v9 mantendo o banco V5, e encerra o servidor no teste offline.
 Exige o historico Git com esse commit para carregar o baseline. Usa contexto
 isolado de navegador, sem tocar os dados da instalacao do produtor.
 
@@ -241,4 +244,20 @@ o baseline `78e937d` para verificar v8 -> v8.1, historico legado e uso offline.
 
 Ainda nao existem GMD, graficos de peso, movimentacao historica de lotes entre
 pastos, compra/venda/morte, transferencia entre propriedades, estoque de medicamentos,
-reproducao, financeiro, nuvem ou sincronizacao. Sprint 011 nao iniciada.
+financeiro, nuvem ou sincronizacao. Sprint 012 nao iniciada.
+
+## Reproducao V1 - Sprint 011
+
+Propriedades -> fazenda escolhida -> Reproducao, ou ficha individual ->
+Registrar evento reprodutivo. Usa animal-events, sem migration (DB5).
+Cobertura admite macho cadastrado explicitamente selecionado ou identificacao
+externa; inseminacao admite doador, lote de semen e tecnico textuais opcionais.
+Diagnostico usa Prenhe/Nao prenhe/Inconclusivo. Parto exige total >=1 e contagens
+opcionais coerentes, sem criar bezerros. Macho nao recebe evento de matriz;
+sexo desconhecido e permitido com aviso, sem alterar cadastro.
+
+Snapshots do reprodutor/lote/pasto permanecem historicos. Timeline, ultimo
+diagnostico, ultima cobertura/inseminacao e ultimo parto sao derivados. Filtros
+por tipo, resultado, lote no registro e periodo local. Arquivados mantem consulta.
+Nao ha edicao/exclusao reprodutiva, previsao, recomendacao ou calendario nesta V1.
+Dados continuam locais, sem backup remoto; homologacao Android fisica pendente.

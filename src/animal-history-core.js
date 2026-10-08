@@ -15,7 +15,7 @@ const AnimalHistoryCore = ((ref) => {
     });
     const ordered = Events.sortTimeline(timeline);
     const weights = ordered.filter((entry) => entry.type === "weighing");
-    return { timeline: ordered, weighingCount: weights.length,
+    return { timeline: ordered, reproductionSummary: Events.reproductionSummary(events), weighingCount: weights.length,
       lastWeight: weights[0]?.item.weightSnapshot ?? null, lastWeighingDate: weights[0]?.session.weighingDate || weights[0]?.session.createdAt || null };
   }
   return { buildHistory };

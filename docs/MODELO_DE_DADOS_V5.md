@@ -21,7 +21,7 @@ Store `animal-events`, keyPath `id`. Indices nao unicos: `accountId`,
 | --- | --- |
 | id | ID local estavel, nao derivado de brinco/nome |
 | accountId, propertyId, animalId | Obrigatorios, animal existente e mesmo contexto |
-| type | Enum registered, lot_changed, status_changed, note, health |
+| type | Enum registered, lot_changed, status_changed, note, health, reproduction |
 | occurredAt | Timestamp ISO com fuso, data e hora validas |
 | fromLotId, fromLotNameSnapshot | Origem da mudanca; null quando nao aplicavel/sem lote |
 | fromPaddockId, fromPaddockNameSnapshot | Local da origem naquele momento, ou null |
@@ -86,6 +86,35 @@ nao convertem textos livres antigos. Rotulos conhecidos sao apresentados pela UI
 e textos legados desconhecidos aparecem como informados. routeOther aparece apenas
 com other; ao trocar de via na UI, o complemento e limpo, e o core descarta qualquer
 complemento residual em nova via diferente de other. Sem migration/regravacao.
+
+## Extensao Reproduction - Sprint 011
+
+Campos adicionais em type=reproduction, sem schema/store/indice novo e sem migration.
+
+| Campo | Regra |
+| --- | --- |
+| reproductionType | Obrigatorio: estrus, natural_service, artificial_insemination, pregnancy_diagnosis, calving |
+| result | Obrigatorio em diagnostico: pregnant, not_pregnant, inconclusive; null nos demais |
+| sireAnimalId | ID explicito opcional de macho ativo da mesma conta/propriedade, somente em cobertura natural |
+| sireNameSnapshot, sireTagSnapshot | Capturados do sire na transacao; null sem vinculo |
+| externalSire | Texto opcional em cobertura/inseminacao; nunca associado automaticamente |
+| semenBatch, technician | Opcionais em inseminacao; null nos demais |
+| calfCount | Inteiro seguro >=1 obrigatorio em parto |
+| maleCalves, femaleCalves | Inteiros seguros >=0 opcionais em parto; soma <= calfCount; ausencia e null |
+| notes | Texto opcional em todos os tipos |
+| lotId, lotNameSnapshot, paddockId, paddockNameSnapshot | Contexto atual capturado na transacao, ou null |
+
+IDs comuns e timestamps seguem obrigatorios; occurredAt deve ser explicito.
+Matriz ativa: female permitida, unknown permitida com aviso sem mudar sexo,
+male bloqueada. Matriz/sire arquivados nao podem participar de novo registro,
+mas eventos antigos permanecem consultaveis. Identificacao externa e cadastrada
+sao alternativas exclusivas na cobertura; nenhuma identificacao e inferida.
+
+Somente animal-events recebe escrita. Nenhum Animal e alterado/criado. Campos
+sao selecionados conforme tipo; snapshots nao mudam com cadastros. Resumo da
+ficha e filtros por propriedade sao derivados, sem reproductiveStatus ou lista
+persistida paralela. Sem operationId coletivo, edicao/exclusao, previsao de parto,
+genealogia ou criacao de bezerros nesta extensao. Ver ADR_011_REPRODUCAO_V1.md.
 
 ## Estado e Historico Atomicos
 

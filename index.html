@@ -414,6 +414,7 @@
               <button type="button" class="secondary-button" data-property-section="herd">Rebanho</button>
               <button type="button" class="secondary-button" data-property-section="weighings">Pesagens</button>
               <button type="button" class="secondary-button" data-property-section="health">Sanidade</button>
+              <button type="button" class="secondary-button" data-property-section="reproduction">Reprodução</button>
             </nav>
           </header>
           <p id="property-context-feedback" role="status"></p>
@@ -427,6 +428,12 @@
           </section>
           <div id="property-herd-slot"></div>
           <div id="property-weighings-slot"></div>
+          <section id="reproduction" class="panel hidden" aria-labelledby="reproduction-title">
+            <div class="properties-header"><h2 id="reproduction-title">Reprodução</h2><button id="new-reproduction" type="button" class="primary-button action-icon add">Registrar evento reprodutivo</button></div>
+            <div id="reproduction-filters" class="form-grid"></div>
+            <p id="reproduction-feedback" role="status" aria-live="polite"></p>
+            <div id="reproduction-list" class="herd-list"></div>
+          </section>
           <section id="health" class="panel hidden" aria-labelledby="health-title">
             <div class="properties-header"><h2 id="health-title">Sanidade</h2><button id="new-health" type="button" class="primary-button action-icon add">Registrar manejo sanitário</button></div>
             <div id="health-filters" class="form-grid"></div>
@@ -537,6 +544,9 @@
     <dialog id="health-dialog" class="finalize-dialog" aria-labelledby="health-dialog-title"><form id="health-form" novalidate></form></dialog>
     <datalist id="health-dose-units"><option value="mL"></option><option value="L"></option><option value="mg"></option><option value="g"></option><option value="dose"></option></datalist>
     <script src="src/health-controller.js"></script>
+    <script src="src/reproduction-repository.js"></script>
+    <dialog id="reproduction-dialog" class="finalize-dialog" aria-labelledby="reproduction-dialog-title"><form id="reproduction-form" novalidate></form></dialog>
+    <script src="src/reproduction-controller.js"></script>
     <dialog id="herd-dialog" class="finalize-dialog" aria-labelledby="herd-dialog-title"><form id="herd-form" novalidate></form></dialog>
     <dialog id="fast-lot-confirm" class="finalize-dialog" aria-labelledby="fast-lot-confirm-title">
       <form method="dialog">
